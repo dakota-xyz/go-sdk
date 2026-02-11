@@ -3,6 +3,8 @@ package webhook
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/dakota-xyz/go-sdk/errors"
 )
 
 // EventType identifies the type of webhook event.
@@ -119,12 +121,31 @@ func (t EventType) IsValid() bool {
 // Event represents a webhook event from Dakota Platform.
 type Event struct {
 	ID        string          `json:"id"`
-	Type      EventType       `json:"event"`
+	Type      EventType       `json:"type"`
 	Data      json.RawMessage `json:"data"`
-	CreatedAt time.Time       `json:"created_at"`
+	Timestamp int64           `json:"timestamp"`
+}
+
+// Time returns the event timestamp as a time.Time.
+func (e Event) Time() time.Time {
+	return time.Unix(e.Timestamp, 0)
 }
 
 // DataAs unmarshals the event's Data field into the provided target.
 func (e Event) DataAs(target any) error {
 	return json.Unmarshal(e.Data, target)
+}
+
+// EventDataAs is a generic helper that unmarshals an event's Data field into
+// the specified type. This avoids the need for a separate Unmarshal call.
+func EventDataAs[T any](event Event) (T, error) {
+	var result T
+	if err := json.Unmarshal(event.Data, &result); err != nil {
+		return result, errors.Wrap(
+			errors.CodeMalformedPayload,
+			"failed to unmarshal event data",
+			err,
+		)
+	}
+	return result, nil
 }

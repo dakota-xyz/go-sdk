@@ -165,7 +165,7 @@ func TestHandler_InvalidSignature(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/webhook",
@@ -209,7 +209,7 @@ func TestHandler_CallbackDelivery(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{"name":"Acme"}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{"name":"Acme"}}`
 	req := h.signedRequest(t, payload)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -239,7 +239,7 @@ func TestHandler_DefaultCallback(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 	req := h.signedRequest(t, payload)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -263,7 +263,7 @@ func TestHandler_ChannelDelivery(t *testing.T) {
 	}
 	defer handler.Close()
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 	req := h.signedRequest(t, payload)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -323,7 +323,7 @@ func TestHandler_IdempotencyStore(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 
 	// First request.
 	req1 := h.signedRequest(t, payload)
@@ -369,7 +369,7 @@ func TestHandler_PayloadTooLarge(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{"key":"value that makes this too long"}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{"key":"value that makes this too long"}}`
 	req := h.signedRequest(t, payload)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -415,7 +415,7 @@ func TestHandler_CallbackError(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 	req := h.signedRequest(t, payload)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -438,7 +438,7 @@ func TestHandler_ChannelFull(t *testing.T) {
 	defer handler.Close()
 
 	// No one reading from the channel - should not block.
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 	req := h.signedRequest(t, payload)
 	rec := httptest.NewRecorder()
 
@@ -466,7 +466,7 @@ func TestHandler_ExpiredTimestamp(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	payload := `{"id":"evt_1","event":"customer.created","data":{}}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
 	oldTimestamp := fmt.Sprintf("%d", time.Now().Add(-10*time.Minute).Unix())
 	sig := webhook.ComputeSignature(oldTimestamp, []byte(payload), h.priv)
 

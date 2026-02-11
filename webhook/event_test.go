@@ -3,6 +3,7 @@ package webhook_test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/dakota-xyz/go-sdk/webhook"
 )
@@ -63,7 +64,7 @@ func TestEvent_DataAs(t *testing.T) {
 }
 
 func TestEvent_JSONRoundTrip(t *testing.T) {
-	payload := `{"id":"evt_1","event":"customer.created","data":{"name":"Acme"},"created_at":"2024-01-15T10:45:00Z"}`
+	payload := `{"id":"evt_1","type":"customer.created","data":{"name":"Acme"},"timestamp":1705315500}`
 
 	var event webhook.Event
 	if err := json.Unmarshal([]byte(payload), &event); err != nil {
@@ -76,8 +77,57 @@ func TestEvent_JSONRoundTrip(t *testing.T) {
 	if event.Type != webhook.EventCustomerCreated {
 		t.Errorf("got Type %q, want %q", event.Type, webhook.EventCustomerCreated)
 	}
-	if event.CreatedAt.IsZero() {
-		t.Error("expected non-zero CreatedAt")
+	if event.Timestamp != 1705315500 {
+		t.Errorf("got Timestamp %d, want %d", event.Timestamp, 1705315500)
+	}
+}
+
+func TestEvent_Time(t *testing.T) {
+	event := webhook.Event{
+		Timestamp: 1705315500,
+	}
+
+	got := event.Time()
+	want := time.Unix(1705315500, 0)
+	if !got.Equal(want) {
+		t.Errorf("Time() = %v, want %v", got, want)
+	}
+}
+
+func TestEventDataAs(t *testing.T) {
+	type customerData struct {
+		Name string `json:"name"`
+	}
+
+	event := webhook.Event{
+		ID:   "evt_1",
+		Type: webhook.EventCustomerCreated,
+		Data: json.RawMessage(`{"name":"Acme"}`),
+	}
+
+	data, err := webhook.EventDataAs[customerData](event)
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.Name != "Acme" {
+		t.Errorf("got Name %q, want %q", data.Name, "Acme")
+	}
+}
+
+func TestEventDataAs_InvalidJSON(t *testing.T) {
+	event := webhook.Event{
+		ID:   "evt_1",
+		Type: webhook.EventCustomerCreated,
+		Data: json.RawMessage(`{not json}`),
+	}
+
+	type customerData struct {
+		Name string `json:"name"`
+	}
+
+	_, err := webhook.EventDataAs[customerData](event)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
 	}
 }
 

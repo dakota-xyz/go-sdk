@@ -12,13 +12,14 @@ import (
 
 	"github.com/dakota-xyz/go-sdk/idempotency"
 	"github.com/dakota-xyz/go-sdk/webhook"
+	"github.com/dakota-xyz/go-sdk/webhook/types"
 )
 
 func ExampleVerifySignature() {
 	// In production, use the Dakota Platform public key for your environment.
 	publicKeyHex := os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEY")
 
-	payload := []byte(`{"id":"evt_1","event":"customer.created","data":{}}`)
+	payload := []byte(`{"id":"evt_1","type":"customer.created","data":{}}`)
 	signatureB64 := "..." // from X-Webhook-Signature header
 	timestampStr := "..." // from X-Webhook-Timestamp header
 
@@ -35,7 +36,7 @@ func ExampleConstructEvent() {
 	publicKeyHex := hex.EncodeToString(pub)
 
 	// Simulate a webhook payload.
-	payload := []byte(`{"id":"evt_123","event":"customer.created","data":{"name":"Acme"}}`)
+	payload := []byte(`{"id":"evt_123","type":"customer.created","data":{"name":"Acme"},"timestamp":1705315500}`)
 	timestamp := fmt.Sprintf("%d", time.Now().Unix())
 	signature := webhook.ComputeSignature(timestamp, payload, priv)
 
@@ -55,11 +56,20 @@ func ExampleNewHandler_callbacks() {
 	handler, err := webhook.NewHandler(
 		webhook.WithPublicKey(publicKeyHex),
 		webhook.On(webhook.EventCustomerCreated, func(ctx context.Context, event webhook.Event) error {
-			fmt.Printf("New customer: %s\n", event.ID)
+			// Use EventDataAs for typed access to the event payload.
+			customer, err := webhook.EventDataAs[types.CustomerData](event)
+			if err != nil {
+				return fmt.Errorf("parse customer data: %w", err)
+			}
+			fmt.Printf("New customer: %s (%s)\n", customer.Name, customer.ID)
 			return nil
 		}),
 		webhook.On(webhook.EventTransactionAutoUpdated, func(ctx context.Context, event webhook.Event) error {
-			fmt.Printf("Transaction updated: %s\n", event.ID)
+			txn, err := webhook.EventDataAs[types.AutoTransactionData](event)
+			if err != nil {
+				return fmt.Errorf("parse transaction data: %w", err)
+			}
+			fmt.Printf("Transaction %s status: %s\n", txn.ID, txn.Status)
 			return nil
 		}),
 		webhook.OnDefault(func(ctx context.Context, event webhook.Event) error {

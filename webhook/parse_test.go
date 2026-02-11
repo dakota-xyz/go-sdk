@@ -20,13 +20,13 @@ func TestParseEvent(t *testing.T) {
 	}{
 		{
 			name:    "valid event",
-			payload: `{"id":"evt_1","event":"customer.created","data":{"name":"Acme"},"created_at":"2024-01-15T10:45:00Z"}`,
+			payload: `{"id":"evt_1","type":"customer.created","data":{"name":"Acme"},"timestamp":1705315500}`,
 			wantID:  "evt_1",
 			wantErr: false,
 		},
 		{
 			name:    "minimal event",
-			payload: `{"id":"evt_2","event":"user.created","data":{}}`,
+			payload: `{"id":"evt_2","type":"user.created","data":{}}`,
 			wantID:  "evt_2",
 			wantErr: false,
 		},
@@ -41,7 +41,7 @@ func TestParseEvent(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "missing event type",
+			name:    "missing type",
 			payload: `{"id":"evt_1","data":{}}`,
 			wantErr: true,
 		},
@@ -78,7 +78,7 @@ func TestConstructEvent(t *testing.T) {
 
 	now := time.Now()
 	timestamp := fmt.Sprintf("%d", now.Unix())
-	payload := []byte(`{"id":"evt_1","event":"customer.created","data":{"name":"Acme"},"created_at":"2024-01-15T10:45:00Z"}`)
+	payload := []byte(`{"id":"evt_1","type":"customer.created","data":{"name":"Acme"},"timestamp":1705315500}`)
 
 	sig := webhook.ComputeSignature(timestamp, payload, priv)
 
@@ -104,7 +104,7 @@ func TestConstructEvent_WithTolerance(t *testing.T) {
 
 	// Timestamp 10 minutes ago.
 	oldTimestamp := fmt.Sprintf("%d", time.Now().Add(-10*time.Minute).Unix())
-	payload := []byte(`{"id":"evt_1","event":"customer.created","data":{}}`)
+	payload := []byte(`{"id":"evt_1","type":"customer.created","data":{}}`)
 	sig := webhook.ComputeSignature(oldTimestamp, payload, priv)
 
 	// Default tolerance (5 min) should fail.
@@ -134,7 +134,7 @@ func TestConstructEvent_IgnoringTolerance(t *testing.T) {
 
 	// Very old timestamp.
 	oldTimestamp := "1000000000"
-	payload := []byte(`{"id":"evt_1","event":"customer.created","data":{}}`)
+	payload := []byte(`{"id":"evt_1","type":"customer.created","data":{}}`)
 	sig := webhook.ComputeSignature(oldTimestamp, payload, priv)
 
 	event, err := webhook.ConstructEvent(
@@ -157,7 +157,7 @@ func TestConstructEvent_InvalidSignature(t *testing.T) {
 	pubHex := hex.EncodeToString(pub)
 
 	timestamp := fmt.Sprintf("%d", time.Now().Unix())
-	payload := []byte(`{"id":"evt_1","event":"customer.created","data":{}}`)
+	payload := []byte(`{"id":"evt_1","type":"customer.created","data":{}}`)
 
 	_, err := webhook.ConstructEvent(payload, "dGVzdA==", timestamp, pubHex)
 	if err == nil {

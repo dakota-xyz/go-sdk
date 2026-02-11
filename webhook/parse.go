@@ -28,7 +28,7 @@ func ParseEvent(payload []byte) (Event, error) {
 	if event.Type == "" {
 		return Event{}, errors.New(
 			errors.CodeMalformedPayload,
-			"event missing event field",
+			"event missing type field",
 		)
 	}
 
