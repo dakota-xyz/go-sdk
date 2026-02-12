@@ -2,13 +2,15 @@ package webhook
 
 import (
 	"context"
+	"crypto/ed25519"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/dakota-xyz/go-sdk/errors"
-	"github.com/dakota-xyz/go-sdk/idempotency"
 	"github.com/dakota-xyz/go-sdk/log"
+	"github.com/dakota-xyz/go-sdk/webhook/idempotency"
 )
 
 const defaultMaxPayloadSize = 64 * 1024 // 64 KB
@@ -26,10 +28,22 @@ const (
 	deliveryChannel
 )
 
+// AckPolicy controls when the handler acknowledges webhook delivery (2xx).
+type AckPolicy int
+
+const (
+	// AckOnSuccess only acknowledges (2xx) when delivery succeeds.
+	AckOnSuccess AckPolicy = iota
+
+	// AckAlways always acknowledges (2xx), even if delivery fails.
+	AckAlways
+)
+
 type handlerConfig struct {
 	publicKeyHex   string
 	tolerance      time.Duration
 	maxPayloadSize int64
+	ackPolicy      AckPolicy
 	logger         log.Logger
 	store          idempotency.Store
 	handlers       map[EventType]EventHandler
@@ -58,6 +72,13 @@ func WithHandlerTolerance(d time.Duration) HandlerOption {
 func WithMaxPayloadSize(n int64) HandlerOption {
 	return func(c *handlerConfig) {
 		c.maxPayloadSize = n
+	}
+}
+
+// WithAckPolicy controls how webhook delivery is acknowledged.
+func WithAckPolicy(policy AckPolicy) HandlerOption {
+	return func(c *handlerConfig) {
+		c.ackPolicy = policy
 	}
 }
 
@@ -104,15 +125,18 @@ func WithChannel(bufferSize int) HandlerOption {
 // Handler is an http.Handler that verifies, parses, and dispatches webhook
 // events.
 type Handler struct {
-	publicKey      string
+	publicKey      ed25519.PublicKey
 	tolerance      time.Duration
 	maxPayloadSize int64
+	ackPolicy      AckPolicy
 	logger         log.Logger
 	store          idempotency.Store
 	mode           deliveryMode
 	handlers       map[EventType]EventHandler
 	defaultHandler EventHandler
+	eventsMu       sync.RWMutex
 	events         chan Event
+	closeOnce      sync.Once
 }
 
 // NewHandler creates a new webhook Handler.
@@ -123,6 +147,7 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 	cfg := &handlerConfig{
 		tolerance:      DefaultTimestampTolerance,
 		maxPayloadSize: defaultMaxPayloadSize,
+		ackPolicy:      AckOnSuccess,
 		logger:         log.Nop(),
 		handlers:       make(map[EventType]EventHandler),
 	}
@@ -137,9 +162,31 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 			"public key is required",
 		)
 	}
+	if cfg.tolerance <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"timestamp tolerance must be greater than zero",
+		)
+	}
+	if cfg.maxPayloadSize <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"max payload size must be greater than zero",
+		)
+	}
+	if cfg.ackPolicy != AckOnSuccess && cfg.ackPolicy != AckAlways {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"invalid ack policy",
+		)
+	}
+	if cfg.logger == nil {
+		cfg.logger = log.Nop()
+	}
 
-	// Validate public key eagerly.
-	if _, err := ParsePublicKey(cfg.publicKeyHex); err != nil {
+	// Parse and validate public key eagerly.
+	pubKey, err := ParsePublicKey(cfg.publicKeyHex)
+	if err != nil {
 		return nil, err
 	}
 
@@ -149,11 +196,18 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 			"cannot use both channel and callback delivery modes",
 		)
 	}
+	if cfg.useChannel && cfg.channelBuf < 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"channel buffer size must be >= 0",
+		)
+	}
 
 	h := &Handler{
-		publicKey:      cfg.publicKeyHex,
+		publicKey:      pubKey,
 		tolerance:      cfg.tolerance,
 		maxPayloadSize: cfg.maxPayloadSize,
+		ackPolicy:      cfg.ackPolicy,
 		logger:         cfg.logger,
 		store:          cfg.store,
 		handlers:       cfg.handlers,
@@ -173,14 +227,23 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 // Events returns the event channel. Returns nil if the handler is not in
 // channel delivery mode.
 func (h *Handler) Events() <-chan Event {
+	h.eventsMu.RLock()
+	defer h.eventsMu.RUnlock()
 	return h.events
 }
 
 // Close closes the event channel if in channel mode.
 func (h *Handler) Close() {
-	if h.events != nil {
-		close(h.events)
-	}
+	h.closeOnce.Do(
+		func() {
+			h.eventsMu.Lock()
+			defer h.eventsMu.Unlock()
+			if h.events != nil {
+				close(h.events)
+				h.events = nil
+			}
+		},
+	)
 }
 
 // ServeHTTP implements http.Handler.
@@ -230,7 +293,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Verify signature.
-	if err := VerifySignature(
+	if err := verifySignatureWithPublicKey(
 		body,
 		sigHeader,
 		tsHeader,
@@ -256,11 +319,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 7. Idempotency check.
+	// 7. Idempotency pre-check.
 	if h.store != nil {
-		added, err := h.store.Add(ctx, event.ID)
+		acquired, err := h.store.Acquire(ctx, event.ID)
 		if err != nil {
-			h.logger.Error(ctx, "idempotency store error", log.Err(err))
+			h.logger.Error(ctx, "idempotency store acquire failed", log.Err(err))
 			http.Error(
 				w,
 				"internal server error",
@@ -268,7 +331,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			)
 			return
 		}
-		if !added {
+		if !acquired {
 			h.logger.Info(
 				ctx,
 				"duplicate event skipped",
@@ -280,34 +343,101 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 8. Dispatch.
+	processed := true
 	switch h.mode {
 	case deliveryChannel:
-		select {
-		case h.events <- event:
-		default:
-			h.logger.Warn(
-				ctx,
-				"event channel full, dropping event",
-				log.String("event_id", event.ID),
-			)
-		}
+		processed = h.deliverToChannel(ctx, event)
 	case deliveryCallback:
-		handler, ok := h.handlers[event.Type]
-		if !ok {
-			handler = h.defaultHandler
-		}
-		if handler != nil {
-			if err := handler(ctx, event); err != nil {
+		processed = h.deliverToCallback(ctx, event)
+	}
+
+	if !processed {
+		if h.store != nil {
+			if err := h.store.Release(ctx, event.ID); err != nil {
 				h.logger.Error(
-					ctx, "event handler error",
+					ctx,
+					"idempotency store release failed",
 					log.String("event_id", event.ID),
-					log.String("event_type", string(event.Type)),
 					log.Err(err),
 				)
 			}
 		}
+
+		if h.ackPolicy == AckOnSuccess {
+			http.Error(w, "delivery failed", http.StatusServiceUnavailable)
+			return
+		}
+
+		h.logger.Warn(
+			ctx,
+			"delivery failed but request acknowledged due to ack policy",
+			log.String("event_id", event.ID),
+		)
+		w.WriteHeader(http.StatusOK)
+		return
 	}
 
-	// 9. Return 200 OK.
+	// 9. Mark event as seen after successful processing.
+	if h.store != nil {
+		if err := h.store.Commit(ctx, event.ID); err != nil {
+			h.logger.Error(
+				ctx,
+				"idempotency store commit failed after event processing",
+				log.String("event_id", event.ID),
+				log.Err(err),
+			)
+		}
+	}
+
+	// 10. Return 200 OK.
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) deliverToChannel(ctx context.Context, event Event) bool {
+	h.eventsMu.RLock()
+	defer h.eventsMu.RUnlock()
+
+	if h.events == nil {
+		h.logger.Warn(
+			ctx,
+			"event channel unavailable, dropping event",
+			log.String("event_id", event.ID),
+		)
+		return false
+	}
+
+	select {
+	case h.events <- event:
+		return true
+	default:
+		h.logger.Warn(
+			ctx,
+			"event channel full, dropping event",
+			log.String("event_id", event.ID),
+		)
+		return false
+	}
+}
+
+func (h *Handler) deliverToCallback(ctx context.Context, event Event) bool {
+	handler, ok := h.handlers[event.Type]
+	if !ok {
+		handler = h.defaultHandler
+	}
+	if handler == nil {
+		return true
+	}
+
+	if err := handler(ctx, event); err != nil {
+		h.logger.Error(
+			ctx,
+			"event handler error",
+			log.String("event_id", event.ID),
+			log.String("event_type", string(event.Type)),
+			log.Err(err),
+		)
+		return false
+	}
+
+	return true
 }

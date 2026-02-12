@@ -34,6 +34,20 @@ func VerifySignature(
 		return err
 	}
 
+	return verifySignatureWithPublicKey(
+		payload,
+		signatureB64,
+		timestampStr,
+		pubKey,
+	)
+}
+
+func verifySignatureWithPublicKey(
+	payload []byte,
+	signatureB64 string,
+	timestampStr string,
+	publicKey ed25519.PublicKey,
+) error {
 	sig, err := base64.StdEncoding.DecodeString(signatureB64)
 	if err != nil {
 		return errors.Wrap(
@@ -51,7 +65,7 @@ func VerifySignature(
 	}
 
 	message := append([]byte(timestampStr), payload...)
-	if !ed25519.Verify(pubKey, message, sig) {
+	if !ed25519.Verify(publicKey, message, sig) {
 		return errors.New(
 			errors.CodeInvalidSignature,
 			"signature verification failed",

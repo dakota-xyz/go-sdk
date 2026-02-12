@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/dakota-xyz/go-sdk/errors"
@@ -14,12 +16,15 @@ import (
 type ListenerOption func(*listenerConfig)
 
 type listenerConfig struct {
-	addr         string
-	path         string
-	readTimeout  time.Duration
-	writeTimeout time.Duration
-	logger       log.Logger
-	handlerOpts  []HandlerOption
+	addr              string
+	path              string
+	readHeaderTimeout time.Duration
+	readTimeout       time.Duration
+	writeTimeout      time.Duration
+	idleTimeout       time.Duration
+	shutdownTimeout   time.Duration
+	logger            log.Logger
+	handlerOpts       []HandlerOption
 }
 
 // WithAddr sets the listen address (default ":8080").
@@ -43,10 +48,31 @@ func WithReadTimeout(d time.Duration) ListenerOption {
 	}
 }
 
+// WithReadHeaderTimeout sets the HTTP server read header timeout.
+func WithReadHeaderTimeout(d time.Duration) ListenerOption {
+	return func(c *listenerConfig) {
+		c.readHeaderTimeout = d
+	}
+}
+
 // WithWriteTimeout sets the HTTP server write timeout.
 func WithWriteTimeout(d time.Duration) ListenerOption {
 	return func(c *listenerConfig) {
 		c.writeTimeout = d
+	}
+}
+
+// WithIdleTimeout sets the HTTP server idle timeout.
+func WithIdleTimeout(d time.Duration) ListenerOption {
+	return func(c *listenerConfig) {
+		c.idleTimeout = d
+	}
+}
+
+// WithShutdownTimeout sets the graceful shutdown timeout.
+func WithShutdownTimeout(d time.Duration) ListenerOption {
+	return func(c *listenerConfig) {
+		c.shutdownTimeout = d
 	}
 }
 
@@ -66,19 +92,26 @@ func WithHandlerOptions(opts ...HandlerOption) ListenerOption {
 
 // Listener is a standalone HTTP server that receives webhook events.
 type Listener struct {
-	handler *Handler
-	server  *http.Server
-	logger  log.Logger
+	handler   *Handler
+	server    *http.Server
+	logger    log.Logger
+	mu        sync.RWMutex
+	listener  net.Listener
+	closeOnce sync.Once
+	shutdown  time.Duration
 }
 
 // NewListener creates a new webhook Listener.
 func NewListener(opts ...ListenerOption) (*Listener, error) {
 	cfg := &listenerConfig{
-		addr:         ":8080",
-		path:         "/webhook",
-		readTimeout:  30 * time.Second,
-		writeTimeout: 30 * time.Second,
-		logger:       log.Nop(),
+		addr:              ":8080",
+		path:              "/webhook",
+		readHeaderTimeout: 5 * time.Second,
+		readTimeout:       30 * time.Second,
+		writeTimeout:      30 * time.Second,
+		idleTimeout:       60 * time.Second,
+		shutdownTimeout:   10 * time.Second,
+		logger:            log.Nop(),
 	}
 
 	for _, opt := range opts {
@@ -91,6 +124,45 @@ func NewListener(opts ...ListenerOption) (*Listener, error) {
 			"handler options are required (at minimum WithPublicKey)",
 		)
 	}
+	if !strings.HasPrefix(cfg.path, "/") {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"path must start with '/'",
+		)
+	}
+	if cfg.readHeaderTimeout <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"read header timeout must be greater than zero",
+		)
+	}
+	if cfg.readTimeout <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"read timeout must be greater than zero",
+		)
+	}
+	if cfg.writeTimeout <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"write timeout must be greater than zero",
+		)
+	}
+	if cfg.idleTimeout <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"idle timeout must be greater than zero",
+		)
+	}
+	if cfg.shutdownTimeout <= 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"shutdown timeout must be greater than zero",
+		)
+	}
+	if cfg.logger == nil {
+		cfg.logger = log.Nop()
+	}
 
 	handler, err := NewHandler(cfg.handlerOpts...)
 	if err != nil {
@@ -101,16 +173,19 @@ func NewListener(opts ...ListenerOption) (*Listener, error) {
 	mux.Handle(cfg.path, handler)
 
 	server := &http.Server{
-		Addr:         cfg.addr,
-		Handler:      mux,
-		ReadTimeout:  cfg.readTimeout,
-		WriteTimeout: cfg.writeTimeout,
+		Addr:              cfg.addr,
+		Handler:           mux,
+		ReadHeaderTimeout: cfg.readHeaderTimeout,
+		ReadTimeout:       cfg.readTimeout,
+		WriteTimeout:      cfg.writeTimeout,
+		IdleTimeout:       cfg.idleTimeout,
 	}
 
 	return &Listener{
-		handler: handler,
-		server:  server,
-		logger:  cfg.logger,
+		handler:  handler,
+		server:   server,
+		logger:   cfg.logger,
+		shutdown: cfg.shutdownTimeout,
 	}, nil
 }
 
@@ -123,21 +198,36 @@ func (l *Listener) Events() <-chan Event {
 // Start begins listening for webhooks. It blocks until the context is
 // cancelled, then gracefully shuts down the server.
 func (l *Listener) Start(ctx context.Context) error {
+	l.mu.RLock()
+	alreadyStarted := l.listener != nil
+	l.mu.RUnlock()
+	if alreadyStarted {
+		return errors.New(errors.CodeInvalidConfig, "listener already started")
+	}
+
+	ln, err := net.Listen("tcp", l.server.Addr)
+	if err != nil {
+		return err
+	}
+	l.setListener(ln)
+
 	errCh := make(chan error, 1)
 
 	go func() {
+		defer close(errCh)
+		defer l.setListener(nil)
+
 		l.logger.Info(
 			ctx,
 			"webhook listener starting",
-			log.String("addr", l.server.Addr),
+			log.String("addr", ln.Addr().String()),
 		)
-		if err := l.server.ListenAndServe(); err != nil && !errors.Is(
+		if err := l.server.Serve(ln); err != nil && !errors.Is(
 			err,
 			http.ErrServerClosed,
 		) {
 			errCh <- err
 		}
-		close(errCh)
 	}()
 
 	select {
@@ -147,22 +237,45 @@ func (l *Listener) Start(ctx context.Context) error {
 		l.logger.Info(ctx, "webhook listener shutting down")
 		shutdownCtx, cancel := context.WithTimeout(
 			context.Background(),
-			10*time.Second,
+			l.shutdown,
 		)
 		defer cancel()
-		return l.server.Shutdown(shutdownCtx)
+		if err := l.server.Shutdown(shutdownCtx); err != nil {
+			return err
+		}
+		l.handler.Close()
+
+		if err := <-errCh; err != nil {
+			return err
+		}
+		return nil
 	}
 }
 
 // Addr returns the listener's address. This is useful when using port 0
-// for dynamic port allocation. Returns empty string if the server has no
-// listener.
+// for dynamic port allocation. Returns nil before Start has bound a listener.
 func (l *Listener) Addr() net.Addr {
-	return nil
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	if l.listener == nil {
+		return nil
+	}
+	return l.listener.Addr()
 }
 
-// Close shuts down the listener and closes the event channel.
+// Close forcefully shuts down the listener and closes the event channel.
+// It is safe to call multiple times.
 func (l *Listener) Close() {
-	l.server.Close()
-	l.handler.Close()
+	l.closeOnce.Do(
+		func() {
+			_ = l.server.Close()
+			l.handler.Close()
+		},
+	)
+}
+
+func (l *Listener) setListener(ln net.Listener) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.listener = ln
 }

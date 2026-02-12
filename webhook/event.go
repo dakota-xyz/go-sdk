@@ -64,47 +64,58 @@ const (
 	EventWalletDeposit            EventType = "wallet.deposit"
 )
 
+// AllEventTypes contains all known Dakota Platform webhook event types.
+var AllEventTypes = []EventType{
+	EventUserCreated,
+	EventUserUpdated,
+	EventUserDeleted,
+	EventAPIKeyCreated,
+	EventAPIKeyDeleted,
+	EventCustomerCreated,
+	EventCustomerUpdated,
+	EventCustomerKYBLinkCreated,
+	EventCustomerKYBLinkUpdated,
+	EventCustomerKYBStatusCreated,
+	EventCustomerKYBStatusUpdated,
+	EventAutoAccountCreated,
+	EventAutoAccountUpdated,
+	EventAutoAccountDeleted,
+	EventTransactionAutoCreated,
+	EventTransactionAutoUpdated,
+	EventTransactionOneOffCreated,
+	EventTransactionOneOffUpdated,
+	EventRecipientCreated,
+	EventRecipientUpdated,
+	EventRecipientDeleted,
+	EventDestinationCreated,
+	EventDestinationDeleted,
+	EventTargetCreated,
+	EventTargetUpdated,
+	EventTargetDeleted,
+	EventExceptionCreated,
+	EventExceptionCleared,
+	EventBVNKOnboardingCreated,
+	EventBVNKOnboardingUpdated,
+	EventWalletCreated,
+	EventWalletUpdated,
+	EventWalletSignerGroupCreated,
+	EventWalletSignerGroupUpdated,
+	EventWalletPolicyCreated,
+	EventWalletPolicyUpdated,
+	EventWalletTransactionCreated,
+	EventWalletTransactionUpdated,
+	EventWalletDeposit,
+}
+
 // validEventTypes is the set of all known event types.
-var validEventTypes = map[EventType]struct{}{
-	EventUserCreated:              {},
-	EventUserUpdated:              {},
-	EventUserDeleted:              {},
-	EventAPIKeyCreated:            {},
-	EventAPIKeyDeleted:            {},
-	EventCustomerCreated:          {},
-	EventCustomerUpdated:          {},
-	EventCustomerKYBLinkCreated:   {},
-	EventCustomerKYBLinkUpdated:   {},
-	EventCustomerKYBStatusCreated: {},
-	EventCustomerKYBStatusUpdated: {},
-	EventAutoAccountCreated:       {},
-	EventAutoAccountUpdated:       {},
-	EventAutoAccountDeleted:       {},
-	EventTransactionAutoCreated:   {},
-	EventTransactionAutoUpdated:   {},
-	EventTransactionOneOffCreated: {},
-	EventTransactionOneOffUpdated: {},
-	EventRecipientCreated:         {},
-	EventRecipientUpdated:         {},
-	EventRecipientDeleted:         {},
-	EventDestinationCreated:       {},
-	EventDestinationDeleted:       {},
-	EventTargetCreated:            {},
-	EventTargetUpdated:            {},
-	EventTargetDeleted:            {},
-	EventExceptionCreated:         {},
-	EventExceptionCleared:         {},
-	EventBVNKOnboardingCreated:    {},
-	EventBVNKOnboardingUpdated:    {},
-	EventWalletCreated:            {},
-	EventWalletUpdated:            {},
-	EventWalletSignerGroupCreated: {},
-	EventWalletSignerGroupUpdated: {},
-	EventWalletPolicyCreated:      {},
-	EventWalletPolicyUpdated:      {},
-	EventWalletTransactionCreated: {},
-	EventWalletTransactionUpdated: {},
-	EventWalletDeposit:            {},
+var validEventTypes = buildEventTypeSet(AllEventTypes)
+
+func buildEventTypeSet(types []EventType) map[EventType]struct{} {
+	m := make(map[EventType]struct{}, len(types))
+	for _, t := range types {
+		m[t] = struct{}{}
+	}
+	return m
 }
 
 // String returns the string representation of the event type.

@@ -43,7 +43,7 @@ type Error struct {
 }
 
 // Error implements the error interface.
-func (e *Error) Error() string {
+func (e Error) Error() string {
 	if e.Err != nil {
 		return fmt.Sprintf("%s: %s: %s", e.Code, e.Message, e.Err.Error())
 	}
@@ -51,19 +51,22 @@ func (e *Error) Error() string {
 }
 
 // Unwrap returns the wrapped cause.
-func (e *Error) Unwrap() error {
+func (e Error) Unwrap() error {
 	return e.Err
 }
 
 // Is reports whether the target matches this error's Code. This allows
 // errors.Is(err, ErrInvalidSignature) to match any Error with
 // CodeInvalidSignature.
-func (e *Error) Is(target error) bool {
-	t, ok := target.(*Error)
-	if !ok {
+func (e Error) Is(target error) bool {
+	switch t := target.(type) {
+	case Error:
+		return e.Code == t.Code
+	case *Error:
+		return t != nil && e.Code == t.Code
+	default:
 		return false
 	}
-	return e.Code == t.Code
 }
 
 // New creates a new Error with the given code and message.
@@ -85,12 +88,36 @@ func Wrap(code Code, message string, err error) *Error {
 
 // Sentinel errors for use with errors.Is().
 var (
-	ErrInvalidSignature = New(CodeInvalidSignature, "invalid signature")
-	ErrSignatureExpired = New(CodeSignatureExpired, "signature expired")
-	ErrPayloadTooLarge  = New(CodePayloadTooLarge, "payload too large")
-	ErrMalformedPayload = New(CodeMalformedPayload, "malformed payload")
-	ErrMissingHeader    = New(CodeMissingHeader, "missing header")
-	ErrDuplicateEvent   = New(CodeDuplicateEvent, "duplicate event")
-	ErrInvalidConfig    = New(CodeInvalidConfig, "invalid configuration")
-	ErrInternal         = New(CodeInternal, "internal error")
+	ErrInvalidSignature = Error{
+		Code:    CodeInvalidSignature,
+		Message: "invalid signature",
+	}
+	ErrSignatureExpired = Error{
+		Code:    CodeSignatureExpired,
+		Message: "signature expired",
+	}
+	ErrPayloadTooLarge = Error{
+		Code:    CodePayloadTooLarge,
+		Message: "payload too large",
+	}
+	ErrMalformedPayload = Error{
+		Code:    CodeMalformedPayload,
+		Message: "malformed payload",
+	}
+	ErrMissingHeader = Error{
+		Code:    CodeMissingHeader,
+		Message: "missing header",
+	}
+	ErrDuplicateEvent = Error{
+		Code:    CodeDuplicateEvent,
+		Message: "duplicate event",
+	}
+	ErrInvalidConfig = Error{
+		Code:    CodeInvalidConfig,
+		Message: "invalid configuration",
+	}
+	ErrInternal = Error{
+		Code:    CodeInternal,
+		Message: "internal error",
+	}
 )

@@ -105,7 +105,7 @@ func TestError_Is(t *testing.T) {
 func TestSentinels(t *testing.T) {
 	sentinels := []struct {
 		name     string
-		sentinel *errors.Error
+		sentinel errors.Error
 		code     errors.Code
 	}{
 		{

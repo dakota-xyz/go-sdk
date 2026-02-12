@@ -48,14 +48,44 @@ type Option func(*slogLogger)
 // WithLevel sets the minimum log level.
 func WithLevel(level slog.Level) Option {
 	return func(l *slogLogger) {
-		l.level = level
+		l.level.Set(level)
+	}
+}
+
+type levelHandler struct {
+	handler slog.Handler
+	level   slog.Leveler
+}
+
+func (h levelHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	if level < h.level.Level() {
+		return false
+	}
+	return h.handler.Enabled(ctx, level)
+}
+
+func (h levelHandler) Handle(ctx context.Context, r slog.Record) error {
+	return h.handler.Handle(ctx, r)
+}
+
+func (h levelHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return levelHandler{
+		handler: h.handler.WithAttrs(attrs),
+		level:   h.level,
+	}
+}
+
+func (h levelHandler) WithGroup(name string) slog.Handler {
+	return levelHandler{
+		handler: h.handler.WithGroup(name),
+		level:   h.level,
 	}
 }
 
 // slogLogger is the default Logger backed by log/slog.
 type slogLogger struct {
 	logger *slog.Logger
-	level  slog.Level
+	level  *slog.LevelVar
 }
 
 func attrsToArgs(attrs []slog.Attr) []any {
@@ -100,9 +130,15 @@ func (l *slogLogger) With(attrs ...slog.Attr) Logger {
 
 // New creates a new Logger backed by the default slog logger.
 func New(opts ...Option) Logger {
+	level := &slog.LevelVar{}
+	level.Set(slog.LevelInfo)
+
 	l := &slogLogger{
-		logger: slog.Default(),
-		level:  slog.LevelInfo,
+		logger: slog.New(levelHandler{
+			handler: slog.Default().Handler(),
+			level:   level,
+		}),
+		level: level,
 	}
 	for _, opt := range opts {
 		opt(l)
@@ -112,9 +148,19 @@ func New(opts ...Option) Logger {
 
 // FromSlog wraps an existing *slog.Logger.
 func FromSlog(logger *slog.Logger) Logger {
+	if logger == nil {
+		return New()
+	}
+
+	level := &slog.LevelVar{}
+	level.Set(slog.LevelDebug)
+
 	return &slogLogger{
-		logger: logger,
-		level:  slog.LevelInfo,
+		logger: slog.New(levelHandler{
+			handler: logger.Handler(),
+			level:   level,
+		}),
+		level: level,
 	}
 }
 

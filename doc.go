@@ -8,9 +8,9 @@
 //
 //   - webhook: Core webhook handling with signature verification, event parsing,
 //     and HTTP handler/listener implementations.
-//   - dakotaerrors: Structured error types with machine-readable codes.
-//   - dakotalog: Structured logging abstraction built on log/slog.
-//   - idempotency: Event deduplication with pluggable store interface.
+//   - errors: Structured error types with machine-readable codes.
+//   - log: Structured logging abstraction built on log/slog.
+//   - webhook/idempotency: Event deduplication with pluggable store interface.
 //
 // # Quick Start
 //

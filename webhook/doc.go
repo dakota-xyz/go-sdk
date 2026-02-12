@@ -17,6 +17,7 @@
 //
 //	handler, err := webhook.NewHandler(
 //	    webhook.WithPublicKey(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEY")),
+//	    webhook.WithAckPolicy(webhook.AckOnSuccess),
 //	    webhook.On(webhook.EventCustomerCreated, handleCustomer),
 //	    webhook.OnDefault(handleOther),
 //	)

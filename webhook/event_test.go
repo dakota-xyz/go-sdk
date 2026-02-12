@@ -132,53 +132,19 @@ func TestEventDataAs_InvalidJSON(t *testing.T) {
 }
 
 func TestAllEventTypes(t *testing.T) {
-	allTypes := []webhook.EventType{
-		webhook.EventUserCreated,
-		webhook.EventUserUpdated,
-		webhook.EventUserDeleted,
-		webhook.EventAPIKeyCreated,
-		webhook.EventAPIKeyDeleted,
-		webhook.EventCustomerCreated,
-		webhook.EventCustomerUpdated,
-		webhook.EventCustomerKYBLinkCreated,
-		webhook.EventCustomerKYBLinkUpdated,
-		webhook.EventCustomerKYBStatusCreated,
-		webhook.EventCustomerKYBStatusUpdated,
-		webhook.EventAutoAccountCreated,
-		webhook.EventAutoAccountUpdated,
-		webhook.EventAutoAccountDeleted,
-		webhook.EventTransactionAutoCreated,
-		webhook.EventTransactionAutoUpdated,
-		webhook.EventTransactionOneOffCreated,
-		webhook.EventTransactionOneOffUpdated,
-		webhook.EventRecipientCreated,
-		webhook.EventRecipientUpdated,
-		webhook.EventRecipientDeleted,
-		webhook.EventDestinationCreated,
-		webhook.EventDestinationDeleted,
-		webhook.EventTargetCreated,
-		webhook.EventTargetUpdated,
-		webhook.EventTargetDeleted,
-		webhook.EventExceptionCreated,
-		webhook.EventExceptionCleared,
-		webhook.EventBVNKOnboardingCreated,
-		webhook.EventBVNKOnboardingUpdated,
-		webhook.EventWalletCreated,
-		webhook.EventWalletUpdated,
-		webhook.EventWalletSignerGroupCreated,
-		webhook.EventWalletSignerGroupUpdated,
-		webhook.EventWalletPolicyCreated,
-		webhook.EventWalletPolicyUpdated,
-		webhook.EventWalletTransactionCreated,
-		webhook.EventWalletTransactionUpdated,
-		webhook.EventWalletDeposit,
-	}
+	allTypes := webhook.AllEventTypes
 
 	if len(allTypes) != 39 {
 		t.Errorf("expected 39 event types, got %d", len(allTypes))
 	}
 
+	seen := make(map[webhook.EventType]struct{}, len(allTypes))
 	for _, et := range allTypes {
+		if _, ok := seen[et]; ok {
+			t.Errorf("duplicate event type %q in AllEventTypes", et)
+		}
+		seen[et] = struct{}{}
+
 		if !et.IsValid() {
 			t.Errorf("expected %q to be valid", et)
 		}

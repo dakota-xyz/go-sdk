@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/dakota-xyz/go-sdk/errors"
-	"github.com/dakota-xyz/go-sdk/idempotency"
 	"github.com/dakota-xyz/go-sdk/webhook"
+	"github.com/dakota-xyz/go-sdk/webhook/idempotency"
 )
 
 type testHarness struct {
@@ -88,6 +89,58 @@ func TestNewHandler_RejectsMixedModes(t *testing.T) {
 	}
 	if !errors.Is(err, errors.ErrInvalidConfig) {
 		t.Errorf("expected ErrInvalidConfig, got: %v", err)
+	}
+}
+
+func TestNewHandler_RejectsInvalidConfig(t *testing.T) {
+	h := newTestHarness(t)
+
+	tests := []struct {
+		name string
+		opts []webhook.HandlerOption
+	}{
+		{
+			name: "negative channel size",
+			opts: []webhook.HandlerOption{
+				webhook.WithPublicKey(h.pubHex),
+				webhook.WithChannel(-1),
+			},
+		},
+		{
+			name: "non-positive payload size",
+			opts: []webhook.HandlerOption{
+				webhook.WithPublicKey(h.pubHex),
+				webhook.WithMaxPayloadSize(0),
+			},
+		},
+		{
+			name: "non-positive tolerance",
+			opts: []webhook.HandlerOption{
+				webhook.WithPublicKey(h.pubHex),
+				webhook.WithHandlerTolerance(0),
+			},
+		},
+		{
+			name: "invalid ack policy",
+			opts: []webhook.HandlerOption{
+				webhook.WithPublicKey(h.pubHex),
+				webhook.WithAckPolicy(webhook.AckPolicy(99)),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				_, err := webhook.NewHandler(tt.opts...)
+				if err == nil {
+					t.Fatal("expected error")
+				}
+				if !errors.Is(err, errors.ErrInvalidConfig) {
+					t.Errorf("expected ErrInvalidConfig, got: %v", err)
+				}
+			},
+		)
 	}
 }
 
@@ -359,6 +412,127 @@ func TestHandler_IdempotencyStore(t *testing.T) {
 	}
 }
 
+func TestHandler_ConcurrentDuplicateSingleProcess(t *testing.T) {
+	h := newTestHarness(t)
+	var callCount atomic.Int32
+
+	store := idempotency.NewMemoryStore()
+	handler, err := webhook.NewHandler(
+		webhook.WithPublicKey(h.pubHex),
+		webhook.WithIdempotencyStore(store),
+		webhook.OnDefault(
+			func(_ context.Context, _ webhook.Event) error {
+				callCount.Add(1)
+				time.Sleep(50 * time.Millisecond)
+				return nil
+			},
+		),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	payload := `{"id":"evt_concurrent","type":"customer.created","data":{}}`
+	timestamp := fmt.Sprintf("%d", time.Now().Unix())
+	sig := webhook.ComputeSignature(timestamp, []byte(payload), h.priv)
+
+	const requests = 20
+	var wg sync.WaitGroup
+	statuses := make(chan int, requests)
+
+	for range requests {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/webhook",
+				strings.NewReader(payload),
+			)
+			req.Header.Set(webhook.SignatureHeader, sig)
+			req.Header.Set(webhook.TimestampHeader, timestamp)
+
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, req)
+			statuses <- rec.Code
+		}()
+	}
+
+	wg.Wait()
+	close(statuses)
+
+	for code := range statuses {
+		if code != http.StatusOK {
+			t.Fatalf("got status %d, want %d", code, http.StatusOK)
+		}
+	}
+
+	if callCount.Load() != 1 {
+		t.Fatalf("callback invoked %d times, want 1", callCount.Load())
+	}
+}
+
+func TestHandler_IdempotencyMarkedAfterSuccessfulProcessing(t *testing.T) {
+	h := newTestHarness(t)
+	var callCount atomic.Int32
+
+	store := idempotency.NewMemoryStore()
+	handler, err := webhook.NewHandler(
+		webhook.WithPublicKey(h.pubHex),
+		webhook.WithIdempotencyStore(store),
+		webhook.OnDefault(
+			func(_ context.Context, _ webhook.Event) error {
+				if callCount.Add(1) == 1 {
+					return fmt.Errorf("transient failure")
+				}
+				return nil
+			},
+		),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
+
+	req1 := h.signedRequest(t, payload)
+	rec1 := httptest.NewRecorder()
+	handler.ServeHTTP(rec1, req1)
+	if rec1.Code != http.StatusServiceUnavailable {
+		t.Fatalf(
+			"first request: got status %d, want %d",
+			rec1.Code,
+			http.StatusServiceUnavailable,
+		)
+	}
+
+	req2 := h.signedRequest(t, payload)
+	rec2 := httptest.NewRecorder()
+	handler.ServeHTTP(rec2, req2)
+	if rec2.Code != http.StatusOK {
+		t.Fatalf(
+			"second request: got status %d, want %d",
+			rec2.Code,
+			http.StatusOK,
+		)
+	}
+
+	req3 := h.signedRequest(t, payload)
+	rec3 := httptest.NewRecorder()
+	handler.ServeHTTP(rec3, req3)
+	if rec3.Code != http.StatusOK {
+		t.Fatalf(
+			"third request: got status %d, want %d",
+			rec3.Code,
+			http.StatusOK,
+		)
+	}
+
+	if callCount.Load() != 2 {
+		t.Fatalf("callback invoked %d times, want 2", callCount.Load())
+	}
+}
+
 func TestHandler_PayloadTooLarge(t *testing.T) {
 	h := newTestHarness(t)
 	handler, err := webhook.NewHandler(
@@ -420,7 +594,36 @@ func TestHandler_CallbackError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 
-	// Should still return 200 even if callback errors.
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf(
+			"got status %d, want %d",
+			rec.Code,
+			http.StatusServiceUnavailable,
+		)
+	}
+}
+
+func TestHandler_CallbackError_AckAlways(t *testing.T) {
+	h := newTestHarness(t)
+
+	handler, err := webhook.NewHandler(
+		webhook.WithPublicKey(h.pubHex),
+		webhook.WithAckPolicy(webhook.AckAlways),
+		webhook.OnDefault(
+			func(_ context.Context, _ webhook.Event) error {
+				return fmt.Errorf("processing failed")
+			},
+		),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
+	req := h.signedRequest(t, payload)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
 	if rec.Code != http.StatusOK {
 		t.Errorf("got status %d, want %d", rec.Code, http.StatusOK)
 	}
@@ -453,6 +656,63 @@ func TestHandler_ChannelFull(t *testing.T) {
 		// Good - didn't block.
 	case <-time.After(2 * time.Second):
 		t.Fatal("ServeHTTP blocked on full channel")
+	}
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf(
+			"got status %d, want %d",
+			rec.Code,
+			http.StatusServiceUnavailable,
+		)
+	}
+}
+
+func TestHandler_ChannelFull_AckAlways(t *testing.T) {
+	h := newTestHarness(t)
+	handler, err := webhook.NewHandler(
+		webhook.WithPublicKey(h.pubHex),
+		webhook.WithAckPolicy(webhook.AckAlways),
+		webhook.WithChannel(0), // unbuffered
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer handler.Close()
+
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
+	req := h.signedRequest(t, payload)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("got status %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestHandler_Close_IdempotentAndSafe(t *testing.T) {
+	h := newTestHarness(t)
+	handler, err := webhook.NewHandler(
+		webhook.WithPublicKey(h.pubHex),
+		webhook.WithChannel(1),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	handler.Close()
+	handler.Close()
+
+	payload := `{"id":"evt_1","type":"customer.created","data":{}}`
+	req := h.signedRequest(t, payload)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf(
+			"got status %d, want %d",
+			rec.Code,
+			http.StatusServiceUnavailable,
+		)
 	}
 }
 

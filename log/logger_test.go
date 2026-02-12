@@ -126,3 +126,32 @@ func TestLogLevels(t *testing.T) {
 		t.Error("expected error message in output")
 	}
 }
+
+func TestWithLevel_FiltersMessages(t *testing.T) {
+	var buf bytes.Buffer
+
+	oldDefault := slog.Default()
+	slog.SetDefault(
+		slog.New(
+			slog.NewTextHandler(
+				&buf,
+				&slog.HandlerOptions{Level: slog.LevelDebug},
+			),
+		),
+	)
+	defer slog.SetDefault(oldDefault)
+
+	logger := log.New(log.WithLevel(slog.LevelWarn))
+	ctx := context.Background()
+
+	logger.Info(ctx, "info msg")
+	logger.Warn(ctx, "warn msg")
+
+	output := buf.String()
+	if strings.Contains(output, "info msg") {
+		t.Fatalf("expected info message to be filtered out, got: %s", output)
+	}
+	if !strings.Contains(output, "warn msg") {
+		t.Fatalf("expected warn message in output, got: %s", output)
+	}
+}

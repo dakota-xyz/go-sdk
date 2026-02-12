@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/dakota-xyz/go-sdk/idempotency"
 	"github.com/dakota-xyz/go-sdk/webhook"
+	"github.com/dakota-xyz/go-sdk/webhook/idempotency"
 	"github.com/dakota-xyz/go-sdk/webhook/types"
 )
 
@@ -23,7 +23,12 @@ func ExampleVerifySignature() {
 	signatureB64 := "..." // from X-Webhook-Signature header
 	timestampStr := "..." // from X-Webhook-Timestamp header
 
-	if err := webhook.VerifySignature(payload, signatureB64, timestampStr, publicKeyHex); err != nil {
+	if err := webhook.VerifySignature(
+		payload,
+		signatureB64,
+		timestampStr,
+		publicKeyHex,
+	); err != nil {
 		log.Printf("signature verification failed: %v", err)
 		return
 	}
@@ -41,7 +46,12 @@ func ExampleConstructEvent() {
 	signature := webhook.ComputeSignature(timestamp, payload, priv)
 
 	// All-in-one: verify + validate timestamp + parse.
-	event, err := webhook.ConstructEvent(payload, signature, timestamp, publicKeyHex)
+	event, err := webhook.ConstructEvent(
+		payload,
+		signature,
+		timestamp,
+		publicKeyHex,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,27 +65,39 @@ func ExampleNewHandler_callbacks() {
 
 	handler, err := webhook.NewHandler(
 		webhook.WithPublicKey(publicKeyHex),
-		webhook.On(webhook.EventCustomerCreated, func(ctx context.Context, event webhook.Event) error {
-			// Use EventDataAs for typed access to the event payload.
-			customer, err := webhook.EventDataAs[types.CustomerData](event)
-			if err != nil {
-				return fmt.Errorf("parse customer data: %w", err)
-			}
-			fmt.Printf("New customer: %s (%s)\n", customer.Name, customer.ID)
-			return nil
-		}),
-		webhook.On(webhook.EventTransactionAutoUpdated, func(ctx context.Context, event webhook.Event) error {
-			txn, err := webhook.EventDataAs[types.AutoTransactionData](event)
-			if err != nil {
-				return fmt.Errorf("parse transaction data: %w", err)
-			}
-			fmt.Printf("Transaction %s status: %s\n", txn.ID, txn.Status)
-			return nil
-		}),
-		webhook.OnDefault(func(ctx context.Context, event webhook.Event) error {
-			fmt.Printf("Other event: %s (%s)\n", event.ID, event.Type)
-			return nil
-		}),
+		webhook.On(
+			webhook.EventCustomerCreated,
+			func(ctx context.Context, event webhook.Event) error {
+				// Use EventDataAs for typed access to the event payload.
+				customer, err := webhook.EventDataAs[types.CustomerData](event)
+				if err != nil {
+					return fmt.Errorf("parse customer data: %w", err)
+				}
+				fmt.Printf(
+					"New customer: %s (%s)\n",
+					customer.Name,
+					customer.ID,
+				)
+				return nil
+			},
+		),
+		webhook.On(
+			webhook.EventTransactionAutoUpdated,
+			func(ctx context.Context, event webhook.Event) error {
+				txn, err := webhook.EventDataAs[types.AutoTransactionData](event)
+				if err != nil {
+					return fmt.Errorf("parse transaction data: %w", err)
+				}
+				fmt.Printf("Transaction %s status: %s\n", txn.ID, txn.Status)
+				return nil
+			},
+		),
+		webhook.OnDefault(
+			func(ctx context.Context, event webhook.Event) error {
+				fmt.Printf("Other event: %s (%s)\n", event.ID, event.Type)
+				return nil
+			},
+		),
 	)
 	if err != nil {
 		log.Fatal(err)
