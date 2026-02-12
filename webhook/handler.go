@@ -372,6 +372,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ctx,
 			"delivery failed but request acknowledged due to ack policy",
 			log.String("event_id", event.ID),
+			log.String("event_type", string(event.Type)),
+			log.String("ack_policy", "always"),
 		)
 		w.WriteHeader(http.StatusOK)
 		return
@@ -402,6 +404,7 @@ func (h *Handler) deliverToChannel(ctx context.Context, event Event) bool {
 			ctx,
 			"event channel unavailable, dropping event",
 			log.String("event_id", event.ID),
+			log.String("event_type", string(event.Type)),
 		)
 		return false
 	}
@@ -414,6 +417,7 @@ func (h *Handler) deliverToChannel(ctx context.Context, event Event) bool {
 			ctx,
 			"event channel full, dropping event",
 			log.String("event_id", event.ID),
+			log.String("event_type", string(event.Type)),
 		)
 		return false
 	}

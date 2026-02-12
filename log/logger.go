@@ -48,17 +48,26 @@ type Option func(*slogLogger)
 // WithLevel sets the minimum log level.
 func WithLevel(level slog.Level) Option {
 	return func(l *slogLogger) {
+		if l.level == nil {
+			l.level = &slog.LevelVar{}
+			l.logger = slog.New(
+				levelHandler{
+					handler: l.logger.Handler(),
+					level:   l.level,
+				},
+			)
+		}
 		l.level.Set(level)
 	}
 }
 
 type levelHandler struct {
 	handler slog.Handler
-	level   slog.Leveler
+	level   *slog.LevelVar
 }
 
 func (h levelHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	if level < h.level.Level() {
+	if h.level != nil && level < h.level.Level() {
 		return false
 	}
 	return h.handler.Enabled(ctx, level)
@@ -152,15 +161,8 @@ func FromSlog(logger *slog.Logger) Logger {
 		return New()
 	}
 
-	level := &slog.LevelVar{}
-	level.Set(slog.LevelDebug)
-
 	return &slogLogger{
-		logger: slog.New(levelHandler{
-			handler: logger.Handler(),
-			level:   level,
-		}),
-		level: level,
+		logger: logger,
 	}
 }
 

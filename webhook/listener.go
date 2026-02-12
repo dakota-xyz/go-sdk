@@ -12,6 +12,8 @@ import (
 	"github.com/dakota-xyz/go-sdk/log"
 )
 
+const healthzPath = "/healthz"
+
 // ListenerOption configures a Listener.
 type ListenerOption func(*listenerConfig)
 
@@ -130,6 +132,12 @@ func NewListener(opts ...ListenerOption) (*Listener, error) {
 			"path must start with '/'",
 		)
 	}
+	if cfg.path == healthzPath {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"webhook path conflicts with health endpoint path",
+		)
+	}
 	if cfg.readHeaderTimeout <= 0 {
 		return nil, errors.New(
 			errors.CodeInvalidConfig,
@@ -171,6 +179,16 @@ func NewListener(opts ...ListenerOption) (*Listener, error) {
 
 	mux := http.NewServeMux()
 	mux.Handle(cfg.path, handler)
+	mux.HandleFunc(
+		healthzPath,
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet && r.Method != http.MethodHead {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+		},
+	)
 
 	server := &http.Server{
 		Addr:              cfg.addr,

@@ -2,6 +2,7 @@ package webhook_test
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -64,6 +65,12 @@ func TestNewListener_InvalidConfig(t *testing.T) {
 			name: "path must start with slash",
 			opts: []webhook.ListenerOption{
 				webhook.WithPath("webhook"),
+			},
+		},
+		{
+			name: "path must not conflict with health endpoint",
+			opts: []webhook.ListenerOption{
+				webhook.WithPath("/healthz"),
 			},
 		},
 		{
@@ -192,6 +199,63 @@ func TestListener_AddrAfterStart(t *testing.T) {
 	}
 	if strings.HasSuffix(addrStr, ":0") {
 		t.Fatalf("expected concrete bound port, got %q", addrStr)
+	}
+
+	cancel()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("unexpected error from Start: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Start did not return after cancel")
+	}
+}
+
+func TestListener_Healthz(t *testing.T) {
+	h := newTestHarness(t)
+	listener, err := webhook.NewListener(
+		webhook.WithAddr("127.0.0.1:0"),
+		webhook.WithHandlerOptions(
+			webhook.WithPublicKey(h.pubHex),
+			webhook.WithChannel(1),
+		),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer listener.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- listener.Start(ctx)
+	}()
+
+	var addrStr string
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		addr := listener.Addr()
+		if addr != nil {
+			addrStr = addr.String()
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if addrStr == "" {
+		t.Fatal("expected listener address after start")
+	}
+
+	resp, err := http.Get("http://" + addrStr + "/healthz")
+	if err != nil {
+		t.Fatalf("healthz request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("healthz status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
 
 	cancel()

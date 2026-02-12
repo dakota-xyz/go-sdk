@@ -106,6 +106,8 @@ addr := listener.Addr() // concrete bound address after start
 _ = addr
 ```
 
+Listener also exposes `GET /healthz` for liveness checks.
+
 ## Typed event payloads
 
 ```go

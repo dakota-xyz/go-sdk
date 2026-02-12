@@ -35,6 +35,7 @@
 //	    ),
 //	)
 //	go processEvents(listener.Events())
+//	// GET /healthz is available for liveness checks.
 //	listener.Start(ctx)
 //
 // # Signature Protocol

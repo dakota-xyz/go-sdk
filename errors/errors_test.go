@@ -102,6 +102,34 @@ func TestError_Is(t *testing.T) {
 	}
 }
 
+func TestError_As(t *testing.T) {
+	base := errors.Wrap(
+		errors.CodeMalformedPayload,
+		"decode event",
+		fmt.Errorf("invalid JSON"),
+	)
+
+	joined := errors.Join(fmt.Errorf("extra context"), base)
+
+	var extractedPtr *errors.Error
+	if !errors.As(joined, &extractedPtr) {
+		t.Fatal("expected errors.As to extract *errors.Error")
+	}
+	if extractedPtr.Code != errors.CodeMalformedPayload {
+		t.Fatalf("got code %q, want %q", extractedPtr.Code, errors.CodeMalformedPayload)
+	}
+
+	// Value extraction should also work for value sentinels.
+	sentinelWrapped := fmt.Errorf("outer: %w", errors.ErrInvalidSignature)
+	var extractedValue errors.Error
+	if !errors.As(sentinelWrapped, &extractedValue) {
+		t.Fatal("expected errors.As to extract errors.Error value")
+	}
+	if extractedValue.Code != errors.CodeInvalidSignature {
+		t.Fatalf("got code %q, want %q", extractedValue.Code, errors.CodeInvalidSignature)
+	}
+}
+
 func TestSentinels(t *testing.T) {
 	sentinels := []struct {
 		name     string

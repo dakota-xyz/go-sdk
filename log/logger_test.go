@@ -155,3 +155,28 @@ func TestWithLevel_FiltersMessages(t *testing.T) {
 		t.Fatalf("expected warn message in output, got: %s", output)
 	}
 }
+
+func TestFromSlog_UsesWrappedLoggerLevel(t *testing.T) {
+	var buf bytes.Buffer
+
+	slogger := slog.New(
+		slog.NewTextHandler(
+			&buf,
+			&slog.HandlerOptions{Level: slog.LevelWarn},
+		),
+	)
+
+	logger := log.FromSlog(slogger)
+	ctx := context.Background()
+
+	logger.Info(ctx, "info msg")
+	logger.Warn(ctx, "warn msg")
+
+	output := buf.String()
+	if strings.Contains(output, "info msg") {
+		t.Fatalf("expected info message to be filtered out, got: %s", output)
+	}
+	if !strings.Contains(output, "warn msg") {
+		t.Fatalf("expected warn message in output, got: %s", output)
+	}
+}
