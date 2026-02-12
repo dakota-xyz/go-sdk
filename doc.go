@@ -6,6 +6,9 @@
 //
 // # Packages
 //
+//   - client: Production-ready Platform API client with auth, retries,
+//     idempotency, pagination helpers, and typed error mapping.
+//   - client/gen: Generated OpenAPI client/types (do not edit manually).
 //   - webhook: Core webhook handling with signature verification, event parsing,
 //     and HTTP handler/listener implementations.
 //   - errors: Structured error types with machine-readable codes.

@@ -1,9 +1,11 @@
 # Dakota Go SDK
 
-Go SDK for Dakota Platform integrations, focused on secure webhook handling.
+Go SDK for Dakota Platform integrations.
 
 ## Packages
 
+- `github.com/dakota-xyz/go-sdk/client`
+- `github.com/dakota-xyz/go-sdk/client/gen`
 - `github.com/dakota-xyz/go-sdk/errors`
 - `github.com/dakota-xyz/go-sdk/log`
 - `github.com/dakota-xyz/go-sdk/webhook`
@@ -12,8 +14,7 @@ Go SDK for Dakota Platform integrations, focused on secure webhook handling.
 
 ## Import aliases
 
-Because this SDK has `errors` and `log` packages, aliasing avoids collisions
-with standard library imports:
+Because this SDK has `errors` and `log` packages, aliasing avoids collisions with standard library imports:
 
 ```go
 import (
@@ -27,6 +28,114 @@ import (
 ```bash
 go get github.com/dakota-xyz/go-sdk
 ```
+
+## Platform API client
+
+`client.New()` is safe-by-default:
+
+- sandbox environment by default
+- API key header injection
+- automatic idempotency key generation for `POST`
+- bounded retries with exponential backoff + `Retry-After`
+- typed error mapping
+- structured logs with secret redaction
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+
+    "github.com/dakota-xyz/go-sdk/client"
+)
+
+func main() {
+    c, err := client.New(
+        client.WithAPIKey("dakota_api_key"),
+        // Optional: client.WithEnvironment(client.EnvironmentProduction),
+    )
+    if err != nil {
+        panic(err)
+    }
+
+    resp, err := client.CheckResponse(
+        c.Raw().ListCustomersWithResponse(context.Background(), nil),
+    )
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println("customers", len(resp.JSON200.Data))
+}
+```
+
+### Typed error handling
+
+```go
+resp, err := client.CheckResponse(
+    c.Raw().ListApplicationsWithResponse(ctx, nil),
+)
+if err != nil {
+    var apiErr *client.APIError
+    if errors.As(err, &apiErr) {
+        fmt.Printf("code=%s status=%d request_id=%s\n", apiErr.Code, apiErr.StatusCode, apiErr.RequestID)
+    }
+    return
+}
+_ = resp
+```
+
+### Pagination helpers
+
+```go
+it := c.ApplicationsIterator(nil)
+for {
+    app, ok, err := it.Next(ctx)
+    if err != nil {
+        panic(err)
+    }
+    if !ok {
+        break
+    }
+    fmt.Println(app.ApplicationId)
+}
+```
+
+For customer-scoped lists, pass `customerID`:
+
+```go
+txIt := c.TransactionsIterator(customerID, nil)
+recipientsIt := c.RecipientsIterator(customerID, nil)
+_, _ = txIt, recipientsIt
+```
+
+### Parser helpers
+
+The client package includes parsers from generated API models into SDK-facing models:
+
+```go
+parsed := client.ParseCustomers(resp.JSON200.Data)
+fmt.Println(parsed[0].ID, parsed[0].Name)
+```
+
+## Regenerating the API client
+
+The OpenAPI source of truth lives at `client/gen/openapi.yaml`.
+
+Regenerate generated client/types:
+
+```bash
+make generate-client
+```
+
+or:
+
+```bash
+./scripts/generate-client.sh
+```
+
+Generation is pinned to `oapi-codegen v2.5.1` and configured through `client/gen/oapi-codegen.yaml`.
 
 ## Webhook quick start
 
@@ -44,7 +153,7 @@ if err != nil {
 _ = event
 ```
 
-## HTTP handler
+## HTTP webhook handler
 
 ```go
 handler, err := webhook.NewHandler(
@@ -108,7 +217,7 @@ _ = addr
 
 Listener also exposes `GET /healthz` for liveness checks.
 
-## Typed event payloads
+## Typed webhook event payloads
 
 ```go
 customer, err := webhook.EventDataAs[types.CustomerData](event)
@@ -119,20 +228,11 @@ if err != nil {
 _ = customer
 ```
 
-## Errors
-
-Errors are structured and support `errors.Is` / `errors.As`:
-
-```go
-if sdkerrors.Is(err, sdkerrors.ErrInvalidSignature) {
-    // handle invalid signature
-}
-```
-
 ## Development
 
 ```bash
-go test ./...
-go test -race ./...
-go vet ./...
+make generate-client
+make test
+make test-race
+make vet
 ```
