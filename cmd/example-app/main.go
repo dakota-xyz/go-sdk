@@ -111,6 +111,15 @@ func newPlatformWebhookHandler(logger *slog.Logger) (http.Handler, error) {
 		webhook.On(webhook.EventTransactionAutoCreated, eventHandler),
 		webhook.On(webhook.EventTransactionAutoUpdated, eventHandler),
 		webhook.On(webhook.EventTransactionOneOffUpdated, eventHandler),
+		webhook.OnDefault(
+			func(
+				_ context.Context,
+				_ webhook.Event,
+			) error {
+				logger.Warn("received unsupported webhook event")
+				return nil
+			},
+		),
 	)
 }
 
