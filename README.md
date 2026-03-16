@@ -43,7 +43,7 @@ func main() {
 
     // List your customers
     resp, err := client.CheckResponse(
-        c.Raw().ListCustomersWithResponse(context.Background(), nil),
+        c.Raw().ListCustomersWithResponse(context.Background(), &gen.ListCustomersParams{}),
     )
     if err != nil {
         log.Fatal(err)
@@ -81,7 +81,7 @@ func main() {
 
     // Step 1: Create a customer (triggers KYB onboarding)
     customerResp, err := client.CheckResponse(
-        c.Raw().CreateCustomerWithResponse(ctx, gen.CustomerCreateRequest{
+        c.Raw().CreateCustomerWithResponse(ctx, nil, gen.CustomerCreateRequest{
             Name:         "Acme Corporation",
             CustomerType: gen.CustomerCreateRequestCustomerTypeBusiness,
             ExternalId:   ptr("acme-123"), // Your internal ID
@@ -100,9 +100,19 @@ func main() {
     // Wait until kyb_status becomes "active" before proceeding.
 
     // Step 2: Create a recipient (the entity receiving USD)
+    // Include address for fiat destinations
+    postalCode := "10001"
+    region := "NY"
     recipientResp, err := client.CheckResponse(
-        c.Raw().CreateRecipientWithResponse(ctx, customerID, gen.RecipientRequest{
+        c.Raw().CreateRecipientWithResponse(ctx, customerID, nil, gen.RecipientRequest{
             Name: "Acme Treasury",
+            Address: &gen.Address{
+                Street1:    "123 Main Street",
+                City:       "New York",
+                Country:    "US",
+                PostalCode: &postalCode,
+                Region:     &region,
+            },
         }),
     )
     if err != nil {
@@ -113,49 +123,58 @@ func main() {
     fmt.Printf("Created recipient: %s\n", recipientID)
 
     // Step 3: Create a bank destination (where USD will be sent)
-    accountType := gen.FiatUSDestinationRequestAccountTypeChecking
+    // Use DestinationRequestUnion with FromFiatUSDestinationRequest method
+    destBody := gen.DestinationRequestUnion{}
+    err = destBody.FromFiatUSDestinationRequest(gen.FiatUSDestinationRequest{
+        Name:             "Acme Bank Account",
+        BankName:         "Chase Bank",
+        AccountHolderName: "Acme Corporation",
+        AccountNumber:    "123456789",
+        AbaRoutingNumber: "021000021",  // Note: AbaRoutingNumber, not RoutingNumber
+        AccountType:      gen.FiatUSDestinationRequestAccountTypeChecking,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
     destResp, err := client.CheckResponse(
-        c.Raw().CreateDestinationWithResponse(ctx, recipientID, gen.DestinationRequest{
-            FromFiatUSDestinationRequest: &gen.FiatUSDestinationRequest{
-                DestinationType:    gen.FiatUSDestinationRequestDestinationTypeFiatUs,
-                BankName:           "Chase Bank",
-                AccountHolderName:  "Acme Corporation",
-                AccountNumber:      "123456789",
-                RoutingNumber:      "021000021",
-                AccountType:        &accountType,
-            },
-        }),
+        c.Raw().CreateDestinationWithResponse(ctx, recipientID, nil, destBody),
     )
     if err != nil {
         log.Fatal(err)
     }
 
-    destinationID := getDestinationID(destResp.JSON201)
-    fmt.Printf("Created bank destination: %s\n", destinationID)
+    fiatDestID := destResp.JSON201.Id
+    fmt.Printf("Created bank destination: %s\n", fiatDestID)
 
     // Step 4: Create an off-ramp account
     // Dakota returns a crypto address where customer sends USDC
+    sourceAsset := "USDC"
+    destAsset := "USD"
+    sourceNetwork := "ethereum-mainnet"
+    capabilities := gen.Capabilities{gen.PaymentCapability("ach")}
+    rail := gen.PaymentCapability("ach")
+
     accountResp, err := client.CheckResponse(
-        c.Raw().CreateAccountWithResponse(ctx, gen.AccountCreateRequest{
-            FromOfframpAccountCreateRequest: &gen.OfframpAccountCreateRequest{
-                AccountType:      gen.OfframpAccountCreateRequestAccountTypeOfframp,
-                CustomerId:       customerID,
-                DestinationId:    destinationID,
-                SourceAsset:      "USDC",
-                SourceNetworkId:  gen.NetworkId("ethereum-mainnet"),
-                DestinationAsset: "USD",
-                DestinationRail:  gen.PaymentCapability("ach"),
-            },
+        c.Raw().CreateAccountWithResponse(ctx, nil, gen.AccountCreateRequest{
+            AccountType:       gen.AccountTypeOfframp,
+            FiatDestinationId: &fiatDestID,
+            SourceAsset:       &sourceAsset,
+            DestinationAsset:  &destAsset,
+            SourceNetworkId:   &sourceNetwork,
+            Capabilities:      &capabilities,
+            Rail:              &rail,
         }),
     )
     if err != nil {
         log.Fatal(err)
     }
 
-    // This is the address where the customer sends USDC
-    account, _ := accountResp.JSON201.AsOfframpAccount()
-    fmt.Printf("Off-ramp account created!\n")
-    fmt.Printf("Send USDC to: %s (on %s)\n", account.CryptoAddress, account.SourceNetworkId)
+    account := accountResp.JSON201
+    fmt.Printf("Off-ramp account created! ID: %s\n", account.Id)
+    if account.SourceCryptoAddress != nil {
+        fmt.Printf("Send USDC to: %s\n", *account.SourceCryptoAddress)
+    }
 
     // When customer sends USDC to this address:
     // 1. Dakota detects the deposit
@@ -165,13 +184,6 @@ func main() {
 }
 
 func ptr[T any](v T) *T { return &v }
-
-func getDestinationID(dest *gen.DestinationResponseUnion) gen.KSUID {
-    if d, err := dest.AsFiatUSDestinationResponse(); err == nil {
-        return d.Id
-    }
-    return ""
-}
 ```
 
 ## Complete Flow: On-Ramp (USD → Crypto)
@@ -180,39 +192,58 @@ Accept USD bank transfers and deliver stablecoins to customer wallets.
 
 ```go
 // Step 1: Create customer (same as off-ramp)
-// Step 2: Create recipient
+// Step 2: Create recipient (same as off-ramp)
+
 // Step 3: Create a crypto destination (where stablecoins will be sent)
+networkID := gen.NetworkId("ethereum-mainnet")
+cryptoDestBody := gen.DestinationRequestUnion{}
+err = cryptoDestBody.FromCryptoDestinationRequest(gen.CryptoDestinationRequest{
+    Name:          "Customer Wallet",
+    CryptoAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f...",
+    NetworkId:     &networkID,
+})
+if err != nil {
+    log.Fatal(err)
+}
+
 cryptoDestResp, err := client.CheckResponse(
-    c.Raw().CreateDestinationWithResponse(ctx, recipientID, gen.DestinationRequest{
-        FromCryptoDestinationRequest: &gen.CryptoDestinationRequest{
-            DestinationType: gen.CryptoDestinationRequestDestinationTypeCrypto,
-            CryptoAddress:   "0x742d35Cc6634C0532925a3b844Bc9e7595f...",
-            NetworkId:       gen.NetworkId("ethereum-mainnet"),
-        },
-    }),
+    c.Raw().CreateDestinationWithResponse(ctx, recipientID, nil, cryptoDestBody),
 )
+if err != nil {
+    log.Fatal(err)
+}
+
+cryptoDestID := cryptoDestResp.JSON201.Id
 
 // Step 4: Create an on-ramp account
 // Dakota returns bank details where customer sends USD
+sourceAsset := "USD"
+destAsset := "USDC"
+destNetwork := gen.NetworkId("ethereum-mainnet")
+capabilities := gen.Capabilities{gen.PaymentCapability("ach")}
+
 onrampResp, err := client.CheckResponse(
-    c.Raw().CreateAccountWithResponse(ctx, gen.AccountCreateRequest{
-        FromOnrampAccountCreateRequest: &gen.OnrampAccountCreateRequest{
-            AccountType:        gen.OnrampAccountCreateRequestAccountTypeOnramp,
-            CustomerId:         customerID,
-            DestinationId:      cryptoDestID,
-            SourceAsset:        "USD",
-            SourceRail:         gen.PaymentCapability("ach"),
-            DestinationAsset:   "USDC",
-            DestinationNetworkId: gen.NetworkId("ethereum-mainnet"),
-        },
+    c.Raw().CreateAccountWithResponse(ctx, nil, gen.AccountCreateRequest{
+        AccountType:          gen.AccountTypeOnramp,
+        CryptoDestinationId:  &cryptoDestID,
+        SourceAsset:          &sourceAsset,
+        DestinationAsset:     &destAsset,
+        DestinationNetworkId: &destNetwork,
+        Capabilities:         &capabilities,
     }),
 )
+if err != nil {
+    log.Fatal(err)
+}
 
-account, _ := onrampResp.JSON201.AsOnrampAccount()
-fmt.Printf("Send USD to:\n")
-fmt.Printf("  Bank: %s\n", *account.BankName)
-fmt.Printf("  Routing: %s\n", *account.RoutingNumber)
-fmt.Printf("  Account: %s\n", *account.AccountNumber)
+account := onrampResp.JSON201
+fmt.Printf("On-ramp account created! ID: %s\n", account.Id)
+if account.BankAccount != nil {
+    fmt.Printf("Send USD to:\n")
+    fmt.Printf("  Bank: %s\n", account.BankAccount.BankName)
+    fmt.Printf("  Routing: %s\n", account.BankAccount.RoutingNumber)
+    fmt.Printf("  Account: %s\n", account.BankAccount.AccountNumber)
+}
 
 // When customer sends USD:
 // 1. Dakota receives the bank transfer
@@ -226,21 +257,23 @@ For single transactions without creating accounts:
 
 ```go
 txResp, err := client.CheckResponse(
-    c.Raw().CreateTransactionWithResponse(ctx, gen.OneOffTransactionRequest{
-        CustomerId:         customerID,
-        Amount:             "1000.00",
-        SourceAsset:        "USDC",
-        SourceNetworkId:    gen.NetworkId("ethereum-mainnet"),
-        DestinationId:      destinationID,
-        DestinationAsset:   "USD",
+    c.Raw().CreateTransactionWithResponse(ctx, nil, gen.OneOffTransactionRequest{
+        CustomerId:             customerID,
+        Amount:                 "1000.00",
+        SourceAsset:            "USDC",
+        SourceNetworkId:        gen.NetworkId("ethereum-mainnet"),
+        DestinationId:          destinationID,
+        DestinationAsset:       "USD",
         DestinationPaymentRail: ptr(gen.PaymentCapability("ach")),
-        PaymentReference:   ptr("Invoice #12345"),
+        PaymentReference:       ptr("Invoice #12345"),
     }),
 )
+if err != nil {
+    log.Fatal(err)
+}
 
 tx := txResp.JSON201
 fmt.Printf("Transaction created: %s\n", tx.Id)
-fmt.Printf("Send %s USDC to: %s\n", *tx.SendAmount, tx.CryptoAddress)
 fmt.Printf("Status: %s\n", tx.Status)
 ```
 
@@ -311,9 +344,8 @@ for {
 }
 
 // Iterate transactions with filters
-txIt := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{
+txIt := c.OneOffTransactionsIterator(&gen.ListOneOffTransactionsParams{
     CustomerId: &customerID,
-    Status:     ptr(gen.OneOffTransactionStatusCompleted),
 })
 ```
 

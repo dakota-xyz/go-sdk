@@ -69,14 +69,17 @@ resp, err := client.CheckResponse(
 
 ### One-Off Transaction
 ```go
-c.Raw().CreateTransactionWithResponse(ctx, gen.OneOffTransactionRequest{
-    CustomerId:       customerID,
-    Amount:           "1000.00",
-    SourceAsset:      "USDC",
-    SourceNetworkId:  gen.NetworkId("ethereum-mainnet"),
-    DestinationId:    destinationID,
-    DestinationAsset: "USD",
+c.Raw().CreateTransactionWithResponse(ctx, nil, gen.OneOffTransactionRequest{
+    CustomerId:             customerID,
+    Amount:                 "1000.00",
+    SourceAsset:            "USDC",
+    SourceNetworkId:        gen.NetworkId("ethereum-mainnet"),
+    DestinationId:          destinationID,
+    DestinationAsset:       "USD",
+    DestinationPaymentRail: ptr(gen.PaymentCapability("ach")),  // Required for fiat
 })
+
+func ptr[T any](v T) *T { return &v }
 ```
 
 ### Webhook Handler
@@ -88,3 +91,32 @@ handler, _ := webhook.NewHandler(
     }),
 )
 ```
+
+## Critical Notes
+
+### Method Signatures
+Most create/update methods require a `params` argument (can be nil):
+`c.Raw().<Method>WithResponse(ctx, params, request)`
+
+### Destination Creation (Union Types)
+```go
+destBody := gen.DestinationRequestUnion{}
+
+// For bank account:
+err = destBody.FromFiatUSDestinationRequest(gen.FiatUSDestinationRequest{
+    Name:              "Bank Account",
+    BankName:          "Chase",        // Required
+    AccountHolderName: "Acme Corp",
+    AccountNumber:     "123456789",
+    AbaRoutingNumber:  "021000021",    // NOTE: AbaRoutingNumber, not RoutingNumber
+    AccountType:       gen.FiatUSDestinationRequestAccountTypeChecking,
+})
+
+// For crypto wallet:
+err = destBody.FromCryptoDestinationRequest(gen.CryptoDestinationRequest{...})
+```
+
+### Account Creation Required Fields
+- Off-ramp needs both `Capabilities` AND `Rail` fields
+- Recipients for fiat destinations need an `Address`
+- ListAccounts requires `AccountType` in params

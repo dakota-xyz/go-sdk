@@ -91,13 +91,14 @@ Customer (must have kyb_status: "active")
 
 #### One-Off Transaction
 ```go
-c.Raw().CreateTransactionWithResponse(ctx, gen.OneOffTransactionRequest{
-    CustomerId:       customerID,
-    Amount:           "1000.00",
-    SourceAsset:      "USDC",
-    SourceNetworkId:  gen.NetworkId("ethereum-mainnet"),
-    DestinationId:    destinationID,
-    DestinationAsset: "USD",
+c.Raw().CreateTransactionWithResponse(ctx, nil, gen.OneOffTransactionRequest{
+    CustomerId:             customerID,
+    Amount:                 "1000.00",
+    SourceAsset:            "USDC",
+    SourceNetworkId:        gen.NetworkId("ethereum-mainnet"),
+    DestinationId:          destinationID,
+    DestinationAsset:       "USD",
+    DestinationPaymentRail: ptr(gen.PaymentCapability("ach")),  // Required for fiat destinations
 })
 ```
 
@@ -113,63 +114,63 @@ c.Raw().CreateTransactionWithResponse(ctx, gen.OneOffTransactionRequest{
 All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse(ctx, ...)`
 
 ### Customers
-- `CreateCustomerWithResponse(ctx, request)`
+- `CreateCustomerWithResponse(ctx, params, request)` - params contains idempotency key
 - `ListCustomersWithResponse(ctx, params)`
 - `GetCustomerWithResponse(ctx, customerID)`
 
 ### Recipients
-- `CreateRecipientWithResponse(ctx, customerID, request)`
+- `CreateRecipientWithResponse(ctx, customerID, params, request)` - params contains idempotency key
 - `ListRecipientsWithResponse(ctx, customerID, params)`
 - `GetRecipientWithResponse(ctx, recipientID)`
-- `UpdateRecipientWithResponse(ctx, recipientID, request)`
+- `UpdateRecipientWithResponse(ctx, recipientID, params, request)`
 
 ### Destinations
-- `CreateDestinationWithResponse(ctx, recipientID, request)`
+- `CreateDestinationWithResponse(ctx, recipientID, params, request)` - params contains idempotency key
 - `ListDestinationsWithResponse(ctx, recipientID, params)`
 
 ### Accounts (On-ramp/Off-ramp/Swap)
-- `CreateAccountWithResponse(ctx, request)`
-- `ListAccountsWithResponse(ctx, params)`
+- `CreateAccountWithResponse(ctx, params, request)` - params contains idempotency key
+- `ListAccountsWithResponse(ctx, params)` - **params.AccountType is REQUIRED**
 - `GetAccountWithResponse(ctx, accountID)`
-- `UpdateAccountWithResponse(ctx, accountID, request)`
+- `UpdateAccountWithResponse(ctx, accountID, params, request)`
 
 ### Transactions (One-Off)
-- `CreateTransactionWithResponse(ctx, request)`
-- `ListTransactionsWithResponse(ctx, params)`
-- `GetTransactionWithResponse(ctx, transactionID)`
-- `CreateTransactionCancellationWithResponse(ctx, transactionID)`
+- `CreateTransactionWithResponse(ctx, params, request)` - params contains idempotency key
+- `ListOneOffTransactionsWithResponse(ctx, params)` - Note: method is ListOneOff*, not ListTransactions*
+- `GetOneOffTransactionWithResponse(ctx, transactionID)` - Note: method is GetOneOff*
+- `CancelOneOffTransactionWithResponse(ctx, transactionID)` - Note: method is CancelOneOff*
 
 ### Auto Transactions (Recurring)
 - `ListAutoTransactionsWithResponse(ctx, params)`
 - `GetAutoTransactionWithResponse(ctx, transactionID)`
 
 ### Wallets
-- `CreateWalletWithResponse(ctx, request)`
+- `CreateWalletWithResponse(ctx, params, request)`
 - `GetWalletBalancesWithResponse(ctx, walletID)`
-- `CreateWalletTransactionWithResponse(ctx, walletID, request)`
+- `CreateWalletTransactionWithResponse(ctx, walletID, params, request)`
 
 ### Signer Groups (Multi-sig)
-- `CreateSignerGroupWithResponse(ctx, request)`
+- `CreateSignerGroupWithResponse(ctx, params, request)`
 - `ListSignerGroupsWithResponse(ctx, params)`
 - `GetSignerGroupWithResponse(ctx, signerGroupID)`
 - `GetSignerGroupsForWalletWithResponse(ctx, walletID)`
-- `CreateSignerWithResponse(ctx, request)`
+- `CreateSignerWithResponse(ctx, params, request)`
 - `DeleteSignerWithResponse(ctx, signerID)`
-- `CreateSignerGroupSignerWithResponse(ctx, signerGroupID, request)`
+- `CreateSignerGroupSignerWithResponse(ctx, signerGroupID, params, request)`
 - `DeleteSignerGroupSignerWithResponse(ctx, signerGroupID, signerID)`
-- `UpsertWalletSignerGroupRelationshipWithResponse(ctx, walletID, request)`
+- `UpsertWalletSignerGroupRelationshipWithResponse(ctx, walletID, params, request)`
 - `DeleteWalletSignerGroupRelationshipWithResponse(ctx, walletID, request)`
 
 ### Policies (Transaction Rules)
-- `CreatePolicyWithResponse(ctx, request)`
+- `CreatePolicyWithResponse(ctx, params, request)`
 - `ListPoliciesWithResponse(ctx, params)`
 - `GetPolicyWithResponse(ctx, policyID)`
-- `DeletePolicyWithResponse(ctx, policyID, request)`
-- `AddPolicyRuleWithResponse(ctx, policyID, request)`
-- `UpdatePolicyRuleWithResponse(ctx, policyID, ruleID, request)`
-- `DeletePolicyRuleWithResponse(ctx, policyID, request)`
-- `UpsertPolicyWalletRelationshipWithResponse(ctx, policyID, request)`
-- `DeletePolicyWalletRelationshipWithResponse(ctx, policyID, request)`
+- `DeletePolicyWithResponse(ctx, policyID, params, request)`
+- `AddPolicyRuleWithResponse(ctx, policyID, params, request)`
+- `UpdatePolicyRuleWithResponse(ctx, policyID, ruleID, params, request)`
+- `DeletePolicyRuleWithResponse(ctx, policyID, params, request)`
+- `UpsertPolicyWalletRelationshipWithResponse(ctx, policyID, params, request)`
+- `DeletePolicyWalletRelationshipWithResponse(ctx, policyID, params, request)`
 
 ### Applications (KYB/KYC)
 - `ListApplicationsWithResponse(ctx, params)`
@@ -195,10 +196,10 @@ All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse
 - `CreateAssociatedIndividualDocumentUploadWithResponse(ctx, applicationID, entityID, request)`
 
 ### Webhooks
-- `CreateWebhookTargetWithResponse(ctx, request)`
+- `CreateWebhookTargetWithResponse(ctx, params, request)`
 - `ListWebhookTargetsWithResponse(ctx, params)`
 - `GetWebhookTargetWithResponse(ctx, targetID)`
-- `UpdateWebhookTargetWithResponse(ctx, targetID, request)`
+- `UpdateWebhookTargetWithResponse(ctx, targetID, params, request)`
 - `DeleteWebhookTargetWithResponse(ctx, targetID)`
 - `ListWebhookHistoryWithResponse(ctx, targetID, params)`
 - `GetWebhookDeliveryWithResponse(ctx, targetID, deliveryID)`
@@ -224,11 +225,13 @@ All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse
 - `GetSupportedNetworksWithResponse(ctx)`
 
 ### Sandbox Simulation
-- `SimulateInboundWithResponse(ctx, request)` - Simulate deposits/payments
-- `SimulateOnboardingWithResponse(ctx, request)` - Simulate KYB status changes
+- `SimulateInboundWithResponse(ctx, request)` - Simulate ACH/Wire deposits (request needs SimulationId)
+- `SimulateOnboardingWithResponse(ctx, request)` - Simulate KYB status changes (request needs SimulationId)
 - `ListSandboxScenariosWithResponse(ctx, params)`
 - `GetSimulationWithResponse(ctx, simulationID)`
 - `AdvanceSimulationWithResponse(ctx, simulationID, request)`
+
+**Note**: SimulateInbound and SimulateOnboarding require a `SimulationId` field (UUID string) in the request body.
 
 ## Pagination
 
@@ -294,19 +297,109 @@ http.Handle("/webhooks", handler)
 | Base | `base-mainnet` | `base-sepolia` |
 | Solana | `solana-mainnet` | `solana-devnet` |
 
-## Type Hints for Union Types
+## Union Types
 
-Some responses use union types. Extract with `As*` methods:
-
+### Request Union Types (use From* methods to set)
 ```go
-// Account responses
-account, err := resp.JSON201.AsOfframpAccount()
-account, err := resp.JSON201.AsOnrampAccount()
-account, err := resp.JSON201.AsSwapAccount()
+// Destination creation - use DestinationRequestUnion
+destBody := gen.DestinationRequestUnion{}
 
-// Destination responses
-dest, err := resp.JSON201.AsFiatUSDestinationResponse()
-dest, err := resp.JSON201.AsCryptoDestinationResponse()
+// For bank accounts (fiat):
+err = destBody.FromFiatUSDestinationRequest(gen.FiatUSDestinationRequest{
+    Name:              "Bank Account",
+    BankName:          "Chase Bank",  // Required
+    AccountHolderName: "Acme Corp",
+    AccountNumber:     "123456789",
+    AbaRoutingNumber:  "021000021",   // Note: AbaRoutingNumber, NOT RoutingNumber
+    AccountType:       gen.FiatUSDestinationRequestAccountTypeChecking,
+})
+
+// For crypto wallets:
+networkID := gen.NetworkId("ethereum-mainnet")
+err = destBody.FromCryptoDestinationRequest(gen.CryptoDestinationRequest{
+    Name:          "Wallet",
+    CryptoAddress: "0x...",
+    NetworkId:     &networkID,
+})
+```
+
+### Response Union Types (use As* methods to extract)
+```go
+// Destination responses - DestinationResponseUnion has As* methods
+if resp.JSON201.Destination != nil {
+    cryptoDest, err := resp.JSON201.Destination.AsCryptoDestinationResponse()
+    fiatUSDest, err := resp.JSON201.Destination.AsFiatUSDestinationResponse()
+    fiatIBANDest, err := resp.JSON201.Destination.AsFiatIBANDestinationResponse()
+}
+
+// Transaction list responses - use AsPaginatedOneOffTransactionResponse
+txResp, err := resp.JSON200.AsPaginatedOneOffTransactionResponse()
+```
+
+### Account Responses (NOT a union type)
+```go
+// AccountResponse is a regular struct, NOT a union type
+// Access fields directly - no As* methods needed
+account := resp.JSON201
+fmt.Println(account.AccountType)  // "onramp", "offramp", or "swap"
+fmt.Println(account.Id)
+if account.BankAccount != nil {
+    fmt.Println(account.BankAccount.RoutingNumber)
+}
+if account.SourceCryptoAddress != nil {
+    fmt.Println(*account.SourceCryptoAddress)
+}
+```
+
+## Required Fields Reference
+
+### Account Creation (AccountCreateRequest)
+```go
+gen.AccountCreateRequest{
+    AccountType: gen.AccountTypeOnramp,  // Required: onramp, offramp, or swap
+
+    // For on-ramp (USD → Crypto):
+    CryptoDestinationId:  &cryptoDestID,   // Where crypto goes
+    SourceAsset:          &sourceAsset,    // "USD"
+    DestinationAsset:     &destAsset,      // "USDC"
+    DestinationNetworkId: &destNetwork,    // gen.NetworkId("ethereum-mainnet")
+    Capabilities:         &capabilities,   // gen.Capabilities{gen.PaymentCapability("ach")}
+
+    // For off-ramp (Crypto → USD):
+    FiatDestinationId: &fiatDestID,        // Where USD goes
+    SourceAsset:       &sourceAsset,       // "USDC"
+    DestinationAsset:  &destAsset,         // "USD"
+    SourceNetworkId:   &sourceNetwork,     // gen.NetworkId("ethereum-mainnet")
+    Capabilities:      &capabilities,      // gen.Capabilities{gen.PaymentCapability("ach")}
+    Rail:              &rail,              // gen.PaymentCapability("ach") - Required for off-ramp
+}
+```
+
+### Fiat Destination (FiatUSDestinationRequest)
+```go
+gen.FiatUSDestinationRequest{
+    Name:              "Account Name",  // Required
+    BankName:          "Chase Bank",    // Required
+    AccountHolderName: "Acme Corp",     // Required
+    AccountNumber:     "123456789",     // Required
+    AbaRoutingNumber:  "021000021",     // Required - NOTE: AbaRoutingNumber, NOT RoutingNumber
+    AccountType:       gen.FiatUSDestinationRequestAccountTypeChecking,  // Required
+}
+```
+
+### Recipient for Fiat Destinations
+Recipients that will have fiat destinations MUST include an Address:
+```go
+gen.RecipientRequest{
+    Name: "Recipient Name",
+    Address: &gen.Address{
+        Street1: "123 Main St",
+        City:    "New York",
+        Country: "US",
+        PostalCode: ptr("10001"),
+        Region:     ptr("NY"),
+    },
+}
 ```
 
 ## Common Mistakes to Avoid
@@ -315,3 +408,8 @@ dest, err := resp.JSON201.AsCryptoDestinationResponse()
 2. **Don't forget KYB** - Customers need `kyb_status: "active"` before creating accounts
 3. **Don't mix environments** - Sandbox and Production have different API keys
 4. **Don't ignore webhooks** - Use webhooks to track transaction status changes
+5. **Don't use wrong field names** - Use `AbaRoutingNumber` not `RoutingNumber` for US bank accounts
+6. **Don't forget params** - Most create/update methods have a `params` argument (can be `nil`)
+7. **Don't forget Capabilities** - Account creation requires `Capabilities` field
+8. **Don't forget Rail for off-ramp** - Off-ramp accounts require `Rail` field
+9. **Don't skip Address on Recipients** - Recipients for fiat destinations need an address

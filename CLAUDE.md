@@ -36,12 +36,14 @@ log/                 # Logging abstraction
 3. Check `client/gen/client.gen.go` for available methods
 
 ### For API Method Questions
-All methods follow: `c.Raw().<Method>WithResponse(ctx, params)`
+Most create/update methods follow: `c.Raw().<Method>WithResponse(ctx, params, request)`
+
+**Important**: The `params` argument is for idempotency keys and can be `nil`.
 
 Example:
 ```go
 resp, err := client.CheckResponse(
-    c.Raw().CreateCustomerWithResponse(ctx, gen.CustomerCreateRequest{...}),
+    c.Raw().CreateCustomerWithResponse(ctx, nil, gen.CustomerCreateRequest{...}),
 )
 ```
 
@@ -56,10 +58,23 @@ Always check for `*client.APIError` and `*client.TransportError`.
 
 ```
 Customer (needs KYB approval first)
-  └── Recipient
+  └── Recipient (needs Address for fiat destinations)
       └── Destination (bank or crypto wallet)
           └── Account (onramp/offramp/swap)
 ```
+
+## Critical Implementation Notes
+
+### Union Types
+- **DestinationRequestUnion**: Use `FromFiatUSDestinationRequest()` or `FromCryptoDestinationRequest()` to set
+- **DestinationResponseUnion**: Use `AsFiatUSDestinationResponse()` or `AsCryptoDestinationResponse()` to extract
+- **AccountResponse**: NOT a union type - access fields directly
+
+### Common Field Name Mistakes
+- Bank routing: Use `AbaRoutingNumber` NOT `RoutingNumber`
+- Bank accounts also require `BankName` field
+- Off-ramp accounts require both `Capabilities` AND `Rail` fields
+- ListAccounts requires `AccountType` in params (not optional)
 
 ## Regenerating Client
 
