@@ -12,7 +12,7 @@ type ParsedCustomer struct {
 	ApplicationID string
 	Name          string
 	CustomerType  string
-	KYCStatus     string
+	KYBStatus     string
 	Decision      string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -37,18 +37,19 @@ type ParsedMoney struct {
 	Asset  string
 }
 
-// ParsedTransaction is an SDK-friendly transaction model.
-type ParsedTransaction struct {
-	ID              string
-	Type            string
-	Status          string
-	Description     string
-	InputAmount     ParsedMoney
-	OutputAmount    ParsedMoney
-	ConvertedAmount ParsedMoney
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	CompletedAt     *time.Time
+// ParsedOneOffTransaction is an SDK-friendly one-off transaction model.
+type ParsedOneOffTransaction struct {
+	ID               string
+	CustomerID       string
+	Status           string
+	Amount           string
+	SourceAsset      string
+	DestinationAsset string
+	DestinationID    string
+	CryptoAddress    string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	CompletedAt      *time.Time
 }
 
 // ParsedRecipient is an SDK-friendly recipient model.
@@ -60,9 +61,9 @@ type ParsedRecipient struct {
 
 // ParsedEvent is an SDK-friendly event model.
 type ParsedEvent struct {
-	ID      string
-	Type    string
-	Content map[string]any
+	ID   string
+	Type string
+	Data gen.EventData
 }
 
 // ParseCustomer converts a generated Customer model into ParsedCustomer.
@@ -71,7 +72,7 @@ func ParseCustomer(in gen.Customer) ParsedCustomer {
 		ID:           string(in.Id),
 		Name:         in.Name,
 		CustomerType: string(in.CustomerType),
-		KYCStatus:    string(in.KybStatus),
+		KYBStatus:    string(in.KybStatus),
 		CreatedAt:    unixSeconds(in.CreatedAt),
 		UpdatedAt:    unixSeconds(in.UpdatedAt),
 	}
@@ -106,7 +107,7 @@ func ParseApplication(in gen.ApplicationListItem) ParsedApplication {
 		out.Decision = string(*in.ApplicationDecision)
 	}
 	if in.Business != nil {
-		out.BusinessName = in.Business.Name
+		out.BusinessName = in.Business.LegalName
 	}
 	if in.SubmittedAt != nil {
 		t := in.SubmittedAt.UTC()
@@ -127,27 +128,21 @@ func ParseApplications(in []gen.ApplicationListItem) []ParsedApplication {
 	return out
 }
 
-// ParseTransaction converts a generated transaction model.
-func ParseTransaction(in gen.Transaction) ParsedTransaction {
-	out := ParsedTransaction{
-		ID:          string(in.Id),
-		Type:        string(in.Type),
-		Status:      string(in.Status),
-		Description: in.Description,
-		InputAmount: ParsedMoney{
-			Amount: in.InputAmount.Amount,
-			Asset:  in.InputAmount.Asset,
-		},
-		OutputAmount: ParsedMoney{
-			Amount: in.OutputAmount.Amount,
-			Asset:  in.OutputAmount.Asset,
-		},
-		ConvertedAmount: ParsedMoney{
-			Amount: in.ConvertedAmount.Amount,
-			Asset:  in.ConvertedAmount.Asset,
-		},
-		CreatedAt: unixSeconds(in.CreatedAt),
-		UpdatedAt: unixSeconds(in.UpdatedAt),
+// ParseOneOffTransaction converts a generated one-off transaction model.
+func ParseOneOffTransaction(in gen.OneOffTransaction) ParsedOneOffTransaction {
+	out := ParsedOneOffTransaction{
+		ID:               string(in.Id),
+		CustomerID:       string(in.CustomerId),
+		Status:           string(in.Status),
+		SourceAsset:      string(in.SourceAsset),
+		DestinationAsset: string(in.DestinationAsset),
+		DestinationID:    string(in.DestinationId),
+		CryptoAddress:    in.CryptoAddress,
+		CreatedAt:        unixSeconds(in.CreatedAt),
+		UpdatedAt:        unixSeconds(in.UpdatedAt),
+	}
+	if in.Amount != nil {
+		out.Amount = *in.Amount
 	}
 	if in.CompletedAt != nil {
 		t := unixSeconds(*in.CompletedAt)
@@ -156,11 +151,11 @@ func ParseTransaction(in gen.Transaction) ParsedTransaction {
 	return out
 }
 
-// ParseTransactions converts a list of generated transactions.
-func ParseTransactions(in []gen.Transaction) []ParsedTransaction {
-	out := make([]ParsedTransaction, 0, len(in))
+// ParseOneOffTransactions converts a list of generated one-off transactions.
+func ParseOneOffTransactions(in []gen.OneOffTransaction) []ParsedOneOffTransaction {
+	out := make([]ParsedOneOffTransaction, 0, len(in))
 	for _, tx := range in {
-		out = append(out, ParseTransaction(tx))
+		out = append(out, ParseOneOffTransaction(tx))
 	}
 	return out
 }
@@ -186,9 +181,9 @@ func ParseRecipients(in []gen.RecipientResponse) []ParsedRecipient {
 // ParseEvent converts a generated event model.
 func ParseEvent(in gen.Event) ParsedEvent {
 	return ParsedEvent{
-		ID:      string(in.EventId),
-		Type:    in.Type,
-		Content: in.Content,
+		ID:   string(in.Id),
+		Type: string(in.Type),
+		Data: in.Data,
 	}
 }
 

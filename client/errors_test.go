@@ -10,18 +10,23 @@ import (
 )
 
 func TestResponseError_FromGeneratedErrorPayload(t *testing.T) {
-	details := map[string]any{"field": "amount"}
+	title := "Invalid request"
+	detail := "amount is required"
+	typeURI := "https://docs.dakota.xyz/api-reference/errors#invalid-request"
+	requestID := "req_123"
 	resp := &gen.ListApplicationsResponse{
 		HTTPResponse: &http.Response{
 			StatusCode: http.StatusBadRequest,
-			Header:     http.Header{"X-Request-Id": []string{"req_123"}},
+			Header:     http.Header{"X-Request-Id": []string{requestID}},
 		},
-		JSON400: &gen.Error{
-			Code:    "invalid_request",
-			Message: "amount is required",
-			Details: &details,
+		ApplicationproblemJSON400: &gen.ProblemDetails{
+			Title:     title,
+			Detail:    &detail,
+			Type:      typeURI,
+			Status:    http.StatusBadRequest,
+			RequestId: &requestID,
 		},
-		Body: []byte(`{"code":"invalid_request","message":"amount is required"}`),
+		Body: []byte(`{"title":"Invalid request","detail":"amount is required","status":400}`),
 	}
 
 	err := ResponseError(resp)
@@ -36,14 +41,11 @@ func TestResponseError_FromGeneratedErrorPayload(t *testing.T) {
 	if apiErr.StatusCode != http.StatusBadRequest {
 		t.Fatalf("status = %d, want %d", apiErr.StatusCode, http.StatusBadRequest)
 	}
-	if apiErr.Code != "invalid_request" {
-		t.Fatalf("code = %q, want %q", apiErr.Code, "invalid_request")
+	if apiErr.Code != "invalid-request" {
+		t.Fatalf("code = %q, want %q", apiErr.Code, "invalid-request")
 	}
 	if apiErr.RequestID != "req_123" {
 		t.Fatalf("request ID = %q, want %q", apiErr.RequestID, "req_123")
-	}
-	if apiErr.Details["field"] != "amount" {
-		t.Fatalf("details[field] = %v, want %q", apiErr.Details["field"], "amount")
 	}
 }
 
@@ -74,55 +76,55 @@ func TestResponseError_FallsBackToBody(t *testing.T) {
 
 func TestResponseError_4xxMapping(t *testing.T) {
 	tests := []struct {
-		name       string
-		resp       any
-		wantStatus int
-		wantCode   string
+		name        string
+		resp        any
+		wantStatus  int
+		wantMessage string
 	}{
 		{
 			name: "400",
 			resp: &gen.ListApplicationsResponse{
-				HTTPResponse: &http.Response{StatusCode: http.StatusBadRequest, Header: make(http.Header)},
-				JSON400:      &gen.Error{Code: "bad_request", Message: "bad request"},
+				HTTPResponse:              &http.Response{StatusCode: http.StatusBadRequest, Header: make(http.Header)},
+				ApplicationproblemJSON400: &gen.ProblemDetails{Title: "Bad request", Status: http.StatusBadRequest},
 			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "bad_request",
+			wantStatus:  http.StatusBadRequest,
+			wantMessage: "Bad request",
 		},
 		{
 			name: "401",
 			resp: &gen.ListApplicationsResponse{
-				HTTPResponse: &http.Response{StatusCode: http.StatusUnauthorized, Header: make(http.Header)},
-				JSON401:      &gen.Error{Code: "unauthorized", Message: "unauthorized"},
+				HTTPResponse:              &http.Response{StatusCode: http.StatusUnauthorized, Header: make(http.Header)},
+				ApplicationproblemJSON401: &gen.ProblemDetails{Title: "Unauthorized", Status: http.StatusUnauthorized},
 			},
-			wantStatus: http.StatusUnauthorized,
-			wantCode:   "unauthorized",
+			wantStatus:  http.StatusUnauthorized,
+			wantMessage: "Unauthorized",
 		},
 		{
 			name: "403",
 			resp: &gen.ListApplicationsResponse{
-				HTTPResponse: &http.Response{StatusCode: http.StatusForbidden, Header: make(http.Header)},
-				JSON403:      &gen.Error{Code: "forbidden", Message: "forbidden"},
+				HTTPResponse:              &http.Response{StatusCode: http.StatusForbidden, Header: make(http.Header)},
+				ApplicationproblemJSON403: &gen.ProblemDetails{Title: "Forbidden", Status: http.StatusForbidden},
 			},
-			wantStatus: http.StatusForbidden,
-			wantCode:   "forbidden",
+			wantStatus:  http.StatusForbidden,
+			wantMessage: "Forbidden",
 		},
 		{
 			name: "404",
 			resp: &gen.GetApplicationResponse{
-				HTTPResponse: &http.Response{StatusCode: http.StatusNotFound, Header: make(http.Header)},
-				JSON404:      &gen.Error{Code: "not_found", Message: "not found"},
+				HTTPResponse:              &http.Response{StatusCode: http.StatusNotFound, Header: make(http.Header)},
+				ApplicationproblemJSON404: &gen.ProblemDetails{Title: "Not found", Status: http.StatusNotFound},
 			},
-			wantStatus: http.StatusNotFound,
-			wantCode:   "not_found",
+			wantStatus:  http.StatusNotFound,
+			wantMessage: "Not found",
 		},
 		{
 			name: "422",
-			resp: &gen.EstimateTransactionResponse{
-				HTTPResponse: &http.Response{StatusCode: http.StatusUnprocessableEntity, Header: make(http.Header)},
-				JSON422:      &gen.Error{Code: "invalid_entity", Message: "invalid"},
+			resp: &gen.CreateTransactionResponse{
+				HTTPResponse:              &http.Response{StatusCode: http.StatusUnprocessableEntity, Header: make(http.Header)},
+				ApplicationproblemJSON422: &gen.ProblemDetails{Title: "Unprocessable entity", Status: http.StatusUnprocessableEntity},
 			},
-			wantStatus: http.StatusUnprocessableEntity,
-			wantCode:   "invalid_entity",
+			wantStatus:  http.StatusUnprocessableEntity,
+			wantMessage: "Unprocessable entity",
 		},
 	}
 
@@ -136,8 +138,8 @@ func TestResponseError_4xxMapping(t *testing.T) {
 			if apiErr.StatusCode != tt.wantStatus {
 				t.Fatalf("status = %d, want %d", apiErr.StatusCode, tt.wantStatus)
 			}
-			if apiErr.Code != tt.wantCode {
-				t.Fatalf("code = %q, want %q", apiErr.Code, tt.wantCode)
+			if apiErr.Message != tt.wantMessage {
+				t.Fatalf("message = %q, want %q", apiErr.Message, tt.wantMessage)
 			}
 		})
 	}

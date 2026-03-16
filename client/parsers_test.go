@@ -59,10 +59,10 @@ func TestParseApplication(t *testing.T) {
 		ApplicationType:     gen.ApplicationListItemApplicationType("business"),
 		ApplicationStatus:   gen.ApplicationStatus("submitted"),
 		ApplicationDecision: &decision,
-		Business: &struct {
-			Id   string `json:"id"`
-			Name string `json:"name"`
-		}{Id: "biz_1", Name: "Acme LLC"},
+		Business: &gen.BusinessListItem{
+			Id:        "biz_1",
+			LegalName: "Acme LLC",
+		},
 		SubmittedAt: &submittedAt,
 		CreatedAt:   time.Unix(1700000000, 0).UTC(),
 		UpdatedAt:   time.Unix(1700000300, 0).UTC(),
@@ -88,7 +88,7 @@ func TestParseApplication(t *testing.T) {
 
 func TestParseApplications_Batch(t *testing.T) {
 	in := []gen.ApplicationListItem{
-		{ApplicationId: "app_1", ApplicationType: gen.ApplicationListItemApplicationType("business"), ApplicationStatus: gen.ApplicationStatus("created"), CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{ApplicationId: "app_1", ApplicationType: gen.ApplicationListItemApplicationType("business"), ApplicationStatus: gen.ApplicationStatus("pending"), CreatedAt: time.Now(), UpdatedAt: time.Now()},
 		{ApplicationId: "app_2", ApplicationType: gen.ApplicationListItemApplicationType("business"), ApplicationStatus: gen.ApplicationStatus("submitted"), CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	out := client.ParseApplications(in)
@@ -100,39 +100,41 @@ func TestParseApplications_Batch(t *testing.T) {
 	}
 }
 
-func TestParseTransaction(t *testing.T) {
+func TestParseOneOffTransaction(t *testing.T) {
 	completedAt := 1700001200
-	in := gen.Transaction{
-		Id:              gen.KSUID("2B5J8KZ9N7M1K3P6Q8R4T7V9ABE"),
-		Type:            gen.TransactionType("onramp"),
-		Status:          gen.TransactionStatus("completed"),
-		Description:     "test transaction",
-		InputAmount:     gen.TransactionAmount{Amount: "100", Asset: "USD"},
-		OutputAmount:    gen.TransactionAmount{Amount: "99", Asset: "USDC"},
-		ConvertedAmount: gen.TransactionAmount{Amount: "99", Asset: "USDC"},
-		CreatedAt:       1700000000,
-		UpdatedAt:       1700001000,
-		CompletedAt:     &completedAt,
+	amount := "100"
+	in := gen.OneOffTransaction{
+		Id:               gen.KSUID("2B5J8KZ9N7M1K3P6Q8R4T7V9ABE"),
+		CustomerId:       gen.KSUID("cus_123"),
+		Status:           gen.OneOffTransactionStatus("completed"),
+		Amount:           &amount,
+		SourceAsset:      gen.Asset("USDC"),
+		DestinationAsset: gen.Asset("USD"),
+		DestinationId:    gen.KSUID("dest_123"),
+		CryptoAddress:    "0x123",
+		CreatedAt:        1700000000,
+		UpdatedAt:        1700001000,
+		CompletedAt:      &completedAt,
 	}
 
-	out := client.ParseTransaction(in)
+	out := client.ParseOneOffTransaction(in)
 	if out.ID != string(in.Id) {
 		t.Fatalf("ID = %q, want %q", out.ID, string(in.Id))
 	}
-	if out.InputAmount.Amount != "100" {
-		t.Fatalf("InputAmount.Amount = %q, want %q", out.InputAmount.Amount, "100")
+	if out.Amount != "100" {
+		t.Fatalf("Amount = %q, want %q", out.Amount, "100")
 	}
 	if out.CompletedAt == nil || !out.CompletedAt.Equal(time.Unix(int64(completedAt), 0).UTC()) {
 		t.Fatalf("CompletedAt = %v, unexpected", out.CompletedAt)
 	}
 }
 
-func TestParseTransactions_Batch(t *testing.T) {
-	in := []gen.Transaction{
-		{Id: gen.KSUID("tx_1"), Type: gen.TransactionType("onramp"), Status: gen.TransactionStatus("pending"), InputAmount: gen.TransactionAmount{Amount: "1", Asset: "USD"}, OutputAmount: gen.TransactionAmount{Amount: "1", Asset: "USDC"}, ConvertedAmount: gen.TransactionAmount{Amount: "1", Asset: "USDC"}, CreatedAt: 1, UpdatedAt: 2},
-		{Id: gen.KSUID("tx_2"), Type: gen.TransactionType("swap"), Status: gen.TransactionStatus("completed"), InputAmount: gen.TransactionAmount{Amount: "2", Asset: "ETH"}, OutputAmount: gen.TransactionAmount{Amount: "3", Asset: "USDC"}, ConvertedAmount: gen.TransactionAmount{Amount: "3", Asset: "USDC"}, CreatedAt: 3, UpdatedAt: 4},
+func TestParseOneOffTransactions_Batch(t *testing.T) {
+	in := []gen.OneOffTransaction{
+		{Id: gen.KSUID("tx_1"), CustomerId: gen.KSUID("cus_1"), Status: gen.OneOffTransactionStatus("pending"), SourceAsset: gen.Asset("USDC"), DestinationAsset: gen.Asset("USD"), DestinationId: gen.KSUID("dest_1"), CryptoAddress: "0x1", CreatedAt: 1, UpdatedAt: 2},
+		{Id: gen.KSUID("tx_2"), CustomerId: gen.KSUID("cus_2"), Status: gen.OneOffTransactionStatus("completed"), SourceAsset: gen.Asset("USDC"), DestinationAsset: gen.Asset("EUR"), DestinationId: gen.KSUID("dest_2"), CryptoAddress: "0x2", CreatedAt: 3, UpdatedAt: 4},
 	}
-	out := client.ParseTransactions(in)
+	out := client.ParseOneOffTransactions(in)
 	if len(out) != 2 {
 		t.Fatalf("len(out) = %d, want 2", len(out))
 	}
@@ -153,9 +155,15 @@ func TestParseRecipientAndEvents(t *testing.T) {
 		t.Fatalf("unexpected parsed recipients: %#v", parsedRecipients)
 	}
 
-	event := gen.Event{EventId: gen.KSUID("evt_1"), Type: "created", Content: map[string]any{"k": "v"}}
+	event := gen.Event{
+		Id:         gen.KSUID("evt_1"),
+		Type:       gen.EventType("customer.created"),
+		ApiVersion: "1.0",
+		Created:    1700000000,
+		Data:       gen.EventData{},
+	}
 	parsedEvent := client.ParseEvent(event)
-	if parsedEvent.ID != "evt_1" || parsedEvent.Type != "created" {
+	if parsedEvent.ID != "evt_1" || parsedEvent.Type != "customer.created" {
 		t.Fatalf("unexpected parsed event: %#v", parsedEvent)
 	}
 

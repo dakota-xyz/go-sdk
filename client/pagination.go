@@ -340,37 +340,45 @@ func (c *Client) CustomersIterator(
 	)
 }
 
-// TransactionsIterator returns a cursor iterator over transactions.
-func (c *Client) TransactionsIterator(
-	customerID gen.KSUID,
+// OneOffTransactionsIterator returns a cursor iterator over one-off transactions.
+func (c *Client) OneOffTransactionsIterator(
 	params *gen.ListTransactionsParams,
-) *Iterator[gen.Transaction] {
+) *Iterator[gen.OneOffTransaction] {
 	baseParams := gen.ListTransactionsParams{}
 	if params != nil {
 		baseParams = *params
 	}
 
 	return NewIterator(
-		func(ctx context.Context, cursor *gen.StartingAfterParam, limit *gen.LimitParam) (Page[gen.Transaction], error) {
+		func(ctx context.Context, cursor *gen.StartingAfterParam, limit *gen.LimitParam) (Page[gen.OneOffTransaction], error) {
 			p := baseParams
 			p.StartingAfter = cloneStartingAfter(cursor)
 			p.Limit = cloneLimit(limit)
 
 			resp, err := CheckResponse(
-				c.api.ListTransactionsWithResponse(ctx, customerID, &p),
+				c.api.ListTransactionsWithResponse(ctx, &p),
 			)
 			if err != nil {
-				return Page[gen.Transaction]{}, err
+				return Page[gen.OneOffTransaction]{}, err
 			}
 			if resp.JSON200 == nil {
-				return Page[gen.Transaction]{}, sdkerrors.New(
+				return Page[gen.OneOffTransaction]{}, sdkerrors.New(
 					sdkerrors.CodeInternal,
 					"list transactions: missing success payload",
 				)
 			}
-			return Page[gen.Transaction]{
-				Items: resp.JSON200.Data,
-				Meta:  resp.JSON200.Meta,
+			// Parse union type as one-off transactions
+			oneOffResp, err := resp.JSON200.AsPaginatedOneOffTransactionResponse()
+			if err != nil {
+				return Page[gen.OneOffTransaction]{}, sdkerrors.Wrap(
+					sdkerrors.CodeInternal,
+					"list transactions: failed to parse as one-off transactions",
+					err,
+				)
+			}
+			return Page[gen.OneOffTransaction]{
+				Items: oneOffResp.Data,
+				Meta:  oneOffResp.Meta,
 			}, nil
 		},
 		cloneStartingAfter(baseParams.StartingAfter),
@@ -451,10 +459,10 @@ func (c *Client) EventsIterator(
 		cloneStartingAfter(baseParams.StartingAfter),
 		cloneLimit(baseParams.Limit),
 		func(item gen.Event) (string, bool) {
-			if item.EventId == "" {
+			if item.Id == "" {
 				return "", false
 			}
-			return string(item.EventId), true
+			return string(item.Id), true
 		},
 	)
 }

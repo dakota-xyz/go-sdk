@@ -1,0 +1,47 @@
+# Dakota Go SDK - LLM Context
+
+> This file provides context for Large Language Models working with this codebase.
+
+## Summary
+
+Go SDK for Dakota Platform - stablecoin payments infrastructure (on-ramps, off-ramps, swaps, wallets).
+
+## Primary Use Cases
+
+1. On-ramp: Convert USD bank transfers to USDC/USDT
+2. Off-ramp: Convert USDC/USDT to USD bank deposits
+3. Swap: Exchange stablecoins across blockchain networks
+4. Wallets: Create non-custodial multi-sig wallets
+
+## Quick Start
+
+```go
+import "github.com/dakota-xyz/go-sdk/client"
+
+c, _ := client.New(client.WithAPIKey("key"))
+resp, err := client.CheckResponse(c.Raw().ListCustomersWithResponse(ctx, nil))
+```
+
+## Key Patterns
+
+- All API methods: `c.Raw().<Method>WithResponse(ctx, params)`
+- Always wrap with: `client.CheckResponse(...)`
+- Resource chain: Customer → Recipient → Destination → Account
+- Default environment: Sandbox (`api.platform.sandbox.dakota.xyz`)
+
+## Important Files
+
+- README.md: Full documentation
+- AGENTS.md: Detailed API reference for AI agents
+- client/client.go: Client initialization
+- client/gen/openapi.yaml: OpenAPI spec (source of truth)
+- client/gen/client.gen.go: Generated API methods
+
+## Environments
+
+- Sandbox (default): Testing, no real money
+- Production: Live transactions, requires `WithEnvironment(client.EnvironmentProduction)`
+
+## Networks
+
+Ethereum, Polygon, Arbitrum, Base, Optimism, Solana (mainnet and testnets)

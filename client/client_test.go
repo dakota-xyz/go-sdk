@@ -209,7 +209,7 @@ func TestClient_IteratorHelpers(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
-		case "/applications", "/customers", "/events", "/customers/cus_1/transactions", "/customers/cus_1/recipients":
+		case "/applications", "/customers", "/events", "/transactions", "/customers/cus_1/recipients":
 			_, _ = w.Write([]byte(`{"data":[],"meta":{"total_count":0,"has_more_after":false,"has_more_before":false}}`))
 		default:
 			t.Fatalf("unexpected path: %s", r.URL.Path)
@@ -244,9 +244,9 @@ func TestClient_IteratorHelpers(t *testing.T) {
 			},
 		},
 		{
-			name: "transactions",
+			name: "one-off transactions",
 			next: func(ctx context.Context) (bool, error) {
-				_, ok, err := c.TransactionsIterator(gen.KSUID("cus_1"), nil).Next(ctx)
+				_, ok, err := c.OneOffTransactionsIterator(nil).Next(ctx)
 				return ok, err
 			},
 		},
