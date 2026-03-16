@@ -702,23 +702,21 @@ const (
 
 // Defines values for NetworkId.
 const (
-	NetworkIdArbitrumMainnet  NetworkId = "arbitrum-mainnet"
-	NetworkIdArbitrumSepolia  NetworkId = "arbitrum-sepolia"
-	NetworkIdAvalancheFuji    NetworkId = "avalanche-fuji"
-	NetworkIdAvalancheMainnet NetworkId = "avalanche-mainnet"
-	NetworkIdBaseMainnet      NetworkId = "base-mainnet"
-	NetworkIdBaseSepolia      NetworkId = "base-sepolia"
-	NetworkIdEthereumGoerli   NetworkId = "ethereum-goerli"
-	NetworkIdEthereumHolesky  NetworkId = "ethereum-holesky"
-	NetworkIdEthereumMainnet  NetworkId = "ethereum-mainnet"
-	NetworkIdEthereumSepolia  NetworkId = "ethereum-sepolia"
-	NetworkIdOptimismMainnet  NetworkId = "optimism-mainnet"
-	NetworkIdOptimismSepolia  NetworkId = "optimism-sepolia"
-	NetworkIdPolygonAmoy      NetworkId = "polygon-amoy"
-	NetworkIdPolygonMainnet   NetworkId = "polygon-mainnet"
-	NetworkIdSolanaDevnet     NetworkId = "solana-devnet"
-	NetworkIdSolanaMainnet    NetworkId = "solana-mainnet"
-	NetworkIdSolanaTestnet    NetworkId = "solana-testnet"
+	NetworkIdArbitrumMainnet NetworkId = "arbitrum-mainnet"
+	NetworkIdArbitrumSepolia NetworkId = "arbitrum-sepolia"
+	NetworkIdBaseMainnet     NetworkId = "base-mainnet"
+	NetworkIdBaseSepolia     NetworkId = "base-sepolia"
+	NetworkIdEthereumGoerli  NetworkId = "ethereum-goerli"
+	NetworkIdEthereumHolesky NetworkId = "ethereum-holesky"
+	NetworkIdEthereumMainnet NetworkId = "ethereum-mainnet"
+	NetworkIdEthereumSepolia NetworkId = "ethereum-sepolia"
+	NetworkIdOptimismMainnet NetworkId = "optimism-mainnet"
+	NetworkIdOptimismSepolia NetworkId = "optimism-sepolia"
+	NetworkIdPolygonAmoy     NetworkId = "polygon-amoy"
+	NetworkIdPolygonMainnet  NetworkId = "polygon-mainnet"
+	NetworkIdSolanaDevnet    NetworkId = "solana-devnet"
+	NetworkIdSolanaMainnet   NetworkId = "solana-mainnet"
+	NetworkIdSolanaTestnet   NetworkId = "solana-testnet"
 )
 
 // Defines values for OneOffTransactionStatus.
@@ -2413,9 +2411,6 @@ type EDDRequest struct {
 	// IsTokenIssuer Whether the business issues tokens
 	IsTokenIssuer *bool `json:"is_token_issuer,omitempty"`
 
-	// KycServiceProvider Name of KYC service provider used
-	KycServiceProvider *string `json:"kyc_service_provider,omitempty"`
-
 	// LastAuditDate Date of the last AML audit in YYYY-MM-DD format
 	LastAuditDate *openapi_types.Date `json:"last_audit_date"`
 
@@ -2478,9 +2473,6 @@ type EDDResponse struct {
 
 	// IsTokenIssuer Whether the business issues tokens
 	IsTokenIssuer *bool `json:"is_token_issuer,omitempty"`
-
-	// KycServiceProvider Name of KYC service provider used
-	KycServiceProvider *string `json:"kyc_service_provider,omitempty"`
 
 	// LastAuditDate Date of the last AML audit in YYYY-MM-DD format
 	LastAuditDate *openapi_types.Date `json:"last_audit_date"`

@@ -3631,7 +3631,6 @@ paths:
               country_of_regulation: US
               regulatory_license_type: Money Services Business (MSB)
               verifies_customer_identity: true
-              kyc_service_provider: Sumsub
               has_transaction_monitoring: true
               subject_to_aml_audits: true
               last_audit_date: '2024-06-30'
@@ -3663,7 +3662,6 @@ paths:
                   country_of_regulation: US
                   regulatory_license_type: Money Services Business (MSB)
                   verifies_customer_identity: true
-                  kyc_service_provider: Sumsub
                   has_transaction_monitoring: true
                   subject_to_aml_audits: true
                   last_audit_date: '2024-06-30'
@@ -3797,7 +3795,6 @@ paths:
                   country_of_regulation: US
                   regulatory_license_type: Money Services Business (MSB)
                   verifies_customer_identity: true
-                  kyc_service_provider: Sumsub
                   has_transaction_monitoring: true
                   subject_to_aml_audits: true
                   last_audit_date: '2024-06-30'
@@ -4336,7 +4333,6 @@ paths:
                   country_of_regulation: US
                   regulatory_license_type: Money Services Business (MSB)
                   verifies_customer_identity: true
-                  kyc_service_provider: Sumsub
                   has_transaction_monitoring: true
                   subject_to_aml_audits: true
                   last_audit_date: '2024-06-30'
@@ -5462,7 +5458,6 @@ paths:
                   country_of_regulation: US
                   regulatory_license_type: Money Services Business (MSB)
                   verifies_customer_identity: true
-                  kyc_service_provider: Sumsub
                   has_transaction_monitoring: true
                   subject_to_aml_audits: true
                   last_audit_date: '2024-06-30'
@@ -11616,8 +11611,6 @@ components:
         - arbitrum-sepolia
         - optimism-mainnet
         - optimism-sepolia
-        - avalanche-mainnet
-        - avalanche-fuji
         - polygon-mainnet
         - polygon-amoy
       minLength: 1
@@ -15812,10 +15805,6 @@ components:
           type: boolean
           description: Whether the business verifies customer identity (KYC)
           example: true
-        kyc_service_provider:
-          type: string
-          description: Name of KYC service provider used
-          example: Sumsub
         has_transaction_monitoring:
           type: boolean
           description: Whether the business has transaction monitoring in place
