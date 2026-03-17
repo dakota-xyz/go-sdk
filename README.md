@@ -1,20 +1,447 @@
 # Dakota Go SDK
 
-Go SDK for Dakota Platform integrations.
+Official Go SDK for the [Dakota Platform](https://dakota.xyz) — infrastructure for stablecoin payments, on/off-ramps, and non-custodial wallets.
+
+## What is Dakota?
+
+Dakota provides APIs to:
+
+- **On-ramp**: Accept USD bank transfers and deliver stablecoins (USDC/USDT) to blockchain wallets
+- **Off-ramp**: Convert stablecoins to USD and deposit to bank accounts via ACH/Wire
+- **Swap**: Exchange stablecoins across networks (e.g., USDC on Ethereum → USDT on Polygon)
+- **Wallets**: Create non-custodial multi-sig wallets with policy controls
+
+## Install
+
+```bash
+go get github.com/dakota-xyz/go-sdk
+```
+
+## Quick Start
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/dakota-xyz/go-sdk/client"
+    "github.com/dakota-xyz/go-sdk/client/gen"
+)
+
+func main() {
+    c, err := client.New(
+        client.WithAPIKey("your_api_key"),
+        // Sandbox by default. For production:
+        // client.WithEnvironment(client.EnvironmentProduction),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // List your customers
+    resp, err := client.CheckResponse(
+        c.Raw().ListCustomersWithResponse(context.Background(), &gen.ListCustomersParams{}),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, customer := range resp.JSON200.Data {
+        fmt.Printf("Customer: %s (KYB: %s)\n", customer.Name, customer.KybStatus)
+    }
+}
+```
+
+## Complete Flow: Off-Ramp (Crypto → USD)
+
+This example shows a complete off-ramp flow where a customer sends USDC and receives USD in their bank account.
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/dakota-xyz/go-sdk/client"
+    "github.com/dakota-xyz/go-sdk/client/gen"
+)
+
+func main() {
+    ctx := context.Background()
+
+    c, err := client.New(client.WithAPIKey("your_api_key"))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Step 1: Create a customer (triggers KYB onboarding)
+    customerResp, err := client.CheckResponse(
+        c.Raw().CreateCustomerWithResponse(ctx, nil, gen.CustomerCreateRequest{
+            Name:         "Acme Corporation",
+            CustomerType: gen.CustomerCreateRequestCustomerTypeBusiness,
+            ExternalId:   ptr("acme-123"), // Your internal ID
+        }),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    customerID := customerResp.JSON201.Id
+    fmt.Printf("Created customer: %s\n", customerID)
+    fmt.Printf("KYB onboarding URL: %s\n", *customerResp.JSON201.ApplicationUrl)
+
+    // Customer completes KYB at the onboarding URL...
+    // You'll receive webhooks as status changes.
+    // Wait until kyb_status becomes "active" before proceeding.
+
+    // Step 2: Create a recipient (the entity receiving USD)
+    // Include address for fiat destinations
+    postalCode := "10001"
+    region := "NY"
+    recipientResp, err := client.CheckResponse(
+        c.Raw().CreateRecipientWithResponse(ctx, customerID, nil, gen.RecipientRequest{
+            Name: "Acme Treasury",
+            Address: &gen.Address{
+                Street1:    "123 Main Street",
+                City:       "New York",
+                Country:    "US",
+                PostalCode: &postalCode,
+                Region:     &region,
+            },
+        }),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    recipientID := recipientResp.JSON201.Id
+    fmt.Printf("Created recipient: %s\n", recipientID)
+
+    // Step 3: Create a bank destination (where USD will be sent)
+    // Use DestinationRequestUnion with FromFiatUSDestinationRequest method
+    destBody := gen.DestinationRequestUnion{}
+    err = destBody.FromFiatUSDestinationRequest(gen.FiatUSDestinationRequest{
+        Name:             "Acme Bank Account",
+        BankName:         "Chase Bank",
+        AccountHolderName: "Acme Corporation",
+        AccountNumber:    "123456789",
+        AbaRoutingNumber: "021000021",  // Note: AbaRoutingNumber, not RoutingNumber
+        AccountType:      gen.FiatUSDestinationRequestAccountTypeChecking,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    destResp, err := client.CheckResponse(
+        c.Raw().CreateDestinationWithResponse(ctx, recipientID, nil, destBody),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fiatDestID := destResp.JSON201.Id
+    fmt.Printf("Created bank destination: %s\n", fiatDestID)
+
+    // Step 4: Create an off-ramp account
+    // Dakota returns a crypto address where customer sends USDC
+    sourceAsset := "USDC"
+    destAsset := "USD"
+    sourceNetwork := "ethereum-mainnet"
+    capabilities := gen.Capabilities{gen.PaymentCapability("ach")}
+    rail := gen.PaymentCapability("ach")
+
+    accountResp, err := client.CheckResponse(
+        c.Raw().CreateAccountWithResponse(ctx, nil, gen.AccountCreateRequest{
+            AccountType:       gen.AccountTypeOfframp,
+            FiatDestinationId: &fiatDestID,
+            SourceAsset:       &sourceAsset,
+            DestinationAsset:  &destAsset,
+            SourceNetworkId:   &sourceNetwork,
+            Capabilities:      &capabilities,
+            Rail:              &rail,
+        }),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    account := accountResp.JSON201
+    fmt.Printf("Off-ramp account created! ID: %s\n", account.Id)
+    if account.SourceCryptoAddress != nil {
+        fmt.Printf("Send USDC to: %s\n", *account.SourceCryptoAddress)
+    }
+
+    // When customer sends USDC to this address:
+    // 1. Dakota detects the deposit
+    // 2. Converts USDC to USD
+    // 3. Initiates ACH transfer to the bank account
+    // 4. You receive webhook notifications at each step
+}
+
+func ptr[T any](v T) *T { return &v }
+```
+
+## Complete Flow: On-Ramp (USD → Crypto)
+
+Accept USD bank transfers and deliver stablecoins to customer wallets.
+
+```go
+// Step 1: Create customer (same as off-ramp)
+// Step 2: Create recipient (same as off-ramp)
+
+// Step 3: Create a crypto destination (where stablecoins will be sent)
+networkID := gen.NetworkId("ethereum-mainnet")
+cryptoDestBody := gen.DestinationRequestUnion{}
+err = cryptoDestBody.FromCryptoDestinationRequest(gen.CryptoDestinationRequest{
+    Name:          "Customer Wallet",
+    CryptoAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f...",
+    NetworkId:     &networkID,
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+cryptoDestResp, err := client.CheckResponse(
+    c.Raw().CreateDestinationWithResponse(ctx, recipientID, nil, cryptoDestBody),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+cryptoDestID := cryptoDestResp.JSON201.Id
+
+// Step 4: Create an on-ramp account
+// Dakota returns bank details where customer sends USD
+sourceAsset := "USD"
+destAsset := "USDC"
+destNetwork := gen.NetworkId("ethereum-mainnet")
+capabilities := gen.Capabilities{gen.PaymentCapability("ach")}
+
+onrampResp, err := client.CheckResponse(
+    c.Raw().CreateAccountWithResponse(ctx, nil, gen.AccountCreateRequest{
+        AccountType:          gen.AccountTypeOnramp,
+        CryptoDestinationId:  &cryptoDestID,
+        SourceAsset:          &sourceAsset,
+        DestinationAsset:     &destAsset,
+        DestinationNetworkId: &destNetwork,
+        Capabilities:         &capabilities,
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+account := onrampResp.JSON201
+fmt.Printf("On-ramp account created! ID: %s\n", account.Id)
+if account.BankAccount != nil {
+    fmt.Printf("Send USD to:\n")
+    fmt.Printf("  Bank: %s\n", account.BankAccount.BankName)
+    fmt.Printf("  Routing: %s\n", account.BankAccount.RoutingNumber)
+    fmt.Printf("  Account: %s\n", account.BankAccount.AccountNumber)
+}
+
+// When customer sends USD:
+// 1. Dakota receives the bank transfer
+// 2. Converts USD to USDC
+// 3. Sends USDC to the customer's wallet address
+```
+
+## One-Off Transactions
+
+For single transactions without creating accounts:
+
+```go
+txResp, err := client.CheckResponse(
+    c.Raw().CreateTransactionWithResponse(ctx, nil, gen.OneOffTransactionRequest{
+        CustomerId:             customerID,
+        Amount:                 "1000.00",
+        SourceAsset:            "USDC",
+        SourceNetworkId:        gen.NetworkId("ethereum-mainnet"),
+        DestinationId:          destinationID,
+        DestinationAsset:       "USD",
+        DestinationPaymentRail: ptr(gen.PaymentCapability("ach")),
+        PaymentReference:       ptr("Invoice #12345"),
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+tx := txResp.JSON201
+fmt.Printf("Transaction created: %s\n", tx.Id)
+fmt.Printf("Status: %s\n", tx.Status)
+```
+
+## Handling Webhooks
+
+Dakota sends webhooks for all status changes. Set up a handler:
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "net/http"
+
+    "github.com/dakota-xyz/go-sdk/webhook"
+    "github.com/dakota-xyz/go-sdk/webhook/idempotency"
+)
+
+func main() {
+    handler, err := webhook.NewHandler(
+        webhook.WithPublicKey("your_webhook_public_key_hex"),
+        webhook.WithIdempotencyStore(idempotency.NewMemoryStore()),
+
+        // Handle specific event types
+        webhook.On(webhook.EventCustomerCreated, func(ctx context.Context, event webhook.Event) error {
+            fmt.Printf("Customer created: %s\n", event.ID)
+            return nil
+        }),
+
+        webhook.On(webhook.EventTransactionOneOffUpdated, func(ctx context.Context, event webhook.Event) error {
+            fmt.Printf("Transaction %s updated\n", event.ID)
+            // Check transaction status, update your records, notify user, etc.
+            return nil
+        }),
+
+        // Catch-all for other events
+        webhook.OnDefault(func(ctx context.Context, event webhook.Event) error {
+            fmt.Printf("Event: %s (type: %s)\n", event.ID, event.Type)
+            return nil
+        }),
+    )
+    if err != nil {
+        panic(err)
+    }
+
+    http.Handle("/webhooks/dakota", handler)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+## Pagination
+
+Iterate through large collections:
+
+```go
+// Iterate all customers
+it := c.CustomersIterator(nil)
+for {
+    customer, ok, err := it.Next(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+    if !ok {
+        break
+    }
+    fmt.Printf("%s: %s\n", customer.Id, customer.Name)
+}
+
+// Iterate transactions with filters
+txIt := c.OneOffTransactionsIterator(&gen.ListOneOffTransactionsParams{
+    CustomerId: &customerID,
+})
+```
+
+## Error Handling
+
+```go
+resp, err := client.CheckResponse(
+    c.Raw().GetCustomerWithResponse(ctx, "invalid_id"),
+)
+if err != nil {
+    var apiErr *client.APIError
+    if errors.As(err, &apiErr) {
+        fmt.Printf("API Error: %s (HTTP %d)\n", apiErr.Message, apiErr.StatusCode)
+        fmt.Printf("Request ID: %s\n", apiErr.RequestID) // Include in support tickets
+
+        if apiErr.Retryable {
+            // Safe to retry (429, 503, etc.)
+        }
+    }
+    return
+}
+```
+
+## Environments
+
+The SDK supports two main environments. **Sandbox is the default** for safe testing.
+
+| Environment | URL | Use Case |
+|-------------|-----|----------|
+| **Sandbox** (default) | `https://api.platform.sandbox.dakota.xyz` | Testing & development |
+| **Production** | `https://api.platform.dakota.xyz` | Live transactions with real money |
+
+```go
+// Sandbox (default) - safe for testing, no real money moves
+c, _ := client.New(
+    client.WithAPIKey("your_sandbox_api_key"),
+)
+
+// Production - real money, real transactions
+c, _ := client.New(
+    client.WithAPIKey("your_production_api_key"),
+    client.WithEnvironment(client.EnvironmentProduction),
+)
+```
+
+> **Note**: Sandbox and Production use different API keys. Make sure you're using the correct key for each environment.
+
+## Configuration Options
+
+```go
+c, err := client.New(
+    // Required: Authentication
+    client.WithAPIKey("your_api_key"),
+
+    // Environment (default: Sandbox)
+    client.WithEnvironment(client.EnvironmentProduction),
+
+    // Custom timeout (default: 15s)
+    client.WithTimeout(30 * time.Second),
+
+    // Custom retry policy
+    client.WithRetryPolicy(client.RetryPolicy{
+        MaxAttempts:    5,
+        InitialBackoff: 100 * time.Millisecond,
+        MaxBackoff:     5 * time.Second,
+    }),
+
+    // Structured logging
+    client.WithLogger(slog.Default()),
+)
+```
+
+## Supported Networks
+
+| Network | Production | Sandbox |
+|---------|------------|---------|
+| Ethereum | `ethereum-mainnet` | `ethereum-sepolia` |
+| Polygon | `polygon-mainnet` | `polygon-amoy` |
+| Arbitrum | `arbitrum-mainnet` | `arbitrum-sepolia` |
+| Base | `base-mainnet` | `base-sepolia` |
+| Optimism | `optimism-mainnet` | — |
+| Solana | `solana-mainnet` | `solana-devnet` |
 
 ## Packages
 
-- `github.com/dakota-xyz/go-sdk/client`
-- `github.com/dakota-xyz/go-sdk/client/gen`
-- `github.com/dakota-xyz/go-sdk/errors`
-- `github.com/dakota-xyz/go-sdk/log`
-- `github.com/dakota-xyz/go-sdk/webhook`
-- `github.com/dakota-xyz/go-sdk/webhook/idempotency`
-- `github.com/dakota-xyz/go-sdk/webhook/types`
+| Package | Description |
+|---------|-------------|
+| `github.com/dakota-xyz/go-sdk/client` | API client with retries, auth, pagination |
+| `github.com/dakota-xyz/go-sdk/client/gen` | Generated types from OpenAPI spec |
+| `github.com/dakota-xyz/go-sdk/webhook` | Webhook signature verification & handling |
+| `github.com/dakota-xyz/go-sdk/errors` | Structured error types |
+| `github.com/dakota-xyz/go-sdk/log` | Logging abstraction |
 
-## Import aliases
+## Import Aliases
 
-Because this SDK has `errors` and `log` packages, aliasing avoids collisions with standard library imports:
+Avoid collisions with standard library:
 
 ```go
 import (
@@ -23,216 +450,18 @@ import (
 )
 ```
 
-## Install
+## Regenerating the Client
 
-```bash
-go get github.com/dakota-xyz/go-sdk
-```
-
-## Platform API client
-
-`client.New()` is safe-by-default:
-
-- sandbox environment by default
-- API key header injection
-- automatic idempotency key generation for `POST`
-- bounded retries with exponential backoff + `Retry-After`
-- typed error mapping
-- structured logs with secret redaction
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-
-    "github.com/dakota-xyz/go-sdk/client"
-)
-
-func main() {
-    c, err := client.New(
-        client.WithAPIKey("dakota_api_key"),
-        // Optional: client.WithEnvironment(client.EnvironmentProduction),
-    )
-    if err != nil {
-        panic(err)
-    }
-
-    resp, err := client.CheckResponse(
-        c.Raw().ListCustomersWithResponse(context.Background(), nil),
-    )
-    if err != nil {
-        panic(err)
-    }
-
-    fmt.Println("customers", len(resp.JSON200.Data))
-}
-```
-
-### Typed error handling
-
-```go
-resp, err := client.CheckResponse(
-    c.Raw().ListApplicationsWithResponse(ctx, nil),
-)
-if err != nil {
-    var apiErr *client.APIError
-    if errors.As(err, &apiErr) {
-        fmt.Printf("code=%s status=%d request_id=%s\n", apiErr.Code, apiErr.StatusCode, apiErr.RequestID)
-    }
-    return
-}
-_ = resp
-```
-
-### Pagination helpers
-
-```go
-it := c.ApplicationsIterator(nil)
-for {
-    app, ok, err := it.Next(ctx)
-    if err != nil {
-        panic(err)
-    }
-    if !ok {
-        break
-    }
-    fmt.Println(app.ApplicationId)
-}
-```
-
-For customer-scoped lists, pass `customerID`:
-
-```go
-txIt := c.TransactionsIterator(customerID, nil)
-recipientsIt := c.RecipientsIterator(customerID, nil)
-_, _ = txIt, recipientsIt
-```
-
-### Parser helpers
-
-The client package includes parsers from generated API models into SDK-facing models:
-
-```go
-parsed := client.ParseCustomers(resp.JSON200.Data)
-fmt.Println(parsed[0].ID, parsed[0].Name)
-```
-
-## Regenerating the API client
-
-The OpenAPI source of truth lives at `client/gen/openapi.yaml`.
-
-Regenerate generated client/types:
+The OpenAPI spec lives at `client/gen/openapi.yaml`. To regenerate:
 
 ```bash
 make generate-client
-```
-
-or:
-
-```bash
+# or
 ./scripts/generate-client.sh
 ```
 
-Generation is pinned to `oapi-codegen v2.5.1` and configured through `client/gen/oapi-codegen.yaml`.
+## Resources
 
-## Webhook quick start
-
-```go
-event, err := webhook.ConstructEvent(
-    payload,
-    r.Header.Get(webhook.SignatureHeader),
-    r.Header.Get(webhook.TimestampHeader),
-    publicKeyHex,
-)
-if err != nil {
-    // signature, timestamp, or payload validation failed
-    return
-}
-_ = event
-```
-
-## HTTP webhook handler
-
-```go
-handler, err := webhook.NewHandler(
-    webhook.WithPublicKey(publicKeyHex),
-    webhook.WithIdempotencyStore(idempotency.NewMemoryStore()),
-    webhook.WithAckPolicy(webhook.AckOnSuccess),
-    webhook.OnDefault(func(ctx context.Context, event webhook.Event) error {
-        // process event
-        return nil
-    }),
-)
-if err != nil {
-    panic(err)
-}
-
-http.Handle("/webhook", handler)
-```
-
-## Delivery acknowledgement policy
-
-- `webhook.AckOnSuccess` (default): returns `2xx` only when delivery succeeds.
-- `webhook.AckAlways`: always returns `2xx`, even when delivery fails.
-
-`AckOnSuccess` is safer for at-least-once delivery because upstream retries on failures.
-
-## Idempotency behavior
-
-When an idempotency store is configured:
-
-1. The handler atomically acquires a reservation for an event ID.
-2. The event is delivered.
-3. On successful delivery, the event ID is committed as processed.
-4. On failed delivery, the reservation is released for retry.
-
-`webhook/idempotency.NewMemoryStore()` implements this atomic flow.
-
-## Listener
-
-```go
-listener, err := webhook.NewListener(
-    webhook.WithAddr("127.0.0.1:0"),
-    webhook.WithHandlerOptions(
-        webhook.WithPublicKey(publicKeyHex),
-        webhook.WithChannel(100),
-    ),
-)
-if err != nil {
-    panic(err)
-}
-
-ctx, cancel := context.WithCancel(context.Background())
-defer cancel()
-
-go func() {
-    _ = listener.Start(ctx)
-}()
-
-addr := listener.Addr() // concrete bound address after start
-_ = addr
-```
-
-Listener also exposes `GET /healthz` for liveness checks.
-
-## Typed webhook event payloads
-
-```go
-customer, err := webhook.EventDataAs[types.CustomerData](event)
-if err != nil {
-    // malformed payload for this type
-    return
-}
-_ = customer
-```
-
-## Development
-
-```bash
-make generate-client
-make test
-make test-race
-make vet
-```
+- [Dakota Documentation](https://docs.dakota.xyz)
+- [API Reference](https://docs.dakota.xyz/api-reference)
+- [Common Flows](https://docs.dakota.xyz/documentation/common-flows)

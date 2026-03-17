@@ -166,7 +166,14 @@ func extractErrorFields(
 	v reflect.Value,
 	status int,
 ) (string, string, map[string]any) {
-	for _, name := range []string{fmt.Sprintf("JSON%d", status), "JSONDefault"} {
+	// Try different field naming conventions used by oapi-codegen
+	fieldNames := []string{
+		fmt.Sprintf("JSON%d", status),
+		fmt.Sprintf("ApplicationproblemJSON%d", status),
+		"JSONDefault",
+		"ApplicationproblemJSONDefault",
+	}
+	for _, name := range fieldNames {
 		field := v.FieldByName(name)
 		if !field.IsValid() || (field.Kind() == reflect.Pointer && field.IsNil()) {
 			continue
@@ -192,9 +199,42 @@ func parseErrorModel(
 		return "", "", nil, false
 	}
 
+	// Try legacy format first (Code, Message, Details)
 	code := stringField(field, "Code")
 	message := stringField(field, "Message")
 	details := mapField(field, "Details")
+
+	// If not found, try ProblemDetails format (Title, Detail, Type)
+	if code == "" && message == "" {
+		// Use Title as the code/message summary
+		title := stringField(field, "Title")
+		detail := stringField(field, "Detail")
+		typeURI := stringField(field, "Type")
+
+		// Extract code from type URI if present (e.g., "https://docs.dakota.xyz/api-reference/errors#invalid-request")
+		if typeURI != "" {
+			if idx := len(typeURI) - 1; idx > 0 {
+				for i := len(typeURI) - 1; i >= 0; i-- {
+					if typeURI[i] == '#' {
+						code = typeURI[i+1:]
+						break
+					}
+				}
+			}
+		}
+
+		if title != "" {
+			message = title
+		}
+		if detail != "" {
+			if message != "" {
+				message = message + ": " + detail
+			} else {
+				message = detail
+			}
+		}
+	}
+
 	if code == "" && message == "" && details == nil {
 		return "", "", nil, false
 	}
