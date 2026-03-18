@@ -1,5 +1,9 @@
 # Dakota Go SDK
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8.svg)](https://golang.org/)
+[![Go Reference](https://pkg.go.dev/badge/github.com/dakota-xyz/go-sdk.svg)](https://pkg.go.dev/github.com/dakota-xyz/go-sdk)
+
 Official Go SDK for the [Dakota Platform](https://dakota.xyz) — infrastructure for stablecoin payments, on/off-ramps, and non-custodial wallets.
 
 ## What is Dakota?
@@ -460,8 +464,16 @@ make generate-client
 ./scripts/generate-client.sh
 ```
 
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
 ## Resources
 
 - [Dakota Documentation](https://docs.dakota.xyz)
 - [API Reference](https://docs.dakota.xyz/api-reference)
 - [Common Flows](https://docs.dakota.xyz/documentation/common-flows)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
