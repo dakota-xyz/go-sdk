@@ -25,7 +25,8 @@ const (
 	EventCustomerKYBLinkCreated   EventType = "customer.kyb_link.created"
 	EventCustomerKYBLinkUpdated   EventType = "customer.kyb_link.updated"
 	EventCustomerKYBStatusCreated EventType = "customer.kyb_status.created"
-	EventCustomerKYBStatusUpdated EventType = "customer.kyb_status.updated"
+	EventCustomerKYBStatusUpdated          EventType = "customer.kyb_status.updated"
+	EventCustomerKYBApplicationSubmitted EventType = "customer.kyb_application.submitted"
 
 	EventAutoAccountCreated EventType = "auto_account.created"
 	EventAutoAccountUpdated EventType = "auto_account.updated"
@@ -77,6 +78,7 @@ var AllEventTypes = []EventType{
 	EventCustomerKYBLinkUpdated,
 	EventCustomerKYBStatusCreated,
 	EventCustomerKYBStatusUpdated,
+	EventCustomerKYBApplicationSubmitted,
 	EventAutoAccountCreated,
 	EventAutoAccountUpdated,
 	EventAutoAccountDeleted,
