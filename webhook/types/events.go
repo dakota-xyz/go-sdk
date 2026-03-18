@@ -71,6 +71,13 @@ type KYBLinkData struct {
 	ExpiresAt  int64  `json:"expires_at"`
 }
 
+// KYBApplicationSubmittedData is the event payload for
+// customer.kyb_application.submitted events.
+type KYBApplicationSubmittedData struct {
+	CustomerID string `json:"customer_id"`
+	Type       string `json:"type"`
+}
+
 // ---------------------------------------------------------------------------
 // Auto Account
 // ---------------------------------------------------------------------------
