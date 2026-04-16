@@ -400,45 +400,46 @@ const (
 
 // Defines values for EventType.
 const (
-	EventTypeApiKeyCreated            EventType = "api_key.created"
-	EventTypeApiKeyDeleted            EventType = "api_key.deleted"
-	EventTypeAutoAccountCreated       EventType = "auto_account.created"
-	EventTypeAutoAccountDeleted       EventType = "auto_account.deleted"
-	EventTypeAutoAccountUpdated       EventType = "auto_account.updated"
-	EventTypeBvnkOnboardingCreated    EventType = "bvnk.onboarding.created"
-	EventTypeBvnkOnboardingUpdated    EventType = "bvnk.onboarding.updated"
-	EventTypeCustomerCreated          EventType = "customer.created"
-	EventTypeCustomerKybLinkCreated   EventType = "customer.kyb_link.created"
-	EventTypeCustomerKybLinkUpdated   EventType = "customer.kyb_link.updated"
-	EventTypeCustomerKybStatusCreated EventType = "customer.kyb_status.created"
-	EventTypeCustomerKybStatusUpdated EventType = "customer.kyb_status.updated"
-	EventTypeCustomerUpdated          EventType = "customer.updated"
-	EventTypeDestinationCreated       EventType = "destination.created"
-	EventTypeDestinationDeleted       EventType = "destination.deleted"
-	EventTypeExceptionCleared         EventType = "exception.cleared"
-	EventTypeExceptionCreated         EventType = "exception.created"
-	EventTypeRecipientCreated         EventType = "recipient.created"
-	EventTypeRecipientDeleted         EventType = "recipient.deleted"
-	EventTypeRecipientUpdated         EventType = "recipient.updated"
-	EventTypeTargetCreated            EventType = "target.created"
-	EventTypeTargetDeleted            EventType = "target.deleted"
-	EventTypeTargetUpdated            EventType = "target.updated"
-	EventTypeTransactionAutoCreated   EventType = "transaction.auto.created"
-	EventTypeTransactionAutoUpdated   EventType = "transaction.auto.updated"
-	EventTypeTransactionOneOffCreated EventType = "transaction.one_off.created"
-	EventTypeTransactionOneOffUpdated EventType = "transaction.one_off.updated"
-	EventTypeUserCreated              EventType = "user.created"
-	EventTypeUserDeleted              EventType = "user.deleted"
-	EventTypeUserUpdated              EventType = "user.updated"
-	EventTypeWalletCreated            EventType = "wallet.created"
-	EventTypeWalletDeposit            EventType = "wallet.deposit"
-	EventTypeWalletPolicyCreated      EventType = "wallet.policy.created"
-	EventTypeWalletPolicyUpdated      EventType = "wallet.policy.updated"
-	EventTypeWalletSignerGroupCreated EventType = "wallet.signer_group.created"
-	EventTypeWalletSignerGroupUpdated EventType = "wallet.signer_group.updated"
-	EventTypeWalletTransactionCreated EventType = "wallet.transaction.created"
-	EventTypeWalletTransactionUpdated EventType = "wallet.transaction.updated"
-	EventTypeWalletUpdated            EventType = "wallet.updated"
+	EventTypeApiKeyCreated                   EventType = "api_key.created"
+	EventTypeApiKeyDeleted                   EventType = "api_key.deleted"
+	EventTypeAutoAccountCreated              EventType = "auto_account.created"
+	EventTypeAutoAccountDeleted              EventType = "auto_account.deleted"
+	EventTypeAutoAccountUpdated              EventType = "auto_account.updated"
+	EventTypeBvnkOnboardingCreated           EventType = "bvnk.onboarding.created"
+	EventTypeBvnkOnboardingUpdated           EventType = "bvnk.onboarding.updated"
+	EventTypeCustomerCreated                 EventType = "customer.created"
+	EventTypeCustomerKybApplicationSubmitted EventType = "customer.kyb_application.submitted"
+	EventTypeCustomerKybLinkCreated          EventType = "customer.kyb_link.created"
+	EventTypeCustomerKybLinkUpdated          EventType = "customer.kyb_link.updated"
+	EventTypeCustomerKybStatusCreated        EventType = "customer.kyb_status.created"
+	EventTypeCustomerKybStatusUpdated        EventType = "customer.kyb_status.updated"
+	EventTypeCustomerUpdated                 EventType = "customer.updated"
+	EventTypeDestinationCreated              EventType = "destination.created"
+	EventTypeDestinationDeleted              EventType = "destination.deleted"
+	EventTypeExceptionCleared                EventType = "exception.cleared"
+	EventTypeExceptionCreated                EventType = "exception.created"
+	EventTypeRecipientCreated                EventType = "recipient.created"
+	EventTypeRecipientDeleted                EventType = "recipient.deleted"
+	EventTypeRecipientUpdated                EventType = "recipient.updated"
+	EventTypeTargetCreated                   EventType = "target.created"
+	EventTypeTargetDeleted                   EventType = "target.deleted"
+	EventTypeTargetUpdated                   EventType = "target.updated"
+	EventTypeTransactionAutoCreated          EventType = "transaction.auto.created"
+	EventTypeTransactionAutoUpdated          EventType = "transaction.auto.updated"
+	EventTypeTransactionOneOffCreated        EventType = "transaction.one_off.created"
+	EventTypeTransactionOneOffUpdated        EventType = "transaction.one_off.updated"
+	EventTypeUserCreated                     EventType = "user.created"
+	EventTypeUserDeleted                     EventType = "user.deleted"
+	EventTypeUserUpdated                     EventType = "user.updated"
+	EventTypeWalletCreated                   EventType = "wallet.created"
+	EventTypeWalletDeposit                   EventType = "wallet.deposit"
+	EventTypeWalletPolicyCreated             EventType = "wallet.policy.created"
+	EventTypeWalletPolicyUpdated             EventType = "wallet.policy.updated"
+	EventTypeWalletSignerGroupCreated        EventType = "wallet.signer_group.created"
+	EventTypeWalletSignerGroupUpdated        EventType = "wallet.signer_group.updated"
+	EventTypeWalletTransactionCreated        EventType = "wallet.transaction.created"
+	EventTypeWalletTransactionUpdated        EventType = "wallet.transaction.updated"
+	EventTypeWalletUpdated                   EventType = "wallet.updated"
 )
 
 // Defines values for Family.
@@ -638,6 +639,7 @@ const (
 // Defines values for KybStatus.
 const (
 	KybStatusActive        KybStatus = "active"
+	KybStatusAutoDeclined  KybStatus = "auto_declined"
 	KybStatusFrozen        KybStatus = "frozen"
 	KybStatusPartnerReview KybStatus = "partner_review"
 	KybStatusPending       KybStatus = "pending"
@@ -738,10 +740,11 @@ const (
 
 // Defines values for PaymentCapability.
 const (
-	PaymentCapabilityAch     PaymentCapability = "ach"
-	PaymentCapabilityFedwire PaymentCapability = "fedwire"
-	PaymentCapabilitySepa    PaymentCapability = "sepa"
-	PaymentCapabilitySwift   PaymentCapability = "swift"
+	PaymentCapabilityAch           PaymentCapability = "ach"
+	PaymentCapabilityFedwire       PaymentCapability = "fedwire"
+	PaymentCapabilitySepa          PaymentCapability = "sepa"
+	PaymentCapabilitySwift         PaymentCapability = "swift"
+	PaymentCapabilityUsBankAccount PaymentCapability = "us_bank_account"
 )
 
 // Defines values for PolicyRuleAction.
@@ -760,6 +763,7 @@ const (
 // Defines values for ProviderKybStatusStatus.
 const (
 	ProviderKybStatusStatusApproved     ProviderKybStatusStatus = "approved"
+	ProviderKybStatusStatusAutoDeclined ProviderKybStatusStatus = "auto_declined"
 	ProviderKybStatusStatusFrozen       ProviderKybStatusStatus = "frozen"
 	ProviderKybStatusStatusInReview     ProviderKybStatusStatus = "in_review"
 	ProviderKybStatusStatusNotStarted   ProviderKybStatusStatus = "not_started"
@@ -798,6 +802,13 @@ const (
 	RiskRatingLevelHigh   RiskRatingLevel = "high"
 	RiskRatingLevelLow    RiskRatingLevel = "low"
 	RiskRatingLevelMedium RiskRatingLevel = "medium"
+)
+
+// Defines values for SelfServeCreditsLedgerEntryEntryType.
+const (
+	SelfServeCreditsLedgerEntryEntryTypeDeduction SelfServeCreditsLedgerEntryEntryType = "deduction"
+	SelfServeCreditsLedgerEntryEntryTypePurchase  SelfServeCreditsLedgerEntryEntryType = "purchase"
+	SelfServeCreditsLedgerEntryEntryTypeRefund    SelfServeCreditsLedgerEntryEntryType = "refund"
 )
 
 // Defines values for SignerKeyType.
@@ -1009,6 +1020,13 @@ const (
 	SimulateOnboardingJSONBodyTypeKycReject         SimulateOnboardingJSONBodyType = "kyc_reject"
 )
 
+// Defines values for ListSelfServeCreditsLedgerParamsType.
+const (
+	ListSelfServeCreditsLedgerParamsTypeDeduction ListSelfServeCreditsLedgerParamsType = "deduction"
+	ListSelfServeCreditsLedgerParamsTypePurchase  ListSelfServeCreditsLedgerParamsType = "purchase"
+	ListSelfServeCreditsLedgerParamsTypeRefund    ListSelfServeCreditsLedgerParamsType = "refund"
+)
+
 // Defines values for ListWebhookHistoryParamsStatus.
 const (
 	ListWebhookHistoryParamsStatusDelivered ListWebhookHistoryParamsStatus = "delivered"
@@ -1039,7 +1057,7 @@ type AccountCreateRequest struct {
 	// FiatDestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	FiatDestinationId *KSUID `json:"fiat_destination_id,omitempty"`
 
-	// Rail Type of payment rail capability supported.
+	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 	Rail *PaymentCapability `json:"rail,omitempty"`
 
 	// ReturnAddress A unique identifier for a specific account on a specific blockchain. When rendered as a string, it has the syntax: <network-id>://<canonical-address> (e.g., ethereum-mainnet://0x165cd37b4c644c2921454429e7f9358d18a45e14)
@@ -1069,13 +1087,13 @@ type AccountResponse struct {
 	// DestinationAsset Asset received at the destination.
 	DestinationAsset *string `json:"destination_asset,omitempty"`
 
-	// DestinationRail Type of payment rail capability supported.
+	// DestinationRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 	DestinationRail *PaymentCapability `json:"destination_rail,omitempty"`
 
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
-	// Rail Type of payment rail capability supported.
+	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 	Rail *PaymentCapability `json:"rail,omitempty"`
 
 	// SourceAsset Asset sent into the account.
@@ -1265,13 +1283,13 @@ type Application struct {
 	Edd          *EDDResponse     `json:"edd,omitempty"`
 
 	// Entities The entities (people/businesses) being onboarded in this application
-	Entities ApplicationEntities `json:"entities"`
+	Entities *ApplicationEntities `json:"entities,omitempty"`
 
 	// RiskRating Risk rating assessment for an application
 	RiskRating *RiskRating `json:"risk_rating,omitempty"`
 
 	// Validation Complete validation state for an application (computed at retrieval time)
-	Validation ApplicationValidation `json:"validation"`
+	Validation *ApplicationValidation `json:"validation,omitempty"`
 }
 
 // ApplicationApplicationDecision Decision outcome for the application (only present after decision is made). Note: auto_declined is mapped to declined in the API response.
@@ -1555,6 +1573,9 @@ type AssociatedIndividualEntity struct {
 
 	// SourceOfWealth Sources of wealth (for individual person type only)
 	SourceOfWealth *[]AssociatedIndividualEntitySourceOfWealth `json:"source_of_wealth,omitempty"`
+
+	// Ssn Social Security Number (only present for US persons, format XXX-XX-XXXX)
+	Ssn *string `json:"ssn,omitempty"`
 
 	// SumsubVerification Sumsub review information for a specific entity
 	SumsubVerification *SumsubReviewData `json:"sumsub_verification,omitempty"`
@@ -2052,14 +2073,14 @@ type ClientUser struct {
 	// LastName Surname of the user.
 	LastName string `json:"last_name"`
 
-	// Role Role that can be assigned to a client user
+	// Role Role that can be assigned to a client user. Available roles: `admin` (full access except issuances) and `viewer` (read-only access).
 	Role ClientUserRole `json:"role"`
 
 	// SwiftEnabled Whether the client has SWIFT payments enabled.
 	SwiftEnabled *bool `json:"swift_enabled,omitempty"`
 }
 
-// ClientUserRole Role that can be assigned to a client user
+// ClientUserRole Role that can be assigned to a client user. Available roles: `admin` (full access except issuances) and `viewer` (read-only access).
 type ClientUserRole string
 
 // CompletedAttestation Details of a completed attestation
@@ -2080,6 +2101,12 @@ type Country struct {
 	Name string `json:"name"`
 }
 
+// CreateApiKeyForClientRequest defines model for CreateApiKeyForClientRequest.
+type CreateApiKeyForClientRequest struct {
+	// ClientId Client ID to create the API key for
+	ClientId KSUID `json:"client_id"`
+}
+
 // CreateClientUserRequest Request body for creating a new client user
 type CreateClientUserRequest struct {
 	// Email Email address of the user
@@ -2091,7 +2118,7 @@ type CreateClientUserRequest struct {
 	// LastName Surname of the user
 	LastName string `json:"last_name"`
 
-	// Role Role that can be assigned to a client user
+	// Role Role that can be assigned to a client user. Available roles: `admin` (full access except issuances) and `viewer` (read-only access).
 	Role ClientUserRole `json:"role"`
 }
 
@@ -2197,6 +2224,9 @@ type Customer struct {
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
+	// IsSubClient Whether this customer is acting as a sub-client (has other customers associated with it).
+	IsSubClient *bool `json:"is_sub_client,omitempty"`
+
 	// KybLinks KYB Links for different providers used in the KYB process.
 	KybLinks *[]KybLink `json:"kyb_links,omitempty"`
 
@@ -2208,6 +2238,12 @@ type Customer struct {
 
 	// ProviderStatuses Detailed status information from different verification providers used in the KYB process.
 	ProviderStatuses *[]ProviderKybStatus `json:"provider_statuses,omitempty"`
+
+	// SubClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	SubClientId *KSUID `json:"sub_client_id,omitempty"`
+
+	// SubClientName Name of the sub-client this customer is associated with, if any.
+	SubClientName *string `json:"sub_client_name,omitempty"`
 
 	// UpdatedAt Timestamp of when the link was last updated.
 	UpdatedAt int `json:"updated_at"`
@@ -2229,6 +2265,9 @@ type CustomerCreateRequest struct {
 
 	// Name Name of the customer - either a person's name or company name. Must contain at least one non-whitespace character.
 	Name string `json:"name"`
+
+	// SubClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	SubClientId *KSUID `json:"sub_client_id,omitempty"`
 }
 
 // CustomerCreateRequestCustomerType Type of entity being created - either an individual person or a company/organization.
@@ -2417,9 +2456,6 @@ type EDDRequest struct {
 	// RegulatoryLicenseType Type of regulatory license held (required if is_regulated=true)
 	RegulatoryLicenseType *string `json:"regulatory_license_type,omitempty"`
 
-	// ScreensCustomersForSanctions Whether the business screens customers against sanctions lists
-	ScreensCustomersForSanctions *bool `json:"screens_customers_for_sanctions,omitempty"`
-
 	// SubjectToAmlAudits Whether the business is subject to AML audits
 	SubjectToAmlAudits *bool `json:"subject_to_aml_audits,omitempty"`
 
@@ -2479,9 +2515,6 @@ type EDDResponse struct {
 
 	// RegulatoryLicenseType Type of regulatory license held (required if is_regulated=true)
 	RegulatoryLicenseType *string `json:"regulatory_license_type,omitempty"`
-
-	// ScreensCustomersForSanctions Whether the business screens customers against sanctions lists
-	ScreensCustomersForSanctions *bool `json:"screens_customers_for_sanctions,omitempty"`
 
 	// SubjectToAmlAudits Whether the business is subject to AML audits
 	SubjectToAmlAudits *bool `json:"subject_to_aml_audits,omitempty"`
@@ -2907,6 +2940,9 @@ type IndividualEntity struct {
 	// SourceOfWealth Sources of wealth (for individual person type only)
 	SourceOfWealth *[]IndividualEntitySourceOfWealth `json:"source_of_wealth,omitempty"`
 
+	// Ssn Social Security Number (only present for US persons, format XXX-XX-XXXX)
+	Ssn *string `json:"ssn,omitempty"`
+
 	// SumsubVerification Sumsub review information for a specific entity
 	SumsubVerification *SumsubReviewData `json:"sumsub_verification,omitempty"`
 }
@@ -3114,7 +3150,7 @@ type NestedTransaction struct {
 // NetworkId Identifier for a blockchain network
 type NetworkId string
 
-// OneOffTransaction A one-off transaction response
+// OneOffTransaction A one-off transaction response. Used for single on/off-ramp transactions.
 type OneOffTransaction struct {
 	// Amount Original requested amount
 	Amount *string `json:"amount,omitempty"`
@@ -3155,7 +3191,7 @@ type OneOffTransaction struct {
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	DestinationId KSUID `json:"destination_id"`
 
-	// DestinationPaymentRail Type of payment rail capability supported.
+	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
 
 	// DestinationRoutingNumber ABA routing number for US bank accounts
@@ -3172,6 +3208,9 @@ type OneOffTransaction struct {
 
 	// Receipt Detailed receipt information for a transaction
 	Receipt *TransactionReceipt `json:"receipt,omitempty"`
+
+	// ResourceType Discriminator field. Always "one_off" for one-off transactions.
+	ResourceType TransactionResourceType `json:"resource_type"`
 
 	// SendAmount Amount that should be sent (may be higher than requested amount due to fees)
 	SendAmount *string `json:"send_amount,omitempty"`
@@ -3206,8 +3245,11 @@ type OneOffTransactionRequest struct {
 	// DestinationNetworkId Identifier for a blockchain network
 	DestinationNetworkId *NetworkId `json:"destination_network_id,omitempty"`
 
-	// DestinationPaymentRail Type of payment rail capability supported.
+	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
+
+	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%). Overrides the default client fee for this transaction.
+	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
 	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-10 chars), Wire (1-140 chars), SEPA (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
 	PaymentReference *string `json:"payment_reference,omitempty"`
@@ -3282,7 +3324,7 @@ type PaginatedTransactionResourceResponse struct {
 	union json.RawMessage
 }
 
-// PaymentCapability Type of payment rail capability supported.
+// PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 type PaymentCapability string
 
 // PersonName Full name of a person
@@ -3543,6 +3585,53 @@ type SandboxScenario struct {
 	ValidFor []string `json:"valid_for"`
 }
 
+// SelfServeCreditTier defines model for SelfServeCreditTier.
+type SelfServeCreditTier struct {
+	PriceCents            int64 `json:"price_cents"`
+	TransferCapacityCents int64 `json:"transfer_capacity_cents"`
+}
+
+// SelfServeCreditTiersResponse defines model for SelfServeCreditTiersResponse.
+type SelfServeCreditTiersResponse struct {
+	Tiers []SelfServeCreditTier `json:"tiers"`
+}
+
+// SelfServeCreditsBalanceResponse defines model for SelfServeCreditsBalanceResponse.
+type SelfServeCreditsBalanceResponse struct {
+	BalanceCents          int64 `json:"balance_cents"`
+	TransferCapacityCents int64 `json:"transfer_capacity_cents"`
+}
+
+// SelfServeCreditsLedgerEntry defines model for SelfServeCreditsLedgerEntry.
+type SelfServeCreditsLedgerEntry struct {
+	AmountCents       int64                                `json:"amount_cents"`
+	BalanceAfterCents int64                                `json:"balance_after_cents"`
+	CreatedAt         time.Time                            `json:"created_at"`
+	Description       string                               `json:"description"`
+	EntryType         SelfServeCreditsLedgerEntryEntryType `json:"entry_type"`
+	Id                string                               `json:"id"`
+	TransactionId     *string                              `json:"transaction_id"`
+}
+
+// SelfServeCreditsLedgerEntryEntryType defines model for SelfServeCreditsLedgerEntry.EntryType.
+type SelfServeCreditsLedgerEntryEntryType string
+
+// SelfServeCreditsLedgerResponse defines model for SelfServeCreditsLedgerResponse.
+type SelfServeCreditsLedgerResponse struct {
+	Entries []SelfServeCreditsLedgerEntry `json:"entries"`
+	HasMore bool                          `json:"has_more"`
+}
+
+// SelfServeCreditsPurchaseRequest defines model for SelfServeCreditsPurchaseRequest.
+type SelfServeCreditsPurchaseRequest struct {
+	TierPriceCents int64 `json:"tier_price_cents"`
+}
+
+// SelfServeCreditsPurchaseResponse defines model for SelfServeCreditsPurchaseResponse.
+type SelfServeCreditsPurchaseResponse struct {
+	CheckoutUrl string `json:"checkout_url"`
+}
+
 // SendTransactionIntent defines model for SendTransactionIntent.
 type SendTransactionIntent struct {
 	// Caip2 CAIP-2 chain identifier for the target blockchain network
@@ -3706,6 +3795,18 @@ type SimulationInspection struct {
 // SimulationState State of a sandbox simulation after submission.
 type SimulationState string
 
+// SubClientSummary Summary of a sub-client including the count of customers associated with it.
+type SubClientSummary struct {
+	// CustomerCount Number of customers associated with this sub-client.
+	CustomerCount int `json:"customer_count"`
+
+	// SubClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	SubClientId KSUID `json:"sub_client_id"`
+
+	// SubClientName Name of the customer acting as a sub-client.
+	SubClientName string `json:"sub_client_name"`
+}
+
 // SumsubReview Sumsub verification review details
 type SumsubReview struct {
 	// AttemptCnt Number of verification attempts
@@ -3814,7 +3915,7 @@ type SumsubRiskLabels struct {
 	Device *[]string `json:"device,omitempty"`
 }
 
-// Transaction A unified transaction object representing money movements in the Dakota platform.
+// Transaction A unified transaction object representing money movements in the Dakota platform. Used for auto-account transactions.
 type Transaction struct {
 	// CompletedAt Unix timestamp when the transaction was completed. Null if not completed.
 	CompletedAt *int `json:"completedAt"`
@@ -3839,6 +3940,9 @@ type Transaction struct {
 
 	// OutputAmount An amount of money with its asset.
 	OutputAmount TransactionAmount `json:"outputAmount"`
+
+	// ResourceType Discriminator field. Always "auto_account" for auto-account transactions.
+	ResourceType TransactionResourceType `json:"resource_type"`
 
 	// Settlement Settlement details for a transaction.
 	Settlement *TransactionSettlement `json:"settlement,omitempty"`
@@ -3986,8 +4090,14 @@ type UpdateClientUserRequest struct {
 	// LastName Surname of the user
 	LastName *string `json:"last_name,omitempty"`
 
-	// Role Role that can be assigned to a client user
+	// Role Role that can be assigned to a client user. Available roles: `admin` (full access except issuances) and `viewer` (read-only access).
 	Role *ClientUserRole `json:"role,omitempty"`
+}
+
+// UpdateCustomerSubClientRequest Request to update the sub-client association for a customer. Set sub_client_id to associate with a sub-client, or null to disassociate.
+type UpdateCustomerSubClientRequest struct {
+	// SubClientId ID of the sub-client to associate with, or null to disassociate.
+	SubClientId *string `json:"sub_client_id"`
 }
 
 // UpdatePolicyRuleIntent defines model for UpdatePolicyRuleIntent.
@@ -4151,6 +4261,9 @@ type WalletTransaction struct {
 
 	// NetworkId Identifier for a blockchain network
 	NetworkId *NetworkId `json:"network_id,omitempty"`
+
+	// ResourceType Discriminator field. Always "wallet" for wallet transactions.
+	ResourceType TransactionResourceType `json:"resource_type"`
 
 	// Status Current status of a transaction.
 	Status TransactionStatus `json:"status"`
@@ -4352,6 +4465,12 @@ type CreateApiKeyParams struct {
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
 
+// CreateApiKeyForClientParams defines parameters for CreateApiKeyForClient.
+type CreateApiKeyForClientParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
 // ListApplicationsParams defines parameters for ListApplications.
 type ListApplicationsParams struct {
 	// Type Filter by application type
@@ -4375,6 +4494,12 @@ type ListApplicationsParamsType string
 
 // ListApplicationsParamsStatus defines parameters for ListApplications.
 type ListApplicationsParamsStatus string
+
+// GetApplicationParams defines parameters for GetApplication.
+type GetApplicationParams struct {
+	// Include Comma-separated list of sections to include in the response (entities, validation, edd, attestations, all)
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
+}
 
 // AddAssociatedIndividualParams defines parameters for AddAssociatedIndividual.
 type AddAssociatedIndividualParams struct {
@@ -4542,6 +4667,12 @@ type ListCustomersParams struct {
 
 	// KybStatus Filter customers by KYB status
 	KybStatus *KybStatus `form:"kyb_status,omitempty" json:"kyb_status,omitempty"`
+
+	// SubClientId Filter customers by sub-client association. Returns only customers associated with the specified sub-client.
+	SubClientId *KSUID `form:"sub_client_id,omitempty" json:"sub_client_id,omitempty"`
+
+	// IsSubClient When set to true, returns only customers that are acting as sub-clients (have other customers associated with them).
+	IsSubClient *bool `form:"is_sub_client,omitempty" json:"is_sub_client,omitempty"`
 }
 
 // CreateCustomerParams defines parameters for CreateCustomer.
@@ -4744,6 +4875,21 @@ type SimulateOnboardingParams struct {
 // SimulateOnboardingJSONBodyType defines parameters for SimulateOnboarding.
 type SimulateOnboardingJSONBodyType string
 
+// ListSelfServeCreditsLedgerParams defines parameters for ListSelfServeCreditsLedger.
+type ListSelfServeCreditsLedgerParams struct {
+	// Cursor Return entries created before this timestamp.
+	Cursor *time.Time `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Limit Maximum number of entries to return.
+	Limit *int32 `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Type Optional ledger entry type filter.
+	Type *ListSelfServeCreditsLedgerParamsType `form:"type,omitempty" json:"type,omitempty"`
+}
+
+// ListSelfServeCreditsLedgerParamsType defines parameters for ListSelfServeCreditsLedger.
+type ListSelfServeCreditsLedgerParamsType string
+
 // ListSignerGroupsParams defines parameters for ListSignerGroups.
 type ListSignerGroupsParams struct {
 	// Limit A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 20.
@@ -4930,6 +5076,9 @@ type CreateAccountJSONRequestBody = AccountCreateRequest
 // UpdateAccountJSONRequestBody defines body for UpdateAccount for application/json ContentType.
 type UpdateAccountJSONRequestBody = AccountUpdateRequest
 
+// CreateApiKeyForClientJSONRequestBody defines body for CreateApiKeyForClient for application/json ContentType.
+type CreateApiKeyForClientJSONRequestBody = CreateApiKeyForClientRequest
+
 // AddAssociatedIndividualJSONRequestBody defines body for AddAssociatedIndividual for application/json ContentType.
 type AddAssociatedIndividualJSONRequestBody = IndividualRequest
 
@@ -4966,6 +5115,9 @@ type CreateCustomerJSONRequestBody = CustomerCreateRequest
 // CreateRecipientJSONRequestBody defines body for CreateRecipient for application/json ContentType.
 type CreateRecipientJSONRequestBody = RecipientRequest
 
+// UpdateCustomerSubClientJSONRequestBody defines body for UpdateCustomerSubClient for application/json ContentType.
+type UpdateCustomerSubClientJSONRequestBody = UpdateCustomerSubClientRequest
+
 // CreatePolicyJSONRequestBody defines body for CreatePolicy for application/json ContentType.
 type CreatePolicyJSONRequestBody = CreatePolicyRequest
 
@@ -5001,6 +5153,9 @@ type SimulateOnboardingJSONRequestBody SimulateOnboardingJSONBody
 
 // AdvanceSimulationJSONRequestBody defines body for AdvanceSimulation for application/json ContentType.
 type AdvanceSimulationJSONRequestBody = AdvanceSimulationRequest
+
+// CreateSelfServeCreditsPurchaseJSONRequestBody defines body for CreateSelfServeCreditsPurchase for application/json ContentType.
+type CreateSelfServeCreditsPurchaseJSONRequestBody = SelfServeCreditsPurchaseRequest
 
 // CreateSignerGroupJSONRequestBody defines body for CreateSignerGroup for application/json ContentType.
 type CreateSignerGroupJSONRequestBody = SignerGroupCreateRequest
@@ -5591,6 +5746,7 @@ func (t TransactionResource) AsOneOffTransaction() (OneOffTransaction, error) {
 
 // FromOneOffTransaction overwrites any union data inside the TransactionResource as the provided OneOffTransaction
 func (t *TransactionResource) FromOneOffTransaction(v OneOffTransaction) error {
+	v.ResourceType = "one_off"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -5598,6 +5754,7 @@ func (t *TransactionResource) FromOneOffTransaction(v OneOffTransaction) error {
 
 // MergeOneOffTransaction performs a merge with any union data inside the TransactionResource, using the provided OneOffTransaction
 func (t *TransactionResource) MergeOneOffTransaction(v OneOffTransaction) error {
+	v.ResourceType = "one_off"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -5617,6 +5774,7 @@ func (t TransactionResource) AsWalletTransaction() (WalletTransaction, error) {
 
 // FromWalletTransaction overwrites any union data inside the TransactionResource as the provided WalletTransaction
 func (t *TransactionResource) FromWalletTransaction(v WalletTransaction) error {
+	v.ResourceType = "wallet"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -5624,6 +5782,7 @@ func (t *TransactionResource) FromWalletTransaction(v WalletTransaction) error {
 
 // MergeWalletTransaction performs a merge with any union data inside the TransactionResource, using the provided WalletTransaction
 func (t *TransactionResource) MergeWalletTransaction(v WalletTransaction) error {
+	v.ResourceType = "wallet"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -5643,6 +5802,7 @@ func (t TransactionResource) AsTransaction() (Transaction, error) {
 
 // FromTransaction overwrites any union data inside the TransactionResource as the provided Transaction
 func (t *TransactionResource) FromTransaction(v Transaction) error {
+	v.ResourceType = "auto_account"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -5650,6 +5810,7 @@ func (t *TransactionResource) FromTransaction(v Transaction) error {
 
 // MergeTransaction performs a merge with any union data inside the TransactionResource, using the provided Transaction
 func (t *TransactionResource) MergeTransaction(v Transaction) error {
+	v.ResourceType = "auto_account"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -5658,6 +5819,31 @@ func (t *TransactionResource) MergeTransaction(v Transaction) error {
 	merged, err := runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
+}
+
+func (t TransactionResource) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"resource_type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t TransactionResource) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "auto_account":
+		return t.AsTransaction()
+	case "one_off":
+		return t.AsOneOffTransaction()
+	case "wallet":
+		return t.AsWalletTransaction()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
 }
 
 func (t TransactionResource) MarshalJSON() ([]byte, error) {
@@ -5751,6 +5937,9 @@ type ClientInterface interface {
 
 	CreateAccount(ctx context.Context, params *CreateAccountParams, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteAccount request
+	DeleteAccount(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetAccount request
 	GetAccount(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5768,6 +5957,11 @@ type ClientInterface interface {
 	// CreateApiKey request
 	CreateApiKey(ctx context.Context, params *CreateApiKeyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateApiKeyForClientWithBody request with any body
+	CreateApiKeyForClientWithBody(ctx context.Context, params *CreateApiKeyForClientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateApiKeyForClient(ctx context.Context, params *CreateApiKeyForClientParams, body CreateApiKeyForClientJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteApiKey request
 	DeleteApiKey(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5775,7 +5969,7 @@ type ClientInterface interface {
 	ListApplications(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApplication request
-	GetApplication(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetApplication(ctx context.Context, applicationId KSUID, params *GetApplicationParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AddAssociatedIndividualWithBody request with any body
 	AddAssociatedIndividualWithBody(ctx context.Context, applicationId KSUID, params *AddAssociatedIndividualParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5868,6 +6062,9 @@ type ClientInterface interface {
 
 	CreateCustomer(ctx context.Context, params *CreateCustomerParams, body CreateCustomerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetSubClientSummary request
+	GetSubClientSummary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetCustomer request
 	GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5878,6 +6075,11 @@ type ClientInterface interface {
 	CreateRecipientWithBody(ctx context.Context, customerId KSUID, params *CreateRecipientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreateRecipient(ctx context.Context, customerId KSUID, params *CreateRecipientParams, body CreateRecipientJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateCustomerSubClientWithBody request with any body
+	UpdateCustomerSubClientWithBody(ctx context.Context, customerId KSUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateCustomerSubClient(ctx context.Context, customerId KSUID, body UpdateCustomerSubClientJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEvents request
 	ListEvents(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5923,6 +6125,9 @@ type ClientInterface interface {
 
 	UpsertPolicyWalletRelationship(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteRecipient request
+	DeleteRecipient(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetRecipient request
 	GetRecipient(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5938,6 +6143,9 @@ type ClientInterface interface {
 	CreateDestinationWithBody(ctx context.Context, recipientId KSUID, params *CreateDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreateDestination(ctx context.Context, recipientId KSUID, params *CreateDestinationParams, body CreateDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteDestination request
+	DeleteDestination(ctx context.Context, recipientId KSUID, destinationId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListSandboxScenarios request
 	ListSandboxScenarios(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5959,6 +6167,20 @@ type ClientInterface interface {
 	AdvanceSimulationWithBody(ctx context.Context, simulationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	AdvanceSimulation(ctx context.Context, simulationId string, body AdvanceSimulationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSelfServeCreditsBalance request
+	GetSelfServeCreditsBalance(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSelfServeCreditsLedger request
+	ListSelfServeCreditsLedger(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSelfServeCreditsPurchaseWithBody request with any body
+	CreateSelfServeCreditsPurchaseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateSelfServeCreditsPurchase(ctx context.Context, body CreateSelfServeCreditsPurchaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSelfServeCreditTiers request
+	ListSelfServeCreditTiers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListSignerGroups request
 	ListSignerGroups(ctx context.Context, params *ListSignerGroupsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6108,6 +6330,18 @@ func (c *APIClient) CreateAccount(ctx context.Context, params *CreateAccountPara
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) DeleteAccount(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAccountRequest(c.Server, accountId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetAccount(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAccountRequest(c.Server, accountId)
 	if err != nil {
@@ -6180,6 +6414,30 @@ func (c *APIClient) CreateApiKey(ctx context.Context, params *CreateApiKeyParams
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) CreateApiKeyForClientWithBody(ctx context.Context, params *CreateApiKeyForClientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApiKeyForClientRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateApiKeyForClient(ctx context.Context, params *CreateApiKeyForClientParams, body CreateApiKeyForClientJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApiKeyForClientRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) DeleteApiKey(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteApiKeyRequest(c.Server, apiKeyId)
 	if err != nil {
@@ -6204,8 +6462,8 @@ func (c *APIClient) ListApplications(ctx context.Context, params *ListApplicatio
 	return c.Client.Do(req)
 }
 
-func (c *APIClient) GetApplication(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApplicationRequest(c.Server, applicationId)
+func (c *APIClient) GetApplication(ctx context.Context, applicationId KSUID, params *GetApplicationParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApplicationRequest(c.Server, applicationId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6624,6 +6882,18 @@ func (c *APIClient) CreateCustomer(ctx context.Context, params *CreateCustomerPa
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) GetSubClientSummary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSubClientSummaryRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCustomerRequest(c.Server, customerId)
 	if err != nil {
@@ -6662,6 +6932,30 @@ func (c *APIClient) CreateRecipientWithBody(ctx context.Context, customerId KSUI
 
 func (c *APIClient) CreateRecipient(ctx context.Context, customerId KSUID, params *CreateRecipientParams, body CreateRecipientJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateRecipientRequest(c.Server, customerId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateCustomerSubClientWithBody(ctx context.Context, customerId KSUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCustomerSubClientRequestWithBody(c.Server, customerId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateCustomerSubClient(ctx context.Context, customerId KSUID, body UpdateCustomerSubClientJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCustomerSubClientRequest(c.Server, customerId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6876,6 +7170,18 @@ func (c *APIClient) UpsertPolicyWalletRelationship(ctx context.Context, policyId
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) DeleteRecipient(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteRecipientRequest(c.Server, recipientId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetRecipient(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRecipientRequest(c.Server, recipientId)
 	if err != nil {
@@ -6938,6 +7244,18 @@ func (c *APIClient) CreateDestinationWithBody(ctx context.Context, recipientId K
 
 func (c *APIClient) CreateDestination(ctx context.Context, recipientId KSUID, params *CreateDestinationParams, body CreateDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateDestinationRequest(c.Server, recipientId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) DeleteDestination(ctx context.Context, recipientId KSUID, destinationId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteDestinationRequest(c.Server, recipientId, destinationId)
 	if err != nil {
 		return nil, err
 	}
@@ -7034,6 +7352,66 @@ func (c *APIClient) AdvanceSimulationWithBody(ctx context.Context, simulationId 
 
 func (c *APIClient) AdvanceSimulation(ctx context.Context, simulationId string, body AdvanceSimulationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAdvanceSimulationRequest(c.Server, simulationId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetSelfServeCreditsBalance(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSelfServeCreditsBalanceRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListSelfServeCreditsLedger(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSelfServeCreditsLedgerRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateSelfServeCreditsPurchaseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSelfServeCreditsPurchaseRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateSelfServeCreditsPurchase(ctx context.Context, body CreateSelfServeCreditsPurchaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSelfServeCreditsPurchaseRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListSelfServeCreditTiers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSelfServeCreditTiersRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -7778,6 +8156,40 @@ func NewCreateAccountRequestWithBody(server string, params *CreateAccountParams,
 	return req, nil
 }
 
+// NewDeleteAccountRequest generates requests for DeleteAccount
+func NewDeleteAccountRequest(server string, accountId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "account_id", runtime.ParamLocationPath, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/accounts/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetAccountRequest generates requests for GetAccount
 func NewGetAccountRequest(server string, accountId KSUID) (*http.Request, error) {
 	var err error
@@ -8020,6 +8432,59 @@ func NewCreateApiKeyRequest(server string, params *CreateApiKeyParams) (*http.Re
 	return req, nil
 }
 
+// NewCreateApiKeyForClientRequest calls the generic CreateApiKeyForClient builder with application/json body
+func NewCreateApiKeyForClientRequest(server string, params *CreateApiKeyForClientParams, body CreateApiKeyForClientJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateApiKeyForClientRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewCreateApiKeyForClientRequestWithBody generates requests for CreateApiKeyForClient with any type of body
+func NewCreateApiKeyForClientRequestWithBody(server string, params *CreateApiKeyForClientParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api-keys/admin")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewDeleteApiKeyRequest generates requests for DeleteApiKey
 func NewDeleteApiKeyRequest(server string, apiKeyId KSUID) (*http.Request, error) {
 	var err error
@@ -8168,7 +8633,7 @@ func NewListApplicationsRequest(server string, params *ListApplicationsParams) (
 }
 
 // NewGetApplicationRequest generates requests for GetApplication
-func NewGetApplicationRequest(server string, applicationId KSUID) (*http.Request, error) {
+func NewGetApplicationRequest(server string, applicationId KSUID, params *GetApplicationParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -8191,6 +8656,28 @@ func NewGetApplicationRequest(server string, applicationId KSUID) (*http.Request
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include", runtime.ParamLocationQuery, *params.Include); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -9711,6 +10198,38 @@ func NewListCustomersRequest(server string, params *ListCustomersParams) (*http.
 
 		}
 
+		if params.SubClientId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sub_client_id", runtime.ParamLocationQuery, *params.SubClientId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.IsSubClient != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "is_sub_client", runtime.ParamLocationQuery, *params.IsSubClient); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -9770,6 +10289,33 @@ func NewCreateCustomerRequestWithBody(server string, params *CreateCustomerParam
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+	}
+
+	return req, nil
+}
+
+// NewGetSubClientSummaryRequest generates requests for GetSubClientSummary
+func NewGetSubClientSummaryRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/sub-client-summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -9953,6 +10499,53 @@ func NewCreateRecipientRequestWithBody(server string, customerId KSUID, params *
 		req.Header.Set("x-idempotency-key", headerParam0)
 
 	}
+
+	return req, nil
+}
+
+// NewUpdateCustomerSubClientRequest calls the generic UpdateCustomerSubClient builder with application/json body
+func NewUpdateCustomerSubClientRequest(server string, customerId KSUID, body UpdateCustomerSubClientJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateCustomerSubClientRequestWithBody(server, customerId, "application/json", bodyReader)
+}
+
+// NewUpdateCustomerSubClientRequestWithBody generates requests for UpdateCustomerSubClient with any type of body
+func NewUpdateCustomerSubClientRequestWithBody(server string, customerId KSUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s/sub-client", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -10594,6 +11187,40 @@ func NewUpsertPolicyWalletRelationshipRequestWithBody(server string, policyId st
 	return req, nil
 }
 
+// NewDeleteRecipientRequest generates requests for DeleteRecipient
+func NewDeleteRecipientRequest(server string, recipientId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipient_id", runtime.ParamLocationPath, recipientId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/recipients/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetRecipientRequest generates requests for GetRecipient
 func NewGetRecipientRequest(server string, recipientId KSUID) (*http.Request, error) {
 	var err error
@@ -10852,6 +11479,47 @@ func NewCreateDestinationRequestWithBody(server string, recipientId KSUID, param
 	return req, nil
 }
 
+// NewDeleteDestinationRequest generates requests for DeleteDestination
+func NewDeleteDestinationRequest(server string, recipientId KSUID, destinationId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipient_id", runtime.ParamLocationPath, recipientId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "destination_id", runtime.ParamLocationPath, destinationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/recipients/%s/destinations/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListSandboxScenariosRequest generates requests for ListSandboxScenarios
 func NewListSandboxScenariosRequest(server string) (*http.Request, error) {
 	var err error
@@ -11062,6 +11730,181 @@ func NewAdvanceSimulationRequestWithBody(server string, simulationId string, con
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetSelfServeCreditsBalanceRequest generates requests for GetSelfServeCreditsBalance
+func NewGetSelfServeCreditsBalanceRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/self-serve/credits/balance")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListSelfServeCreditsLedgerRequest generates requests for ListSelfServeCreditsLedger
+func NewListSelfServeCreditsLedgerRequest(server string, params *ListSelfServeCreditsLedgerParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/self-serve/credits/ledger")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "cursor", runtime.ParamLocationQuery, *params.Cursor); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Type != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "type", runtime.ParamLocationQuery, *params.Type); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateSelfServeCreditsPurchaseRequest calls the generic CreateSelfServeCreditsPurchase builder with application/json body
+func NewCreateSelfServeCreditsPurchaseRequest(server string, body CreateSelfServeCreditsPurchaseJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSelfServeCreditsPurchaseRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateSelfServeCreditsPurchaseRequestWithBody generates requests for CreateSelfServeCreditsPurchase with any type of body
+func NewCreateSelfServeCreditsPurchaseRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/self-serve/credits/purchase")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListSelfServeCreditTiersRequest generates requests for ListSelfServeCreditTiers
+func NewListSelfServeCreditTiersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/self-serve/credits/tiers")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -12831,6 +13674,9 @@ type ClientWithResponsesInterface interface {
 
 	CreateAccountWithResponse(ctx context.Context, params *CreateAccountParams, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
 
+	// DeleteAccountWithResponse request
+	DeleteAccountWithResponse(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*DeleteAccountResponse, error)
+
 	// GetAccountWithResponse request
 	GetAccountWithResponse(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*GetAccountResponse, error)
 
@@ -12848,6 +13694,11 @@ type ClientWithResponsesInterface interface {
 	// CreateApiKeyWithResponse request
 	CreateApiKeyWithResponse(ctx context.Context, params *CreateApiKeyParams, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error)
 
+	// CreateApiKeyForClientWithBodyWithResponse request with any body
+	CreateApiKeyForClientWithBodyWithResponse(ctx context.Context, params *CreateApiKeyForClientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApiKeyForClientResponse, error)
+
+	CreateApiKeyForClientWithResponse(ctx context.Context, params *CreateApiKeyForClientParams, body CreateApiKeyForClientJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateApiKeyForClientResponse, error)
+
 	// DeleteApiKeyWithResponse request
 	DeleteApiKeyWithResponse(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*DeleteApiKeyResponse, error)
 
@@ -12855,7 +13706,7 @@ type ClientWithResponsesInterface interface {
 	ListApplicationsWithResponse(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*ListApplicationsResponse, error)
 
 	// GetApplicationWithResponse request
-	GetApplicationWithResponse(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*GetApplicationResponse, error)
+	GetApplicationWithResponse(ctx context.Context, applicationId KSUID, params *GetApplicationParams, reqEditors ...RequestEditorFn) (*GetApplicationResponse, error)
 
 	// AddAssociatedIndividualWithBodyWithResponse request with any body
 	AddAssociatedIndividualWithBodyWithResponse(ctx context.Context, applicationId KSUID, params *AddAssociatedIndividualParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddAssociatedIndividualResponse, error)
@@ -12948,6 +13799,9 @@ type ClientWithResponsesInterface interface {
 
 	CreateCustomerWithResponse(ctx context.Context, params *CreateCustomerParams, body CreateCustomerJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateCustomerResponse, error)
 
+	// GetSubClientSummaryWithResponse request
+	GetSubClientSummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubClientSummaryResponse, error)
+
 	// GetCustomerWithResponse request
 	GetCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerResponse, error)
 
@@ -12958,6 +13812,11 @@ type ClientWithResponsesInterface interface {
 	CreateRecipientWithBodyWithResponse(ctx context.Context, customerId KSUID, params *CreateRecipientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRecipientResponse, error)
 
 	CreateRecipientWithResponse(ctx context.Context, customerId KSUID, params *CreateRecipientParams, body CreateRecipientJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRecipientResponse, error)
+
+	// UpdateCustomerSubClientWithBodyWithResponse request with any body
+	UpdateCustomerSubClientWithBodyWithResponse(ctx context.Context, customerId KSUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCustomerSubClientResponse, error)
+
+	UpdateCustomerSubClientWithResponse(ctx context.Context, customerId KSUID, body UpdateCustomerSubClientJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCustomerSubClientResponse, error)
 
 	// ListEventsWithResponse request
 	ListEventsWithResponse(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*ListEventsResponse, error)
@@ -13003,6 +13862,9 @@ type ClientWithResponsesInterface interface {
 
 	UpsertPolicyWalletRelationshipWithResponse(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertPolicyWalletRelationshipResponse, error)
 
+	// DeleteRecipientWithResponse request
+	DeleteRecipientWithResponse(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*DeleteRecipientResponse, error)
+
 	// GetRecipientWithResponse request
 	GetRecipientWithResponse(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*GetRecipientResponse, error)
 
@@ -13018,6 +13880,9 @@ type ClientWithResponsesInterface interface {
 	CreateDestinationWithBodyWithResponse(ctx context.Context, recipientId KSUID, params *CreateDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateDestinationResponse, error)
 
 	CreateDestinationWithResponse(ctx context.Context, recipientId KSUID, params *CreateDestinationParams, body CreateDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateDestinationResponse, error)
+
+	// DeleteDestinationWithResponse request
+	DeleteDestinationWithResponse(ctx context.Context, recipientId KSUID, destinationId KSUID, reqEditors ...RequestEditorFn) (*DeleteDestinationResponse, error)
 
 	// ListSandboxScenariosWithResponse request
 	ListSandboxScenariosWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSandboxScenariosResponse, error)
@@ -13039,6 +13904,20 @@ type ClientWithResponsesInterface interface {
 	AdvanceSimulationWithBodyWithResponse(ctx context.Context, simulationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdvanceSimulationResponse, error)
 
 	AdvanceSimulationWithResponse(ctx context.Context, simulationId string, body AdvanceSimulationJSONRequestBody, reqEditors ...RequestEditorFn) (*AdvanceSimulationResponse, error)
+
+	// GetSelfServeCreditsBalanceWithResponse request
+	GetSelfServeCreditsBalanceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSelfServeCreditsBalanceResponse, error)
+
+	// ListSelfServeCreditsLedgerWithResponse request
+	ListSelfServeCreditsLedgerWithResponse(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*ListSelfServeCreditsLedgerResponse, error)
+
+	// CreateSelfServeCreditsPurchaseWithBodyWithResponse request with any body
+	CreateSelfServeCreditsPurchaseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSelfServeCreditsPurchaseResponse, error)
+
+	CreateSelfServeCreditsPurchaseWithResponse(ctx context.Context, body CreateSelfServeCreditsPurchaseJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSelfServeCreditsPurchaseResponse, error)
+
+	// ListSelfServeCreditTiersWithResponse request
+	ListSelfServeCreditTiersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSelfServeCreditTiersResponse, error)
 
 	// ListSignerGroupsWithResponse request
 	ListSignerGroupsWithResponse(ctx context.Context, params *ListSignerGroupsParams, reqEditors ...RequestEditorFn) (*ListSignerGroupsResponse, error)
@@ -13208,6 +14087,35 @@ func (r CreateAccountResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteAccountResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON501 *ProblemDetails
+	ApplicationproblemJSON502 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAccountResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAccountResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetAccountResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -13336,6 +14244,32 @@ func (r CreateApiKeyResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateApiKeyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateApiKeyForClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *ApiKeyResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateApiKeyForClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateApiKeyForClientResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14038,6 +14972,30 @@ func (r CreateCustomerResponse) StatusCode() int {
 	return 0
 }
 
+type GetSubClientSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Data []SubClientSummary `json:"data"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSubClientSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSubClientSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetCustomerResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -14115,6 +15073,30 @@ func (r CreateRecipientResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateRecipientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateCustomerSubClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *Customer
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateCustomerSubClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateCustomerSubClientResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14404,6 +15386,32 @@ func (r UpsertPolicyWalletRelationshipResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteRecipientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRecipientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRecipientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetRecipientResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -14506,6 +15514,32 @@ func (r CreateDestinationResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateDestinationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteDestinationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteDestinationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteDestinationResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14651,6 +15685,105 @@ func (r AdvanceSimulationResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r AdvanceSimulationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSelfServeCreditsBalanceResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SelfServeCreditsBalanceResponse
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSelfServeCreditsBalanceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSelfServeCreditsBalanceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListSelfServeCreditsLedgerResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SelfServeCreditsLedgerResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSelfServeCreditsLedgerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSelfServeCreditsLedgerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateSelfServeCreditsPurchaseResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SelfServeCreditsPurchaseResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSelfServeCreditsPurchaseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSelfServeCreditsPurchaseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListSelfServeCreditTiersResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SelfServeCreditTiersResponse
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSelfServeCreditTiersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSelfServeCreditTiersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15471,6 +16604,15 @@ func (c *ClientWithResponses) CreateAccountWithResponse(ctx context.Context, par
 	return ParseCreateAccountResponse(rsp)
 }
 
+// DeleteAccountWithResponse request returning *DeleteAccountResponse
+func (c *ClientWithResponses) DeleteAccountWithResponse(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*DeleteAccountResponse, error) {
+	rsp, err := c.DeleteAccount(ctx, accountId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAccountResponse(rsp)
+}
+
 // GetAccountWithResponse request returning *GetAccountResponse
 func (c *ClientWithResponses) GetAccountWithResponse(ctx context.Context, accountId KSUID, reqEditors ...RequestEditorFn) (*GetAccountResponse, error) {
 	rsp, err := c.GetAccount(ctx, accountId, reqEditors...)
@@ -15524,6 +16666,23 @@ func (c *ClientWithResponses) CreateApiKeyWithResponse(ctx context.Context, para
 	return ParseCreateApiKeyResponse(rsp)
 }
 
+// CreateApiKeyForClientWithBodyWithResponse request with arbitrary body returning *CreateApiKeyForClientResponse
+func (c *ClientWithResponses) CreateApiKeyForClientWithBodyWithResponse(ctx context.Context, params *CreateApiKeyForClientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApiKeyForClientResponse, error) {
+	rsp, err := c.CreateApiKeyForClientWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateApiKeyForClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateApiKeyForClientWithResponse(ctx context.Context, params *CreateApiKeyForClientParams, body CreateApiKeyForClientJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateApiKeyForClientResponse, error) {
+	rsp, err := c.CreateApiKeyForClient(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateApiKeyForClientResponse(rsp)
+}
+
 // DeleteApiKeyWithResponse request returning *DeleteApiKeyResponse
 func (c *ClientWithResponses) DeleteApiKeyWithResponse(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*DeleteApiKeyResponse, error) {
 	rsp, err := c.DeleteApiKey(ctx, apiKeyId, reqEditors...)
@@ -15543,8 +16702,8 @@ func (c *ClientWithResponses) ListApplicationsWithResponse(ctx context.Context, 
 }
 
 // GetApplicationWithResponse request returning *GetApplicationResponse
-func (c *ClientWithResponses) GetApplicationWithResponse(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*GetApplicationResponse, error) {
-	rsp, err := c.GetApplication(ctx, applicationId, reqEditors...)
+func (c *ClientWithResponses) GetApplicationWithResponse(ctx context.Context, applicationId KSUID, params *GetApplicationParams, reqEditors ...RequestEditorFn) (*GetApplicationResponse, error) {
+	rsp, err := c.GetApplication(ctx, applicationId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -15846,6 +17005,15 @@ func (c *ClientWithResponses) CreateCustomerWithResponse(ctx context.Context, pa
 	return ParseCreateCustomerResponse(rsp)
 }
 
+// GetSubClientSummaryWithResponse request returning *GetSubClientSummaryResponse
+func (c *ClientWithResponses) GetSubClientSummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubClientSummaryResponse, error) {
+	rsp, err := c.GetSubClientSummary(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSubClientSummaryResponse(rsp)
+}
+
 // GetCustomerWithResponse request returning *GetCustomerResponse
 func (c *ClientWithResponses) GetCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerResponse, error) {
 	rsp, err := c.GetCustomer(ctx, customerId, reqEditors...)
@@ -15879,6 +17047,23 @@ func (c *ClientWithResponses) CreateRecipientWithResponse(ctx context.Context, c
 		return nil, err
 	}
 	return ParseCreateRecipientResponse(rsp)
+}
+
+// UpdateCustomerSubClientWithBodyWithResponse request with arbitrary body returning *UpdateCustomerSubClientResponse
+func (c *ClientWithResponses) UpdateCustomerSubClientWithBodyWithResponse(ctx context.Context, customerId KSUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCustomerSubClientResponse, error) {
+	rsp, err := c.UpdateCustomerSubClientWithBody(ctx, customerId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCustomerSubClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateCustomerSubClientWithResponse(ctx context.Context, customerId KSUID, body UpdateCustomerSubClientJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCustomerSubClientResponse, error) {
+	rsp, err := c.UpdateCustomerSubClient(ctx, customerId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCustomerSubClientResponse(rsp)
 }
 
 // ListEventsWithResponse request returning *ListEventsResponse
@@ -16027,6 +17212,15 @@ func (c *ClientWithResponses) UpsertPolicyWalletRelationshipWithResponse(ctx con
 	return ParseUpsertPolicyWalletRelationshipResponse(rsp)
 }
 
+// DeleteRecipientWithResponse request returning *DeleteRecipientResponse
+func (c *ClientWithResponses) DeleteRecipientWithResponse(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*DeleteRecipientResponse, error) {
+	rsp, err := c.DeleteRecipient(ctx, recipientId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteRecipientResponse(rsp)
+}
+
 // GetRecipientWithResponse request returning *GetRecipientResponse
 func (c *ClientWithResponses) GetRecipientWithResponse(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*GetRecipientResponse, error) {
 	rsp, err := c.GetRecipient(ctx, recipientId, reqEditors...)
@@ -16077,6 +17271,15 @@ func (c *ClientWithResponses) CreateDestinationWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseCreateDestinationResponse(rsp)
+}
+
+// DeleteDestinationWithResponse request returning *DeleteDestinationResponse
+func (c *ClientWithResponses) DeleteDestinationWithResponse(ctx context.Context, recipientId KSUID, destinationId KSUID, reqEditors ...RequestEditorFn) (*DeleteDestinationResponse, error) {
+	rsp, err := c.DeleteDestination(ctx, recipientId, destinationId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteDestinationResponse(rsp)
 }
 
 // ListSandboxScenariosWithResponse request returning *ListSandboxScenariosResponse
@@ -16146,6 +17349,50 @@ func (c *ClientWithResponses) AdvanceSimulationWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseAdvanceSimulationResponse(rsp)
+}
+
+// GetSelfServeCreditsBalanceWithResponse request returning *GetSelfServeCreditsBalanceResponse
+func (c *ClientWithResponses) GetSelfServeCreditsBalanceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSelfServeCreditsBalanceResponse, error) {
+	rsp, err := c.GetSelfServeCreditsBalance(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSelfServeCreditsBalanceResponse(rsp)
+}
+
+// ListSelfServeCreditsLedgerWithResponse request returning *ListSelfServeCreditsLedgerResponse
+func (c *ClientWithResponses) ListSelfServeCreditsLedgerWithResponse(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*ListSelfServeCreditsLedgerResponse, error) {
+	rsp, err := c.ListSelfServeCreditsLedger(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSelfServeCreditsLedgerResponse(rsp)
+}
+
+// CreateSelfServeCreditsPurchaseWithBodyWithResponse request with arbitrary body returning *CreateSelfServeCreditsPurchaseResponse
+func (c *ClientWithResponses) CreateSelfServeCreditsPurchaseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSelfServeCreditsPurchaseResponse, error) {
+	rsp, err := c.CreateSelfServeCreditsPurchaseWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSelfServeCreditsPurchaseResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateSelfServeCreditsPurchaseWithResponse(ctx context.Context, body CreateSelfServeCreditsPurchaseJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSelfServeCreditsPurchaseResponse, error) {
+	rsp, err := c.CreateSelfServeCreditsPurchase(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSelfServeCreditsPurchaseResponse(rsp)
+}
+
+// ListSelfServeCreditTiersWithResponse request returning *ListSelfServeCreditTiersResponse
+func (c *ClientWithResponses) ListSelfServeCreditTiersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSelfServeCreditTiersResponse, error) {
+	rsp, err := c.ListSelfServeCreditTiers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSelfServeCreditTiersResponse(rsp)
 }
 
 // ListSignerGroupsWithResponse request returning *ListSignerGroupsResponse
@@ -16641,6 +17888,81 @@ func ParseCreateAccountResponse(rsp *http.Response) (*CreateAccountResponse, err
 	return response, nil
 }
 
+// ParseDeleteAccountResponse parses an HTTP response from a DeleteAccountWithResponse call
+func ParseDeleteAccountResponse(rsp *http.Response) (*DeleteAccountResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAccountResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 501:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON501 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetAccountResponse parses an HTTP response from a GetAccountWithResponse call
 func ParseGetAccountResponse(rsp *http.Response) (*GetAccountResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -16903,6 +18225,60 @@ func ParseCreateApiKeyResponse(rsp *http.Response) (*CreateApiKeyResponse, error
 			return nil, err
 		}
 		response.ApplicationproblemJSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateApiKeyForClientResponse parses an HTTP response from a CreateApiKeyForClientWithResponse call
+func ParseCreateApiKeyForClientResponse(rsp *http.Response) (*CreateApiKeyForClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateApiKeyForClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ApiKeyResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
 
 	}
 
@@ -18345,6 +19721,34 @@ func ParseCreateCustomerResponse(rsp *http.Response) (*CreateCustomerResponse, e
 	return response, nil
 }
 
+// ParseGetSubClientSummaryResponse parses an HTTP response from a GetSubClientSummaryWithResponse call
+func ParseGetSubClientSummaryResponse(rsp *http.Response) (*GetSubClientSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSubClientSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Data []SubClientSummary `json:"data"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetCustomerResponse parses an HTTP response from a GetCustomerWithResponse call
 func ParseGetCustomerResponse(rsp *http.Response) (*GetCustomerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -18499,6 +19903,46 @@ func ParseCreateRecipientResponse(rsp *http.Response) (*CreateRecipientResponse,
 			return nil, err
 		}
 		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateCustomerSubClientResponse parses an HTTP response from a UpdateCustomerSubClientWithResponse call
+func ParseUpdateCustomerSubClientResponse(rsp *http.Response) (*UpdateCustomerSubClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateCustomerSubClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Customer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ProblemDetails
@@ -19183,6 +20627,60 @@ func ParseUpsertPolicyWalletRelationshipResponse(rsp *http.Response) (*UpsertPol
 	return response, nil
 }
 
+// ParseDeleteRecipientResponse parses an HTTP response from a DeleteRecipientWithResponse call
+func ParseDeleteRecipientResponse(rsp *http.Response) (*DeleteRecipientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRecipientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetRecipientResponse parses an HTTP response from a GetRecipientWithResponse call
 func ParseGetRecipientResponse(rsp *http.Response) (*GetRecipientResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -19391,6 +20889,60 @@ func ParseCreateDestinationResponse(rsp *http.Response) (*CreateDestinationRespo
 			return nil, err
 		}
 		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteDestinationResponse parses an HTTP response from a DeleteDestinationWithResponse call
+func ParseDeleteDestinationResponse(rsp *http.Response) (*DeleteDestinationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteDestinationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
 
 	}
 
@@ -19664,6 +21216,187 @@ func ParseAdvanceSimulationResponse(rsp *http.Response) (*AdvanceSimulationRespo
 			return nil, err
 		}
 		response.ApplicationproblemJSON502 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSelfServeCreditsBalanceResponse parses an HTTP response from a GetSelfServeCreditsBalanceWithResponse call
+func ParseGetSelfServeCreditsBalanceResponse(rsp *http.Response) (*GetSelfServeCreditsBalanceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSelfServeCreditsBalanceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfServeCreditsBalanceResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSelfServeCreditsLedgerResponse parses an HTTP response from a ListSelfServeCreditsLedgerWithResponse call
+func ParseListSelfServeCreditsLedgerResponse(rsp *http.Response) (*ListSelfServeCreditsLedgerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSelfServeCreditsLedgerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfServeCreditsLedgerResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSelfServeCreditsPurchaseResponse parses an HTTP response from a CreateSelfServeCreditsPurchaseWithResponse call
+func ParseCreateSelfServeCreditsPurchaseResponse(rsp *http.Response) (*CreateSelfServeCreditsPurchaseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSelfServeCreditsPurchaseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfServeCreditsPurchaseResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSelfServeCreditTiersResponse parses an HTTP response from a ListSelfServeCreditTiersWithResponse call
+func ParseListSelfServeCreditTiersResponse(rsp *http.Response) (*ListSelfServeCreditTiersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSelfServeCreditTiersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfServeCreditTiersResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
 
 	}
 
