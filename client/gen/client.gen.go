@@ -62,6 +62,13 @@ const (
 	ApplicationApplicationTypeIndividual ApplicationApplicationType = "individual"
 )
 
+// Defines values for ApplicationDecisionMethod.
+const (
+	ApplicationDecisionMethodAuto     ApplicationDecisionMethod = "auto"
+	ApplicationDecisionMethodManual   ApplicationDecisionMethod = "manual"
+	ApplicationDecisionMethodOverride ApplicationDecisionMethod = "override"
+)
+
 // Defines values for ApplicationDocumentType.
 const (
 	ApplicationDocumentTypeArticlesOfAssociation      ApplicationDocumentType = "articles_of_association"
@@ -620,6 +627,11 @@ const (
 	IndividualRequestTitleOtherOfficer IndividualRequestTitle = "other_officer"
 )
 
+// Defines values for InsufficientCreditsErrorError.
+const (
+	InsufficientCreditsErrorErrorInsufficientCredits InsufficientCreditsErrorError = "insufficient_credits"
+)
+
 // Defines values for KybLinkStatus.
 const (
 	KybLinkStatusApproved   KybLinkStatus = "approved"
@@ -723,14 +735,15 @@ const (
 
 // Defines values for OneOffTransactionStatus.
 const (
-	OneOffTransactionStatusCancelled     OneOffTransactionStatus = "cancelled"
-	OneOffTransactionStatusCompleted     OneOffTransactionStatus = "completed"
-	OneOffTransactionStatusFailed        OneOffTransactionStatus = "failed"
-	OneOffTransactionStatusPending       OneOffTransactionStatus = "pending"
-	OneOffTransactionStatusPendingReturn OneOffTransactionStatus = "pending_return"
-	OneOffTransactionStatusProcessing    OneOffTransactionStatus = "processing"
-	OneOffTransactionStatusReturned      OneOffTransactionStatus = "returned"
-	OneOffTransactionStatusReversed      OneOffTransactionStatus = "reversed"
+	OneOffTransactionStatusCancelled       OneOffTransactionStatus = "cancelled"
+	OneOffTransactionStatusCompleted       OneOffTransactionStatus = "completed"
+	OneOffTransactionStatusFailed          OneOffTransactionStatus = "failed"
+	OneOffTransactionStatusPending         OneOffTransactionStatus = "pending"
+	OneOffTransactionStatusPendingReturn   OneOffTransactionStatus = "pending_return"
+	OneOffTransactionStatusPendingReversal OneOffTransactionStatus = "pending_reversal"
+	OneOffTransactionStatusProcessing      OneOffTransactionStatus = "processing"
+	OneOffTransactionStatusReturned        OneOffTransactionStatus = "returned"
+	OneOffTransactionStatusReversed        OneOffTransactionStatus = "reversed"
 )
 
 // Defines values for OneOffTransactionType.
@@ -742,7 +755,6 @@ const (
 const (
 	PaymentCapabilityAch           PaymentCapability = "ach"
 	PaymentCapabilityFedwire       PaymentCapability = "fedwire"
-	PaymentCapabilitySepa          PaymentCapability = "sepa"
 	PaymentCapabilitySwift         PaymentCapability = "swift"
 	PaymentCapabilityUsBankAccount PaymentCapability = "us_bank_account"
 )
@@ -802,6 +814,17 @@ const (
 	RiskRatingLevelHigh   RiskRatingLevel = "high"
 	RiskRatingLevelLow    RiskRatingLevel = "low"
 	RiskRatingLevelMedium RiskRatingLevel = "medium"
+)
+
+// Defines values for SelfServeCreditsLedgerEntryCategory.
+const (
+	SelfServeCreditsLedgerEntryCategoryAdjustment        SelfServeCreditsLedgerEntryCategory = "adjustment"
+	SelfServeCreditsLedgerEntryCategoryComplianceFee     SelfServeCreditsLedgerEntryCategory = "compliance_fee"
+	SelfServeCreditsLedgerEntryCategoryComplianceRefund  SelfServeCreditsLedgerEntryCategory = "compliance_refund"
+	SelfServeCreditsLedgerEntryCategoryPurchase          SelfServeCreditsLedgerEntryCategory = "purchase"
+	SelfServeCreditsLedgerEntryCategoryTransactionFee    SelfServeCreditsLedgerEntryCategory = "transaction_fee"
+	SelfServeCreditsLedgerEntryCategoryTransactionRefund SelfServeCreditsLedgerEntryCategory = "transaction_refund"
+	SelfServeCreditsLedgerEntryCategoryUnknown           SelfServeCreditsLedgerEntryCategory = "unknown"
 )
 
 // Defines values for SelfServeCreditsLedgerEntryEntryType.
@@ -885,6 +908,7 @@ const (
 	TransactionStatusNotStarted           TransactionStatus = "not_started"
 	TransactionStatusPending              TransactionStatus = "pending"
 	TransactionStatusPendingReturn        TransactionStatus = "pending_return"
+	TransactionStatusPendingReversal      TransactionStatus = "pending_reversal"
 	TransactionStatusProcessing           TransactionStatus = "processing"
 	TransactionStatusRejected             TransactionStatus = "rejected"
 	TransactionStatusReturned             TransactionStatus = "returned"
@@ -964,6 +988,77 @@ const (
 	WebhookReplayResponseStatusQueued WebhookReplayResponseStatus = "queued"
 )
 
+// Defines values for SandboxErrorStepHeader.
+const (
+	SandboxErrorStepHeaderAccountValidation     SandboxErrorStepHeader = "account_validation"
+	SandboxErrorStepHeaderComplianceCheck       SandboxErrorStepHeader = "compliance_check"
+	SandboxErrorStepHeaderKybApproval           SandboxErrorStepHeader = "kyb_approval"
+	SandboxErrorStepHeaderKybSubmission         SandboxErrorStepHeader = "kyb_submission"
+	SandboxErrorStepHeaderNetworkCall           SandboxErrorStepHeader = "network_call"
+	SandboxErrorStepHeaderProviderCall          SandboxErrorStepHeader = "provider_call"
+	SandboxErrorStepHeaderTransactionProcessing SandboxErrorStepHeader = "transaction_processing"
+)
+
+// Defines values for SandboxScenarioHeader.
+const (
+	SandboxScenarioHeaderAccountFrozen       SandboxScenarioHeader = "account_frozen"
+	SandboxScenarioHeaderComplianceBlock     SandboxScenarioHeader = "compliance_block"
+	SandboxScenarioHeaderDelayedSettlement   SandboxScenarioHeader = "delayed_settlement"
+	SandboxScenarioHeaderDocumentExpired     SandboxScenarioHeader = "document_expired"
+	SandboxScenarioHeaderHappyPath           SandboxScenarioHeader = "happy_path"
+	SandboxScenarioHeaderInsufficientFunds   SandboxScenarioHeader = "insufficient_funds"
+	SandboxScenarioHeaderIntermittentErrors  SandboxScenarioHeader = "intermittent_errors"
+	SandboxScenarioHeaderInvalidAccount      SandboxScenarioHeader = "invalid_account"
+	SandboxScenarioHeaderInvalidSwift        SandboxScenarioHeader = "invalid_swift"
+	SandboxScenarioHeaderKybExpired          SandboxScenarioHeader = "kyb_expired"
+	SandboxScenarioHeaderKybManualReview     SandboxScenarioHeader = "kyb_manual_review"
+	SandboxScenarioHeaderKybRejected         SandboxScenarioHeader = "kyb_rejected"
+	SandboxScenarioHeaderNetworkCongestion   SandboxScenarioHeader = "network_congestion"
+	SandboxScenarioHeaderNetworkTimeout      SandboxScenarioHeader = "network_timeout"
+	SandboxScenarioHeaderProviderMaintenance SandboxScenarioHeader = "provider_maintenance"
+)
+
+// Defines values for CreateAccountParamsXSandboxScenario.
+const (
+	CreateAccountParamsXSandboxScenarioAccountFrozen       CreateAccountParamsXSandboxScenario = "account_frozen"
+	CreateAccountParamsXSandboxScenarioComplianceBlock     CreateAccountParamsXSandboxScenario = "compliance_block"
+	CreateAccountParamsXSandboxScenarioDelayedSettlement   CreateAccountParamsXSandboxScenario = "delayed_settlement"
+	CreateAccountParamsXSandboxScenarioDocumentExpired     CreateAccountParamsXSandboxScenario = "document_expired"
+	CreateAccountParamsXSandboxScenarioHappyPath           CreateAccountParamsXSandboxScenario = "happy_path"
+	CreateAccountParamsXSandboxScenarioInsufficientFunds   CreateAccountParamsXSandboxScenario = "insufficient_funds"
+	CreateAccountParamsXSandboxScenarioIntermittentErrors  CreateAccountParamsXSandboxScenario = "intermittent_errors"
+	CreateAccountParamsXSandboxScenarioInvalidAccount      CreateAccountParamsXSandboxScenario = "invalid_account"
+	CreateAccountParamsXSandboxScenarioInvalidSwift        CreateAccountParamsXSandboxScenario = "invalid_swift"
+	CreateAccountParamsXSandboxScenarioKybExpired          CreateAccountParamsXSandboxScenario = "kyb_expired"
+	CreateAccountParamsXSandboxScenarioKybManualReview     CreateAccountParamsXSandboxScenario = "kyb_manual_review"
+	CreateAccountParamsXSandboxScenarioKybRejected         CreateAccountParamsXSandboxScenario = "kyb_rejected"
+	CreateAccountParamsXSandboxScenarioNetworkCongestion   CreateAccountParamsXSandboxScenario = "network_congestion"
+	CreateAccountParamsXSandboxScenarioNetworkTimeout      CreateAccountParamsXSandboxScenario = "network_timeout"
+	CreateAccountParamsXSandboxScenarioProviderMaintenance CreateAccountParamsXSandboxScenario = "provider_maintenance"
+)
+
+// Defines values for CreateAccountParamsXSandboxErrorStep.
+const (
+	CreateAccountParamsXSandboxErrorStepAccountValidation     CreateAccountParamsXSandboxErrorStep = "account_validation"
+	CreateAccountParamsXSandboxErrorStepComplianceCheck       CreateAccountParamsXSandboxErrorStep = "compliance_check"
+	CreateAccountParamsXSandboxErrorStepKybApproval           CreateAccountParamsXSandboxErrorStep = "kyb_approval"
+	CreateAccountParamsXSandboxErrorStepKybSubmission         CreateAccountParamsXSandboxErrorStep = "kyb_submission"
+	CreateAccountParamsXSandboxErrorStepNetworkCall           CreateAccountParamsXSandboxErrorStep = "network_call"
+	CreateAccountParamsXSandboxErrorStepProviderCall          CreateAccountParamsXSandboxErrorStep = "provider_call"
+	CreateAccountParamsXSandboxErrorStepTransactionProcessing CreateAccountParamsXSandboxErrorStep = "transaction_processing"
+)
+
+// Defines values for ListApiKeysParamsSortBy.
+const (
+	ListApiKeysParamsSortByCreatedAt ListApiKeysParamsSortBy = "created_at"
+)
+
+// Defines values for ListApiKeysParamsSortDir.
+const (
+	ListApiKeysParamsSortDirAsc  ListApiKeysParamsSortDir = "asc"
+	ListApiKeysParamsSortDirDesc ListApiKeysParamsSortDir = "desc"
+)
+
 // Defines values for ListApplicationsParamsType.
 const (
 	ListApplicationsParamsTypeBusiness   ListApplicationsParamsType = "business"
@@ -984,6 +1079,63 @@ const (
 	ListDocumentsParamsCategoryIdentity ListDocumentsParamsCategory = "identity"
 )
 
+// Defines values for ListAutoTransactionsParamsSortBy.
+const (
+	ListAutoTransactionsParamsSortByCreatedAt ListAutoTransactionsParamsSortBy = "created_at"
+)
+
+// Defines values for ListAutoTransactionsParamsSortDir.
+const (
+	ListAutoTransactionsParamsSortDirAsc  ListAutoTransactionsParamsSortDir = "asc"
+	ListAutoTransactionsParamsSortDirDesc ListAutoTransactionsParamsSortDir = "desc"
+)
+
+// Defines values for ListCustomersParamsSortBy.
+const (
+	ListCustomersParamsSortByCreatedAt    ListCustomersParamsSortBy = "created_at"
+	ListCustomersParamsSortByCustomerType ListCustomersParamsSortBy = "customer_type"
+	ListCustomersParamsSortById           ListCustomersParamsSortBy = "id"
+	ListCustomersParamsSortByKybStatus    ListCustomersParamsSortBy = "kyb_status"
+	ListCustomersParamsSortByKycStatus    ListCustomersParamsSortBy = "kyc_status"
+	ListCustomersParamsSortByName         ListCustomersParamsSortBy = "name"
+)
+
+// Defines values for ListCustomersParamsSortDir.
+const (
+	ListCustomersParamsSortDirAsc  ListCustomersParamsSortDir = "asc"
+	ListCustomersParamsSortDirDesc ListCustomersParamsSortDir = "desc"
+)
+
+// Defines values for CreateCustomerParamsXSandboxScenario.
+const (
+	CreateCustomerParamsXSandboxScenarioAccountFrozen       CreateCustomerParamsXSandboxScenario = "account_frozen"
+	CreateCustomerParamsXSandboxScenarioComplianceBlock     CreateCustomerParamsXSandboxScenario = "compliance_block"
+	CreateCustomerParamsXSandboxScenarioDelayedSettlement   CreateCustomerParamsXSandboxScenario = "delayed_settlement"
+	CreateCustomerParamsXSandboxScenarioDocumentExpired     CreateCustomerParamsXSandboxScenario = "document_expired"
+	CreateCustomerParamsXSandboxScenarioHappyPath           CreateCustomerParamsXSandboxScenario = "happy_path"
+	CreateCustomerParamsXSandboxScenarioInsufficientFunds   CreateCustomerParamsXSandboxScenario = "insufficient_funds"
+	CreateCustomerParamsXSandboxScenarioIntermittentErrors  CreateCustomerParamsXSandboxScenario = "intermittent_errors"
+	CreateCustomerParamsXSandboxScenarioInvalidAccount      CreateCustomerParamsXSandboxScenario = "invalid_account"
+	CreateCustomerParamsXSandboxScenarioInvalidSwift        CreateCustomerParamsXSandboxScenario = "invalid_swift"
+	CreateCustomerParamsXSandboxScenarioKybExpired          CreateCustomerParamsXSandboxScenario = "kyb_expired"
+	CreateCustomerParamsXSandboxScenarioKybManualReview     CreateCustomerParamsXSandboxScenario = "kyb_manual_review"
+	CreateCustomerParamsXSandboxScenarioKybRejected         CreateCustomerParamsXSandboxScenario = "kyb_rejected"
+	CreateCustomerParamsXSandboxScenarioNetworkCongestion   CreateCustomerParamsXSandboxScenario = "network_congestion"
+	CreateCustomerParamsXSandboxScenarioNetworkTimeout      CreateCustomerParamsXSandboxScenario = "network_timeout"
+	CreateCustomerParamsXSandboxScenarioProviderMaintenance CreateCustomerParamsXSandboxScenario = "provider_maintenance"
+)
+
+// Defines values for CreateCustomerParamsXSandboxErrorStep.
+const (
+	CreateCustomerParamsXSandboxErrorStepAccountValidation     CreateCustomerParamsXSandboxErrorStep = "account_validation"
+	CreateCustomerParamsXSandboxErrorStepComplianceCheck       CreateCustomerParamsXSandboxErrorStep = "compliance_check"
+	CreateCustomerParamsXSandboxErrorStepKybApproval           CreateCustomerParamsXSandboxErrorStep = "kyb_approval"
+	CreateCustomerParamsXSandboxErrorStepKybSubmission         CreateCustomerParamsXSandboxErrorStep = "kyb_submission"
+	CreateCustomerParamsXSandboxErrorStepNetworkCall           CreateCustomerParamsXSandboxErrorStep = "network_call"
+	CreateCustomerParamsXSandboxErrorStepProviderCall          CreateCustomerParamsXSandboxErrorStep = "provider_call"
+	CreateCustomerParamsXSandboxErrorStepTransactionProcessing CreateCustomerParamsXSandboxErrorStep = "transaction_processing"
+)
+
 // Defines values for ListDestinationsParamsDestinationType.
 const (
 	ListDestinationsParamsDestinationTypeCrypto   ListDestinationsParamsDestinationType = "crypto"
@@ -991,21 +1143,87 @@ const (
 	ListDestinationsParamsDestinationTypeFiatUs   ListDestinationsParamsDestinationType = "fiat_us"
 )
 
+// Defines values for SimulateInboundParamsXSandboxScenario.
+const (
+	SimulateInboundParamsXSandboxScenarioAccountFrozen       SimulateInboundParamsXSandboxScenario = "account_frozen"
+	SimulateInboundParamsXSandboxScenarioComplianceBlock     SimulateInboundParamsXSandboxScenario = "compliance_block"
+	SimulateInboundParamsXSandboxScenarioDelayedSettlement   SimulateInboundParamsXSandboxScenario = "delayed_settlement"
+	SimulateInboundParamsXSandboxScenarioDocumentExpired     SimulateInboundParamsXSandboxScenario = "document_expired"
+	SimulateInboundParamsXSandboxScenarioHappyPath           SimulateInboundParamsXSandboxScenario = "happy_path"
+	SimulateInboundParamsXSandboxScenarioInsufficientFunds   SimulateInboundParamsXSandboxScenario = "insufficient_funds"
+	SimulateInboundParamsXSandboxScenarioIntermittentErrors  SimulateInboundParamsXSandboxScenario = "intermittent_errors"
+	SimulateInboundParamsXSandboxScenarioInvalidAccount      SimulateInboundParamsXSandboxScenario = "invalid_account"
+	SimulateInboundParamsXSandboxScenarioInvalidSwift        SimulateInboundParamsXSandboxScenario = "invalid_swift"
+	SimulateInboundParamsXSandboxScenarioKybExpired          SimulateInboundParamsXSandboxScenario = "kyb_expired"
+	SimulateInboundParamsXSandboxScenarioKybManualReview     SimulateInboundParamsXSandboxScenario = "kyb_manual_review"
+	SimulateInboundParamsXSandboxScenarioKybRejected         SimulateInboundParamsXSandboxScenario = "kyb_rejected"
+	SimulateInboundParamsXSandboxScenarioNetworkCongestion   SimulateInboundParamsXSandboxScenario = "network_congestion"
+	SimulateInboundParamsXSandboxScenarioNetworkTimeout      SimulateInboundParamsXSandboxScenario = "network_timeout"
+	SimulateInboundParamsXSandboxScenarioProviderMaintenance SimulateInboundParamsXSandboxScenario = "provider_maintenance"
+)
+
+// Defines values for SimulateInboundParamsXSandboxErrorStep.
+const (
+	SimulateInboundParamsXSandboxErrorStepAccountValidation     SimulateInboundParamsXSandboxErrorStep = "account_validation"
+	SimulateInboundParamsXSandboxErrorStepComplianceCheck       SimulateInboundParamsXSandboxErrorStep = "compliance_check"
+	SimulateInboundParamsXSandboxErrorStepKybApproval           SimulateInboundParamsXSandboxErrorStep = "kyb_approval"
+	SimulateInboundParamsXSandboxErrorStepKybSubmission         SimulateInboundParamsXSandboxErrorStep = "kyb_submission"
+	SimulateInboundParamsXSandboxErrorStepNetworkCall           SimulateInboundParamsXSandboxErrorStep = "network_call"
+	SimulateInboundParamsXSandboxErrorStepProviderCall          SimulateInboundParamsXSandboxErrorStep = "provider_call"
+	SimulateInboundParamsXSandboxErrorStepTransactionProcessing SimulateInboundParamsXSandboxErrorStep = "transaction_processing"
+)
+
 // Defines values for SimulateInboundJSONBodyType.
 const (
-	SimulateInboundJSONBodyTypeAchInbound           SimulateInboundJSONBodyType = "ach_inbound"
-	SimulateInboundJSONBodyTypeAchOutboundFailed    SimulateInboundJSONBodyType = "ach_outbound_failed"
-	SimulateInboundJSONBodyTypeAchOutboundRejected  SimulateInboundJSONBodyType = "ach_outbound_rejected"
-	SimulateInboundJSONBodyTypeAchOutboundReturned  SimulateInboundJSONBodyType = "ach_outbound_returned"
-	SimulateInboundJSONBodyTypeAchOutboundSettled   SimulateInboundJSONBodyType = "ach_outbound_settled"
-	SimulateInboundJSONBodyTypeAchReversal          SimulateInboundJSONBodyType = "ach_reversal"
-	SimulateInboundJSONBodyTypeCryptoInbound        SimulateInboundJSONBodyType = "crypto_inbound"
-	SimulateInboundJSONBodyTypeWireInbound          SimulateInboundJSONBodyType = "wire_inbound"
-	SimulateInboundJSONBodyTypeWireOutboundFailed   SimulateInboundJSONBodyType = "wire_outbound_failed"
-	SimulateInboundJSONBodyTypeWireOutboundRejected SimulateInboundJSONBodyType = "wire_outbound_rejected"
-	SimulateInboundJSONBodyTypeWireOutboundReturned SimulateInboundJSONBodyType = "wire_outbound_returned"
-	SimulateInboundJSONBodyTypeWireOutboundSettled  SimulateInboundJSONBodyType = "wire_outbound_settled"
-	SimulateInboundJSONBodyTypeWireReversal         SimulateInboundJSONBodyType = "wire_reversal"
+	SimulateInboundJSONBodyTypeAchInbound              SimulateInboundJSONBodyType = "ach_inbound"
+	SimulateInboundJSONBodyTypeAchOutboundFailed       SimulateInboundJSONBodyType = "ach_outbound_failed"
+	SimulateInboundJSONBodyTypeAchOutboundRejected     SimulateInboundJSONBodyType = "ach_outbound_rejected"
+	SimulateInboundJSONBodyTypeAchOutboundReturned     SimulateInboundJSONBodyType = "ach_outbound_returned"
+	SimulateInboundJSONBodyTypeAchOutboundSettled      SimulateInboundJSONBodyType = "ach_outbound_settled"
+	SimulateInboundJSONBodyTypeAchReversal             SimulateInboundJSONBodyType = "ach_reversal"
+	SimulateInboundJSONBodyTypeCryptoInbound           SimulateInboundJSONBodyType = "crypto_inbound"
+	SimulateInboundJSONBodyTypeFedwireInbound          SimulateInboundJSONBodyType = "fedwire_inbound"
+	SimulateInboundJSONBodyTypeFedwireOutboundFailed   SimulateInboundJSONBodyType = "fedwire_outbound_failed"
+	SimulateInboundJSONBodyTypeFedwireOutboundRejected SimulateInboundJSONBodyType = "fedwire_outbound_rejected"
+	SimulateInboundJSONBodyTypeFedwireOutboundReturned SimulateInboundJSONBodyType = "fedwire_outbound_returned"
+	SimulateInboundJSONBodyTypeFedwireOutboundSettled  SimulateInboundJSONBodyType = "fedwire_outbound_settled"
+	SimulateInboundJSONBodyTypeFedwireReversal         SimulateInboundJSONBodyType = "fedwire_reversal"
+	SimulateInboundJSONBodyTypeWireInbound             SimulateInboundJSONBodyType = "wire_inbound"
+	SimulateInboundJSONBodyTypeWireOutboundFailed      SimulateInboundJSONBodyType = "wire_outbound_failed"
+	SimulateInboundJSONBodyTypeWireOutboundRejected    SimulateInboundJSONBodyType = "wire_outbound_rejected"
+	SimulateInboundJSONBodyTypeWireOutboundReturned    SimulateInboundJSONBodyType = "wire_outbound_returned"
+	SimulateInboundJSONBodyTypeWireOutboundSettled     SimulateInboundJSONBodyType = "wire_outbound_settled"
+	SimulateInboundJSONBodyTypeWireReversal            SimulateInboundJSONBodyType = "wire_reversal"
+)
+
+// Defines values for SimulateOnboardingParamsXSandboxScenario.
+const (
+	SimulateOnboardingParamsXSandboxScenarioAccountFrozen       SimulateOnboardingParamsXSandboxScenario = "account_frozen"
+	SimulateOnboardingParamsXSandboxScenarioComplianceBlock     SimulateOnboardingParamsXSandboxScenario = "compliance_block"
+	SimulateOnboardingParamsXSandboxScenarioDelayedSettlement   SimulateOnboardingParamsXSandboxScenario = "delayed_settlement"
+	SimulateOnboardingParamsXSandboxScenarioDocumentExpired     SimulateOnboardingParamsXSandboxScenario = "document_expired"
+	SimulateOnboardingParamsXSandboxScenarioHappyPath           SimulateOnboardingParamsXSandboxScenario = "happy_path"
+	SimulateOnboardingParamsXSandboxScenarioInsufficientFunds   SimulateOnboardingParamsXSandboxScenario = "insufficient_funds"
+	SimulateOnboardingParamsXSandboxScenarioIntermittentErrors  SimulateOnboardingParamsXSandboxScenario = "intermittent_errors"
+	SimulateOnboardingParamsXSandboxScenarioInvalidAccount      SimulateOnboardingParamsXSandboxScenario = "invalid_account"
+	SimulateOnboardingParamsXSandboxScenarioInvalidSwift        SimulateOnboardingParamsXSandboxScenario = "invalid_swift"
+	SimulateOnboardingParamsXSandboxScenarioKybExpired          SimulateOnboardingParamsXSandboxScenario = "kyb_expired"
+	SimulateOnboardingParamsXSandboxScenarioKybManualReview     SimulateOnboardingParamsXSandboxScenario = "kyb_manual_review"
+	SimulateOnboardingParamsXSandboxScenarioKybRejected         SimulateOnboardingParamsXSandboxScenario = "kyb_rejected"
+	SimulateOnboardingParamsXSandboxScenarioNetworkCongestion   SimulateOnboardingParamsXSandboxScenario = "network_congestion"
+	SimulateOnboardingParamsXSandboxScenarioNetworkTimeout      SimulateOnboardingParamsXSandboxScenario = "network_timeout"
+	SimulateOnboardingParamsXSandboxScenarioProviderMaintenance SimulateOnboardingParamsXSandboxScenario = "provider_maintenance"
+)
+
+// Defines values for SimulateOnboardingParamsXSandboxErrorStep.
+const (
+	SimulateOnboardingParamsXSandboxErrorStepAccountValidation     SimulateOnboardingParamsXSandboxErrorStep = "account_validation"
+	SimulateOnboardingParamsXSandboxErrorStepComplianceCheck       SimulateOnboardingParamsXSandboxErrorStep = "compliance_check"
+	SimulateOnboardingParamsXSandboxErrorStepKybApproval           SimulateOnboardingParamsXSandboxErrorStep = "kyb_approval"
+	SimulateOnboardingParamsXSandboxErrorStepKybSubmission         SimulateOnboardingParamsXSandboxErrorStep = "kyb_submission"
+	SimulateOnboardingParamsXSandboxErrorStepNetworkCall           SimulateOnboardingParamsXSandboxErrorStep = "network_call"
+	SimulateOnboardingParamsXSandboxErrorStepProviderCall          SimulateOnboardingParamsXSandboxErrorStep = "provider_call"
+	SimulateOnboardingParamsXSandboxErrorStepTransactionProcessing SimulateOnboardingParamsXSandboxErrorStep = "transaction_processing"
 )
 
 // Defines values for SimulateOnboardingJSONBodyType.
@@ -1025,6 +1243,94 @@ const (
 	ListSelfServeCreditsLedgerParamsTypeDeduction ListSelfServeCreditsLedgerParamsType = "deduction"
 	ListSelfServeCreditsLedgerParamsTypePurchase  ListSelfServeCreditsLedgerParamsType = "purchase"
 	ListSelfServeCreditsLedgerParamsTypeRefund    ListSelfServeCreditsLedgerParamsType = "refund"
+)
+
+// Defines values for ListTransactionsParamsSortBy.
+const (
+	ListTransactionsParamsSortByAmount       ListTransactionsParamsSortBy = "amount"
+	ListTransactionsParamsSortByCreatedAt    ListTransactionsParamsSortBy = "created_at"
+	ListTransactionsParamsSortByCustomerName ListTransactionsParamsSortBy = "customer_name"
+	ListTransactionsParamsSortByStatus       ListTransactionsParamsSortBy = "status"
+)
+
+// Defines values for ListTransactionsParamsSortDir.
+const (
+	ListTransactionsParamsSortDirAsc  ListTransactionsParamsSortDir = "asc"
+	ListTransactionsParamsSortDirDesc ListTransactionsParamsSortDir = "desc"
+)
+
+// Defines values for CreateTransactionParamsXSandboxScenario.
+const (
+	CreateTransactionParamsXSandboxScenarioAccountFrozen       CreateTransactionParamsXSandboxScenario = "account_frozen"
+	CreateTransactionParamsXSandboxScenarioComplianceBlock     CreateTransactionParamsXSandboxScenario = "compliance_block"
+	CreateTransactionParamsXSandboxScenarioDelayedSettlement   CreateTransactionParamsXSandboxScenario = "delayed_settlement"
+	CreateTransactionParamsXSandboxScenarioDocumentExpired     CreateTransactionParamsXSandboxScenario = "document_expired"
+	CreateTransactionParamsXSandboxScenarioHappyPath           CreateTransactionParamsXSandboxScenario = "happy_path"
+	CreateTransactionParamsXSandboxScenarioInsufficientFunds   CreateTransactionParamsXSandboxScenario = "insufficient_funds"
+	CreateTransactionParamsXSandboxScenarioIntermittentErrors  CreateTransactionParamsXSandboxScenario = "intermittent_errors"
+	CreateTransactionParamsXSandboxScenarioInvalidAccount      CreateTransactionParamsXSandboxScenario = "invalid_account"
+	CreateTransactionParamsXSandboxScenarioInvalidSwift        CreateTransactionParamsXSandboxScenario = "invalid_swift"
+	CreateTransactionParamsXSandboxScenarioKybExpired          CreateTransactionParamsXSandboxScenario = "kyb_expired"
+	CreateTransactionParamsXSandboxScenarioKybManualReview     CreateTransactionParamsXSandboxScenario = "kyb_manual_review"
+	CreateTransactionParamsXSandboxScenarioKybRejected         CreateTransactionParamsXSandboxScenario = "kyb_rejected"
+	CreateTransactionParamsXSandboxScenarioNetworkCongestion   CreateTransactionParamsXSandboxScenario = "network_congestion"
+	CreateTransactionParamsXSandboxScenarioNetworkTimeout      CreateTransactionParamsXSandboxScenario = "network_timeout"
+	CreateTransactionParamsXSandboxScenarioProviderMaintenance CreateTransactionParamsXSandboxScenario = "provider_maintenance"
+)
+
+// Defines values for CreateTransactionParamsXSandboxErrorStep.
+const (
+	CreateTransactionParamsXSandboxErrorStepAccountValidation     CreateTransactionParamsXSandboxErrorStep = "account_validation"
+	CreateTransactionParamsXSandboxErrorStepComplianceCheck       CreateTransactionParamsXSandboxErrorStep = "compliance_check"
+	CreateTransactionParamsXSandboxErrorStepKybApproval           CreateTransactionParamsXSandboxErrorStep = "kyb_approval"
+	CreateTransactionParamsXSandboxErrorStepKybSubmission         CreateTransactionParamsXSandboxErrorStep = "kyb_submission"
+	CreateTransactionParamsXSandboxErrorStepNetworkCall           CreateTransactionParamsXSandboxErrorStep = "network_call"
+	CreateTransactionParamsXSandboxErrorStepProviderCall          CreateTransactionParamsXSandboxErrorStep = "provider_call"
+	CreateTransactionParamsXSandboxErrorStepTransactionProcessing CreateTransactionParamsXSandboxErrorStep = "transaction_processing"
+)
+
+// Defines values for CreateTransactionCancellationParamsXSandboxScenario.
+const (
+	CreateTransactionCancellationParamsXSandboxScenarioAccountFrozen       CreateTransactionCancellationParamsXSandboxScenario = "account_frozen"
+	CreateTransactionCancellationParamsXSandboxScenarioComplianceBlock     CreateTransactionCancellationParamsXSandboxScenario = "compliance_block"
+	CreateTransactionCancellationParamsXSandboxScenarioDelayedSettlement   CreateTransactionCancellationParamsXSandboxScenario = "delayed_settlement"
+	CreateTransactionCancellationParamsXSandboxScenarioDocumentExpired     CreateTransactionCancellationParamsXSandboxScenario = "document_expired"
+	CreateTransactionCancellationParamsXSandboxScenarioHappyPath           CreateTransactionCancellationParamsXSandboxScenario = "happy_path"
+	CreateTransactionCancellationParamsXSandboxScenarioInsufficientFunds   CreateTransactionCancellationParamsXSandboxScenario = "insufficient_funds"
+	CreateTransactionCancellationParamsXSandboxScenarioIntermittentErrors  CreateTransactionCancellationParamsXSandboxScenario = "intermittent_errors"
+	CreateTransactionCancellationParamsXSandboxScenarioInvalidAccount      CreateTransactionCancellationParamsXSandboxScenario = "invalid_account"
+	CreateTransactionCancellationParamsXSandboxScenarioInvalidSwift        CreateTransactionCancellationParamsXSandboxScenario = "invalid_swift"
+	CreateTransactionCancellationParamsXSandboxScenarioKybExpired          CreateTransactionCancellationParamsXSandboxScenario = "kyb_expired"
+	CreateTransactionCancellationParamsXSandboxScenarioKybManualReview     CreateTransactionCancellationParamsXSandboxScenario = "kyb_manual_review"
+	CreateTransactionCancellationParamsXSandboxScenarioKybRejected         CreateTransactionCancellationParamsXSandboxScenario = "kyb_rejected"
+	CreateTransactionCancellationParamsXSandboxScenarioNetworkCongestion   CreateTransactionCancellationParamsXSandboxScenario = "network_congestion"
+	CreateTransactionCancellationParamsXSandboxScenarioNetworkTimeout      CreateTransactionCancellationParamsXSandboxScenario = "network_timeout"
+	CreateTransactionCancellationParamsXSandboxScenarioProviderMaintenance CreateTransactionCancellationParamsXSandboxScenario = "provider_maintenance"
+)
+
+// Defines values for CreateTransactionCancellationParamsXSandboxErrorStep.
+const (
+	CreateTransactionCancellationParamsXSandboxErrorStepAccountValidation     CreateTransactionCancellationParamsXSandboxErrorStep = "account_validation"
+	CreateTransactionCancellationParamsXSandboxErrorStepComplianceCheck       CreateTransactionCancellationParamsXSandboxErrorStep = "compliance_check"
+	CreateTransactionCancellationParamsXSandboxErrorStepKybApproval           CreateTransactionCancellationParamsXSandboxErrorStep = "kyb_approval"
+	CreateTransactionCancellationParamsXSandboxErrorStepKybSubmission         CreateTransactionCancellationParamsXSandboxErrorStep = "kyb_submission"
+	CreateTransactionCancellationParamsXSandboxErrorStepNetworkCall           CreateTransactionCancellationParamsXSandboxErrorStep = "network_call"
+	CreateTransactionCancellationParamsXSandboxErrorStepProviderCall          CreateTransactionCancellationParamsXSandboxErrorStep = "provider_call"
+	CreateTransactionCancellationParamsXSandboxErrorStepTransactionProcessing CreateTransactionCancellationParamsXSandboxErrorStep = "transaction_processing"
+)
+
+// Defines values for ListClientUsersParamsSortBy.
+const (
+	ListClientUsersParamsSortByCreatedAt ListClientUsersParamsSortBy = "created_at"
+	ListClientUsersParamsSortByEmail     ListClientUsersParamsSortBy = "email"
+	ListClientUsersParamsSortByName      ListClientUsersParamsSortBy = "name"
+	ListClientUsersParamsSortByRole      ListClientUsersParamsSortBy = "role"
+)
+
+// Defines values for ListClientUsersParamsSortDir.
+const (
+	ListClientUsersParamsSortDirAsc  ListClientUsersParamsSortDir = "asc"
+	ListClientUsersParamsSortDirDesc ListClientUsersParamsSortDir = "desc"
 )
 
 // Defines values for ListWebhookHistoryParamsStatus.
@@ -1280,7 +1586,13 @@ type Application struct {
 
 	// Attestations Attestation records showing what has been attested to
 	Attestations *AttestationData `json:"attestations,omitempty"`
-	Edd          *EDDResponse     `json:"edd,omitempty"`
+
+	// DecisionMethod How the decision was reached: 'manual' for operator-driven decisions, 'auto' for automated approvals, 'override' reserved for future escalation. Null if no decision has been made.
+	DecisionMethod *ApplicationDecisionMethod `json:"decision_method"`
+
+	// DecisionRuleVersion Version identifier of the rule set that produced an automated decision. Null for manual decisions or when no decision has been made.
+	DecisionRuleVersion *string      `json:"decision_rule_version"`
+	Edd                 *EDDResponse `json:"edd,omitempty"`
 
 	// Entities The entities (people/businesses) being onboarded in this application
 	Entities *ApplicationEntities `json:"entities,omitempty"`
@@ -1297,6 +1609,9 @@ type ApplicationApplicationDecision string
 
 // ApplicationApplicationType Type of application
 type ApplicationApplicationType string
+
+// ApplicationDecisionMethod How the decision was reached: 'manual' for operator-driven decisions, 'auto' for automated approvals, 'override' reserved for future escalation. Null if no decision has been made.
+type ApplicationDecisionMethod string
 
 // ApplicationDocumentType Type of application-level document (business or EDD)
 type ApplicationDocumentType string
@@ -1776,6 +2091,27 @@ type AutoAccountTransaction struct {
 	// Receipt Detailed receipt information for a transaction
 	Receipt *TransactionReceipt `json:"receipt,omitempty"`
 
+	// ReturnCode NACHA/Fedwire return code (e.g., R01) when the transaction was returned by the receiving bank.
+	ReturnCode *string `json:"return_code,omitempty"`
+
+	// ReturnDeadline Unix timestamp deadline for return processing.
+	ReturnDeadline *int `json:"return_deadline,omitempty"`
+
+	// ReturnInitiatedAt Unix timestamp when the return was initiated.
+	ReturnInitiatedAt *int `json:"return_initiated_at,omitempty"`
+
+	// ReturnReason Human-readable return reason provided by the receiving bank.
+	ReturnReason *string `json:"return_reason,omitempty"`
+
+	// ReversalInitiatedAt Unix timestamp when the reversal was initiated.
+	ReversalInitiatedAt *int `json:"reversal_initiated_at,omitempty"`
+
+	// ReversalReason Lead Bank ACH reversal reason when the originator reverses the transaction (e.g., duplicate, receiver_incorrect).
+	ReversalReason *string `json:"reversal_reason,omitempty"`
+
+	// SenderDetails Originating sender details for onramp/offramp/swap transactions. Populated when source-side metadata is available (e.g., from inbound wire/ACH source data).
+	SenderDetails *SenderDetails `json:"sender_details,omitempty"`
+
 	// Status Current status of a transaction.
 	Status TransactionStatus `json:"status"`
 
@@ -2056,8 +2392,50 @@ type CRI struct {
 // Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
 type Capabilities = []PaymentCapability
 
+// ClientPricingConfig defines model for ClientPricingConfig.
+type ClientPricingConfig struct {
+	// AchFeeCents Per-ACH transaction fee in cents
+	AchFeeCents int `json:"achFeeCents"`
+
+	// CreatedAt When this pricing configuration was created
+	CreatedAt time.Time `json:"createdAt"`
+
+	// EffectiveFrom When this pricing takes effect
+	EffectiveFrom time.Time `json:"effectiveFrom"`
+
+	// KybFeeCents Per-business-application-submission compliance fee in USD cents.
+	KybFeeCents int `json:"kybFeeCents"`
+
+	// KycFeeCents Per-individual-application-submission compliance fee in USD cents.
+	KycFeeCents int `json:"kycFeeCents"`
+
+	// MonthlyMinimumCents Monthly minimum fee in cents
+	MonthlyMinimumCents int `json:"monthlyMinimumCents"`
+
+	// SepaFeeCents Per-SWIFT transaction fee in cents
+	SepaFeeCents int `json:"sepaFeeCents"`
+
+	// SwiftFeeCents Per-Swift-transfer banking fee in USD cents.
+	SwiftFeeCents int `json:"swiftFeeCents"`
+
+	// TransferFeeBps Transfer fee in basis points (0-10000, representing 0% to 100%)
+	TransferFeeBps float32 `json:"transferFeeBps"`
+
+	// UpdatedAt When this pricing configuration was last updated
+	UpdatedAt time.Time `json:"updatedAt"`
+
+	// WireFeeCents Per-wire transaction fee in cents
+	WireFeeCents int `json:"wireFeeCents"`
+}
+
 // ClientUser User object representing a user in the system, including all clients they can access.
 type ClientUser struct {
+	// ClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	ClientId *KSUID `json:"client_id,omitempty"`
+
+	// ClientName Display name of the active client for this request.
+	ClientName *string `json:"client_name,omitempty"`
+
 	// CreatedAt Timestamp of when the user was created.
 	CreatedAt int `json:"created_at"`
 
@@ -2232,6 +2610,30 @@ type Customer struct {
 
 	// KybStatus Overall status of the KYB verification process (e.g., pending, active, restricted).
 	KybStatus KybStatus `json:"kyb_status"`
+
+	// KycStatus Provider-agnostic effective KYC/B status for this customer,
+	// derived server-side for display convenience. Returns the same
+	// answer for both Sumsub-verified and Persona-verified customers
+	// without the client having to know which provider did the work.
+	//
+	// **Derivation order (most authoritative first):**
+	// 1. The customer's onboarding application `decision`, if set
+	//    (`approved` → `approved`; `declined`/`auto_declined` →
+	//    `rejected`; `withdrawn` → `expired`).
+	// 2. The most-recently-updated non-deleted persona `kyb_link`'s
+	//    status (legacy customers from before the orchestration
+	//    layer — Persona's `created` maps to `not_started`,
+	//    `completed` to `approved`, `needs_review` to `in_review`).
+	// 3. `pending` if the customer has an open onboarding
+	//    application but no decision yet (Sumsub in-flight).
+	// 4. `not_started` otherwise.
+	//
+	// **Advisory, not authoritative.** This field is provided for
+	// badge rendering and operator UIs. The derivation rules may
+	// evolve as new verification providers are added. For
+	// compliance-critical decisions, consult `decision`,
+	// `kyb_links`, and `provider_statuses` directly.
+	KycStatus KybLinkStatus `json:"kyc_status"`
 
 	// Name Name of the customer
 	Name string `json:"name"`
@@ -2677,7 +3079,7 @@ type FiatIBANDestinationRequest struct {
 	BankAddress *Address `json:"bank_address,omitempty"`
 	BankName    string   `json:"bank_name"`
 
-	// Bic BIC/SWIFT code for the international bank account (optional for SEPA, required for SWIFT).
+	// Bic BIC/SWIFT code for the international bank account (optional for required for SWIFT).
 	Bic *string `json:"bic,omitempty"`
 
 	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
@@ -2714,7 +3116,7 @@ type FiatIBANDestinationResponse struct {
 	// BankName Name of the bank.
 	BankName *string `json:"bank_name,omitempty"`
 
-	// Bic BIC/SWIFT code for the international bank account (optional for SEPA, required for SWIFT).
+	// Bic BIC/SWIFT code for the international bank account (optional for required for SWIFT).
 	Bic *string `json:"bic,omitempty"`
 
 	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
@@ -2734,20 +3136,38 @@ type FiatIBANDestinationResponse struct {
 // FiatIBANDestinationResponseDestinationType defines model for FiatIBANDestinationResponse.DestinationType.
 type FiatIBANDestinationResponseDestinationType string
 
+// FiatUSDestinationAddress defines model for FiatUSDestinationAddress.
+type FiatUSDestinationAddress struct {
+	// City City or locality name
+	City string `json:"city"`
+
+	// Country ISO 3166-1 alpha-2 country code (two-letter country code)
+	Country string `json:"country"`
+
+	// PostalCode Postal or ZIP code
+	PostalCode *string `json:"postal_code,omitempty"`
+
+	// Region Full name of state, province, or region
+	Region  *string `json:"region,omitempty"`
+	Street1 string  `json:"street1"`
+	Street2 *string `json:"street2,omitempty"`
+	Street3 *string `json:"street3,omitempty"`
+}
+
 // FiatUSDestinationRequest defines model for FiatUSDestinationRequest.
 type FiatUSDestinationRequest struct {
 	AbaRoutingNumber     string  `json:"aba_routing_number"`
 	AbaWireRoutingNumber *string `json:"aba_wire_routing_number,omitempty"`
 
-	// AccountHolderAddress Standardized physical address format used throughout the Dakota platform for user and entity addresses.
-	AccountHolderAddress *Address                            `json:"account_holder_address,omitempty"`
+	// AccountHolderAddress Address format for fiat destinations with Lead Bank wire transfer character limits (max 35 characters per address line).
+	AccountHolderAddress *FiatUSDestinationAddress           `json:"account_holder_address,omitempty"`
 	AccountHolderName    string                              `json:"account_holder_name"`
 	AccountHolderPhone   *string                             `json:"account_holder_phone,omitempty"`
 	AccountNumber        string                              `json:"account_number"`
 	AccountType          FiatUSDestinationRequestAccountType `json:"account_type"`
 
 	// BankAddress Address of the bank. Optional for US domestic transfers.
-	BankAddress     *Address                                `json:"bank_address,omitempty"`
+	BankAddress     *FiatUSDestinationAddress               `json:"bank_address,omitempty"`
 	BankName        string                                  `json:"bank_name"`
 	BankPhone       *string                                 `json:"bank_phone,omitempty"`
 	DestinationType FiatUSDestinationRequestDestinationType `json:"destination_type"`
@@ -3041,6 +3461,24 @@ type IndividualRequestSourceOfWealth string
 // IndividualRequestTitle Job title (required for UBO/control person, optional for applicant, invalid for individual)
 type IndividualRequestTitle string
 
+// InsufficientCreditsError Error response when a self-serve client lacks the credits required to perform an action.
+type InsufficientCreditsError struct {
+	// BalanceCents Caller's current credit balance, in USD cents.
+	BalanceCents int64 `json:"balance_cents"`
+
+	// Error Stable machine-readable error code.
+	Error InsufficientCreditsErrorError `json:"error"`
+
+	// Message Human-readable explanation including the required and current amounts.
+	Message string `json:"message"`
+
+	// RequiredCents Amount of credits required to perform this action, in USD cents.
+	RequiredCents int64 `json:"required_cents"`
+}
+
+// InsufficientCreditsErrorError Stable machine-readable error code.
+type InsufficientCreditsErrorError string
+
 // KSUID KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 type KSUID = string
 
@@ -3056,6 +3494,13 @@ type KybLink struct {
 	ExpiresAt *int `json:"expires_at,omitempty"`
 
 	// LinkType Type of link provided by a verification provider for KYB verification.
+	//
+	// **Deprecated values:**
+	// - `tos` — the Bridge TOS flow has been deprecated. The dashboard no
+	//   longer surfaces TOS state, but legacy customer records may still
+	//   carry `link_type: 'tos'` entries on the wire. New integrations
+	//   should ignore these entries; the value is retained in the enum
+	//   to keep responses for legacy data schema-valid.
 	LinkType KybLinkType `json:"link_type"`
 
 	// ProviderId ID of the verification provider or service used for a specific check.
@@ -3075,6 +3520,13 @@ type KybLink struct {
 type KybLinkStatus string
 
 // KybLinkType Type of link provided by a verification provider for KYB verification.
+//
+// **Deprecated values:**
+//   - `tos` — the Bridge TOS flow has been deprecated. The dashboard no
+//     longer surfaces TOS state, but legacy customer records may still
+//     carry `link_type: 'tos'` entries on the wire. New integrations
+//     should ignore these entries; the value is retained in the enum
+//     to keep responses for legacy data schema-valid.
 type KybLinkType string
 
 // KybStatus Overall status of the KYB verification process (e.g., pending, active, restricted).
@@ -3170,6 +3622,9 @@ type OneOffTransaction struct {
 	// CustomerId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	CustomerId KSUID `json:"customer_id"`
 
+	// CustomerName Display name of the customer associated with this transaction.
+	CustomerName *string `json:"customer_name,omitempty"`
+
 	// DestinationAccountHolderName Name of the account holder at the destination bank
 	DestinationAccountHolderName *string `json:"destination_account_holder_name,omitempty"`
 
@@ -3203,7 +3658,7 @@ type OneOffTransaction struct {
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
-	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT or SEPA reference)
+	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT reference)
 	PaymentReference *string `json:"payment_reference"`
 
 	// Receipt Detailed receipt information for a transaction
@@ -3211,6 +3666,24 @@ type OneOffTransaction struct {
 
 	// ResourceType Discriminator field. Always "one_off" for one-off transactions.
 	ResourceType TransactionResourceType `json:"resource_type"`
+
+	// ReturnCode NACHA/Fedwire return code (e.g., R01) when the transaction was returned by the receiving bank.
+	ReturnCode *string `json:"return_code,omitempty"`
+
+	// ReturnDeadline Unix timestamp deadline for return processing.
+	ReturnDeadline *int `json:"return_deadline,omitempty"`
+
+	// ReturnInitiatedAt Unix timestamp when the return was initiated.
+	ReturnInitiatedAt *int `json:"return_initiated_at,omitempty"`
+
+	// ReturnReason Human-readable return reason provided by the receiving bank.
+	ReturnReason *string `json:"return_reason,omitempty"`
+
+	// ReversalInitiatedAt Unix timestamp when the reversal was initiated.
+	ReversalInitiatedAt *int `json:"reversal_initiated_at,omitempty"`
+
+	// ReversalReason Lead Bank ACH reversal reason when the originator reverses the transaction (e.g., duplicate, receiver_incorrect).
+	ReversalReason *string `json:"reversal_reason,omitempty"`
 
 	// SendAmount Amount that should be sent (may be higher than requested amount due to fees)
 	SendAmount *string `json:"send_amount,omitempty"`
@@ -3251,7 +3724,7 @@ type OneOffTransactionRequest struct {
 	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%). Overrides the default client fee for this transaction.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
-	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-10 chars), Wire (1-140 chars), SEPA (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
+	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-10 chars), Wire (1-140 chars) (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
 	PaymentReference *string `json:"payment_reference,omitempty"`
 
 	// SourceAsset Source crypto asset symbol
@@ -3358,6 +3831,9 @@ type Policy struct {
 
 	// Rules Rules that make up this policy
 	Rules *[]PolicyRule `json:"rules,omitempty"`
+
+	// SignerGroupId ID of the signer group that governs mutations of this policy. Members of this group must endorse any add_policy_rule, update_policy_rule, remove_policy_rule, or delete_policy intent.
+	SignerGroupId *string `json:"signer_group_id"`
 
 	// UpdatedAt Unix timestamp when the policy was last updated
 	UpdatedAt int `json:"updated_at"`
@@ -3604,14 +4080,27 @@ type SelfServeCreditsBalanceResponse struct {
 
 // SelfServeCreditsLedgerEntry defines model for SelfServeCreditsLedgerEntry.
 type SelfServeCreditsLedgerEntry struct {
-	AmountCents       int64                                `json:"amount_cents"`
-	BalanceAfterCents int64                                `json:"balance_after_cents"`
-	CreatedAt         time.Time                            `json:"created_at"`
-	Description       string                               `json:"description"`
-	EntryType         SelfServeCreditsLedgerEntryEntryType `json:"entry_type"`
-	Id                string                               `json:"id"`
-	TransactionId     *string                              `json:"transaction_id"`
+	AmountCents       int64 `json:"amount_cents"`
+	BalanceAfterCents int64 `json:"balance_after_cents"`
+
+	// Category Sub-category that distinguishes transaction fees from compliance
+	// fees and similar for refunds. `unknown` indicates a legacy row
+	// written before this column existed.
+	Category    SelfServeCreditsLedgerEntryCategory  `json:"category"`
+	CreatedAt   time.Time                            `json:"created_at"`
+	Description string                               `json:"description"`
+	EntryType   SelfServeCreditsLedgerEntryEntryType `json:"entry_type"`
+	Id          string                               `json:"id"`
+
+	// StripePaymentIntentId Stripe PaymentIntent ID (pi_...) for purchase entries — paste into the Stripe dashboard search to look up the underlying payment.
+	StripePaymentIntentId *string `json:"stripe_payment_intent_id"`
+	TransactionId         *string `json:"transaction_id"`
 }
+
+// SelfServeCreditsLedgerEntryCategory Sub-category that distinguishes transaction fees from compliance
+// fees and similar for refunds. `unknown` indicates a legacy row
+// written before this column existed.
+type SelfServeCreditsLedgerEntryCategory string
 
 // SelfServeCreditsLedgerEntryEntryType defines model for SelfServeCreditsLedgerEntry.EntryType.
 type SelfServeCreditsLedgerEntryEntryType string
@@ -3645,6 +4134,42 @@ type SendTransactionIntent struct {
 	WalletId string `json:"wallet_id"`
 }
 
+// SenderDetails Originating sender details for onramp/offramp/swap transactions. Populated when source-side metadata is available (e.g., from inbound wire/ACH source data).
+type SenderDetails struct {
+	// SenderAccountHolderName Name on the originating account.
+	SenderAccountHolderName *string `json:"sender_account_holder_name,omitempty"`
+
+	// SenderAccountNumber Account number of the originating bank account.
+	SenderAccountNumber *string `json:"sender_account_number,omitempty"`
+
+	// SenderAccountType Type of the originating bank account (e.g., "checking", "savings").
+	SenderAccountType *string `json:"sender_account_type,omitempty"`
+
+	// SenderBankName Bank name of the originating account.
+	SenderBankName *string `json:"sender_bank_name,omitempty"`
+
+	// SenderBic BIC/SWIFT code of the originating bank.
+	SenderBic *string `json:"sender_bic,omitempty"`
+
+	// SenderIban IBAN of the originating account.
+	SenderIban *string `json:"sender_iban,omitempty"`
+
+	// SenderNetwork Network identifier of the originating wallet (e.g., "ethereum-mainnet").
+	SenderNetwork *string `json:"sender_network,omitempty"`
+
+	// SenderRoutingNumber ACH routing number of the originating bank account.
+	SenderRoutingNumber *string `json:"sender_routing_number,omitempty"`
+
+	// SenderType Type of the originating sender (e.g., "fiat_account", "crypto_wallet").
+	SenderType *string `json:"sender_type,omitempty"`
+
+	// SenderWalletAddress Blockchain wallet address of the originating sender (offramp/swap).
+	SenderWalletAddress *string `json:"sender_wallet_address,omitempty"`
+
+	// SenderWireRoutingNumber Wire routing number of the originating bank account.
+	SenderWireRoutingNumber *string `json:"sender_wire_routing_number,omitempty"`
+}
+
 // Signer A signer is a public key that can sign intents and it is part of a signer group
 type Signer struct {
 	// ClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -3659,7 +4184,11 @@ type Signer struct {
 	// Name The signer name
 	Name string `json:"name"`
 
-	// PublicKey The signer public key
+	// PublicKey The signer public key. For KEY_TYPE_ES256 this must be a
+	// base64-encoded X.509 SubjectPublicKeyInfo (PKIX) for an ECDSA
+	// P-256 key. Both PEM-wrapped (with BEGIN/END PUBLIC KEY headers)
+	// and raw DER encodings are accepted. For KEY_TYPE_WEBAUTHN this
+	// must be a base64-encoded COSE public key.
 	PublicKey string `json:"public_key"`
 }
 
@@ -3674,7 +4203,11 @@ type SignerCreateRequest struct {
 	// Name The signer name
 	Name string `json:"name"`
 
-	// PublicKey The signer public key
+	// PublicKey The signer public key. For KEY_TYPE_ES256 this must be a
+	// base64-encoded X.509 SubjectPublicKeyInfo (PKIX) for an ECDSA
+	// P-256 key. Both PEM-wrapped (with BEGIN/END PUBLIC KEY headers)
+	// and raw DER encodings are accepted. For KEY_TYPE_WEBAUTHN this
+	// must be a base64-encoded COSE public key.
 	PublicKey string `json:"public_key"`
 }
 
@@ -3943,6 +4476,9 @@ type Transaction struct {
 
 	// ResourceType Discriminator field. Always "auto_account" for auto-account transactions.
 	ResourceType TransactionResourceType `json:"resource_type"`
+
+	// SenderDetails Originating sender details for onramp/offramp/swap transactions. Populated when source-side metadata is available (e.g., from inbound wire/ACH source data).
+	SenderDetails *SenderDetails `json:"sender_details,omitempty"`
 
 	// Settlement Settlement details for a transaction.
 	Settlement *TransactionSettlement `json:"settlement,omitempty"`
@@ -4399,6 +4935,24 @@ type IdempotencyKeyHeader = openapi_types.UUID
 // LimitParam defines model for LimitParam.
 type LimitParam = int
 
+// SandboxErrorMessageHeader defines model for SandboxErrorMessageHeader.
+type SandboxErrorMessageHeader = string
+
+// SandboxErrorStatusHeader defines model for SandboxErrorStatusHeader.
+type SandboxErrorStatusHeader = int
+
+// SandboxErrorStepHeader defines model for SandboxErrorStepHeader.
+type SandboxErrorStepHeader string
+
+// SandboxInstantCompletionHeader defines model for SandboxInstantCompletionHeader.
+type SandboxInstantCompletionHeader = bool
+
+// SandboxScenarioHeader defines model for SandboxScenarioHeader.
+type SandboxScenarioHeader string
+
+// SandboxSkipAutoApprovalHeader defines model for SandboxSkipAutoApprovalHeader.
+type SandboxSkipAutoApprovalHeader = bool
+
 // StartingAfterParam KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 type StartingAfterParam = KSUID
 
@@ -4439,7 +4993,29 @@ type ListAccountsParams struct {
 type CreateAccountParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+
+	// XSandboxScenario Sandbox-only. Applies a preset failure or behavior mode for the request, selecting a coherent combination of error step, status, and message. The full set of scenarios is also exposed dynamically via `GET /sandbox/scenarios` along with descriptions and per-rail applicability.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxScenario *CreateAccountParamsXSandboxScenario `json:"X-Sandbox-Scenario,omitempty"`
+
+	// XSandboxErrorStep Sandbox-only. Names the pipeline step at which the injected error fires. Pair with `X-Sandbox-Error-Status` and (optionally) `X-Sandbox-Error-Message` to drive a deterministic failure mode at a known point in the request lifecycle. Values longer than 100 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStep *CreateAccountParamsXSandboxErrorStep `json:"X-Sandbox-Error-Step,omitempty"`
+
+	// XSandboxErrorStatus Sandbox-only. Sets the HTTP status code returned when the sandbox injects an error at the configured step (see `X-Sandbox-Error-Step`). Must be a valid HTTP status code in the range 100-599; values outside that range are ignored. Status codes >= 400 cause the request to short-circuit immediately with a structured error response.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStatus *SandboxErrorStatusHeader `json:"X-Sandbox-Error-Status,omitempty"`
+
+	// XSandboxErrorMessage Sandbox-only. Sets the human-readable `message` field of the injected sandbox error response. Truncated values longer than 500 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorMessage *SandboxErrorMessageHeader `json:"X-Sandbox-Error-Message,omitempty"`
 }
+
+// CreateAccountParamsXSandboxScenario defines parameters for CreateAccount.
+type CreateAccountParamsXSandboxScenario string
+
+// CreateAccountParamsXSandboxErrorStep defines parameters for CreateAccount.
+type CreateAccountParamsXSandboxErrorStep string
 
 // UpdateAccountParams defines parameters for UpdateAccount.
 type UpdateAccountParams struct {
@@ -4457,7 +5033,25 @@ type ListApiKeysParams struct {
 
 	// EndingBefore A cursor for use in pagination. `ending_before` is a KSUID for the object you are listing that defines your place in the list. For instance, if you make a list request and receive 100 objects, starting with ID `2B5J8KZ9N7M1K3P6Q8R4T7V9`, your subsequent call can include `ending_before=2B5J8KZ9N7M1K3P6Q8R4T7V9` in order to fetch the previous page of the list.
 	EndingBefore *EndingBeforeParam `form:"ending_before,omitempty" json:"ending_before,omitempty"`
+
+	// CreatedAtFrom Filter API keys created at or after this ISO 8601 datetime (e.g. 2024-01-01T00:00:00Z).
+	CreatedAtFrom *time.Time `form:"created_at_from,omitempty" json:"created_at_from,omitempty"`
+
+	// CreatedAtTo Filter API keys created at or before this ISO 8601 datetime (e.g. 2024-12-31T23:59:59Z).
+	CreatedAtTo *time.Time `form:"created_at_to,omitempty" json:"created_at_to,omitempty"`
+
+	// SortBy Field to sort API keys by. Currently only `created_at` is supported.
+	SortBy *ListApiKeysParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+
+	// SortDir Sort direction. Defaults to `desc`.
+	SortDir *ListApiKeysParamsSortDir `form:"sort_dir,omitempty" json:"sort_dir,omitempty"`
 }
+
+// ListApiKeysParamsSortBy defines parameters for ListApiKeys.
+type ListApiKeysParamsSortBy string
+
+// ListApiKeysParamsSortDir defines parameters for ListApiKeys.
+type ListApiKeysParamsSortDir string
 
 // CreateApiKeyParams defines parameters for CreateApiKey.
 type CreateApiKeyParams struct {
@@ -4646,7 +5240,31 @@ type ListAutoTransactionsParams struct {
 
 	// DestinationAsset Filter transactions by destination asset symbol
 	DestinationAsset *string `form:"destination_asset,omitempty" json:"destination_asset,omitempty"`
+
+	// Statuses Filter transactions by one or more statuses. Comma-separated list (e.g. `pending,processing`).
+	Statuses *string `form:"statuses,omitempty" json:"statuses,omitempty"`
+
+	// Types Filter transactions by one or more types. Comma-separated list (e.g. `onramp,offramp`).
+	Types *string `form:"types,omitempty" json:"types,omitempty"`
+
+	// OutgoingAmountMin Filter transactions where outgoing_amount is greater than or equal to this value.
+	OutgoingAmountMin *string `form:"outgoing_amount_min,omitempty" json:"outgoing_amount_min,omitempty"`
+
+	// OutgoingAmountMax Filter transactions where outgoing_amount is less than or equal to this value.
+	OutgoingAmountMax *string `form:"outgoing_amount_max,omitempty" json:"outgoing_amount_max,omitempty"`
+
+	// SortBy Field to sort transactions by. Currently only `created_at` is supported. Defaults to `created_at`.
+	SortBy *ListAutoTransactionsParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+
+	// SortDir Sort direction. Defaults to `desc`.
+	SortDir *ListAutoTransactionsParamsSortDir `form:"sort_dir,omitempty" json:"sort_dir,omitempty"`
 }
+
+// ListAutoTransactionsParamsSortBy defines parameters for ListAutoTransactions.
+type ListAutoTransactionsParamsSortBy string
+
+// ListAutoTransactionsParamsSortDir defines parameters for ListAutoTransactions.
+type ListAutoTransactionsParamsSortDir string
 
 // ListCustomersParams defines parameters for ListCustomers.
 type ListCustomersParams struct {
@@ -4665,18 +5283,83 @@ type ListCustomersParams struct {
 	// Search Search customers by name, email, or customer ID (case-insensitive)
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 
-	// KybStatus Filter customers by KYB status
+	// KybStatus Filter customers by KYB status (single value).
 	KybStatus *KybStatus `form:"kyb_status,omitempty" json:"kyb_status,omitempty"`
+
+	// KybStatuses Filter customers by one or more KYB statuses. Comma-separated list (e.g. `active,frozen`).
+	KybStatuses *string `form:"kyb_statuses,omitempty" json:"kyb_statuses,omitempty"`
+
+	// KycStatuses Filter customers by one or more effective KYC/B link statuses.
+	// Comma-separated list (e.g. `pending,in_review`). Values mirror
+	// the `KybLinkStatus` enum (`not_started`, `pending`, `in_review`,
+	// `approved`, `expired`, `rejected`).
+	KycStatuses *string `form:"kyc_statuses,omitempty" json:"kyc_statuses,omitempty"`
 
 	// SubClientId Filter customers by sub-client association. Returns only customers associated with the specified sub-client.
 	SubClientId *KSUID `form:"sub_client_id,omitempty" json:"sub_client_id,omitempty"`
 
 	// IsSubClient When set to true, returns only customers that are acting as sub-clients (have other customers associated with them).
 	IsSubClient *bool `form:"is_sub_client,omitempty" json:"is_sub_client,omitempty"`
+
+	// SortBy Field to sort customers by. Defaults to `name`.
+	SortBy *ListCustomersParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+
+	// SortDir Sort direction. Defaults to `asc`.
+	SortDir *ListCustomersParamsSortDir `form:"sort_dir,omitempty" json:"sort_dir,omitempty"`
+
+	// CreatedAtFrom Filter customers created at or after this ISO 8601 datetime (e.g. 2024-01-01T00:00:00Z).
+	CreatedAtFrom *time.Time `form:"created_at_from,omitempty" json:"created_at_from,omitempty"`
+
+	// CreatedAtTo Filter customers created at or before this ISO 8601 datetime (e.g. 2024-12-31T23:59:59Z).
+	CreatedAtTo *time.Time `form:"created_at_to,omitempty" json:"created_at_to,omitempty"`
 }
+
+// ListCustomersParamsSortBy defines parameters for ListCustomers.
+type ListCustomersParamsSortBy string
+
+// ListCustomersParamsSortDir defines parameters for ListCustomers.
+type ListCustomersParamsSortDir string
 
 // CreateCustomerParams defines parameters for CreateCustomer.
 type CreateCustomerParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+
+	// XSandboxScenario Sandbox-only. Applies a preset failure or behavior mode for the request, selecting a coherent combination of error step, status, and message. The full set of scenarios is also exposed dynamically via `GET /sandbox/scenarios` along with descriptions and per-rail applicability.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxScenario *CreateCustomerParamsXSandboxScenario `json:"X-Sandbox-Scenario,omitempty"`
+
+	// XSandboxErrorStep Sandbox-only. Names the pipeline step at which the injected error fires. Pair with `X-Sandbox-Error-Status` and (optionally) `X-Sandbox-Error-Message` to drive a deterministic failure mode at a known point in the request lifecycle. Values longer than 100 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStep *CreateCustomerParamsXSandboxErrorStep `json:"X-Sandbox-Error-Step,omitempty"`
+
+	// XSandboxErrorStatus Sandbox-only. Sets the HTTP status code returned when the sandbox injects an error at the configured step (see `X-Sandbox-Error-Step`). Must be a valid HTTP status code in the range 100-599; values outside that range are ignored. Status codes >= 400 cause the request to short-circuit immediately with a structured error response.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStatus *SandboxErrorStatusHeader `json:"X-Sandbox-Error-Status,omitempty"`
+
+	// XSandboxErrorMessage Sandbox-only. Sets the human-readable `message` field of the injected sandbox error response. Truncated values longer than 500 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorMessage *SandboxErrorMessageHeader `json:"X-Sandbox-Error-Message,omitempty"`
+
+	// XSandboxSkipAutoApproval Sandbox-only. When `true`, prevents the default 5-second KYB auto-approval that the sandbox applies to newly created customers. Use this header (typically with `X-Sandbox-Scenario: kyb_manual_review` or `kyb_rejected`) to keep an application in `pending` so integrators can exercise manual-review and rejection flows. Accepts `true`/`false` (also `1`/`0`, `yes`/`no`); other values are treated as `false`.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxSkipAutoApproval *SandboxSkipAutoApprovalHeader `json:"X-Sandbox-Skip-Auto-Approval,omitempty"`
+}
+
+// CreateCustomerParamsXSandboxScenario defines parameters for CreateCustomer.
+type CreateCustomerParamsXSandboxScenario string
+
+// CreateCustomerParamsXSandboxErrorStep defines parameters for CreateCustomer.
+type CreateCustomerParamsXSandboxErrorStep string
+
+// BulkImportFromSumsubTokensJSONBody defines parameters for BulkImportFromSumsubTokens.
+type BulkImportFromSumsubTokensJSONBody struct {
+	// Tokens List of Sumsub share tokens to import
+	Tokens []string `json:"tokens"`
+}
+
+// BulkImportFromSumsubTokensParams defines parameters for BulkImportFromSumsubTokens.
+type BulkImportFromSumsubTokensParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
@@ -4797,8 +5480,10 @@ type CreateDestinationParams struct {
 
 // SimulateInboundJSONBody defines parameters for SimulateInbound.
 type SimulateInboundJSONBody struct {
-	// AccountId Platform account ID (required for ach_inbound and wire_inbound types)
-	AccountId string `json:"account_id"`
+	// AccountId Platform account ID of the target onramp/offramp auto account.
+	// **Required for `ach_inbound` and `fedwire_inbound`.**
+	// Ignored for other `type` values.
+	AccountId *string `json:"account_id,omitempty"`
 
 	// Amount Amount as a decimal string
 	Amount string `json:"amount"`
@@ -4809,8 +5494,19 @@ type SimulateInboundJSONBody struct {
 	// DelaySeconds Delay in seconds for success_delayed scenario (1-86400)
 	DelaySeconds *int `json:"delay_seconds,omitempty"`
 
-	// MovementId Movement ID (required for outbound types)
+	// MovementId Legacy alias for `one_off_transaction_id`. Prefer
+	// `one_off_transaction_id` — this field is accepted for
+	// backwards compatibility and may be removed in a future
+	// major version.
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
 	MovementId *string `json:"movement_id,omitempty"`
+
+	// OneOffTransactionId The one-off transaction ID returned by
+	// `POST /transactions/one-off` (see the `id` field in the
+	// response). **Required for outbound types**
+	// (`ach_outbound_*`, `fedwire_outbound_*`, `*_reversal`).
+	// Ignored for inbound types.
+	OneOffTransactionId *string `json:"one_off_transaction_id,omitempty"`
 
 	// PartialAmount Amount actually received (for crypto_inbound with scenario=partial_crypto only).
 	// Must be a valid decimal less than amount.
@@ -4829,10 +5525,21 @@ type SimulateInboundJSONBody struct {
 	// TraceId Optional trace ID for correlation
 	TraceId *string `json:"trace_id,omitempty"`
 
-	// Type Payment rail and direction
+	// Type Payment rail and direction. Use the `fedwire_*` values for
+	// Fedwire flows; the `wire_*` values are accepted as legacy
+	// aliases for backwards compatibility and may be removed in
+	// a future major version.
 	Type SimulateInboundJSONBodyType `json:"type"`
 
-	// WalletId Wallet ID (required for crypto_inbound type)
+	// WalletAddress The on-chain wallet address returned by `POST /wallets`
+	// (see the `address` field in the response). **Required for
+	// `crypto_inbound`.** Ignored for other types.
+	WalletAddress *string `json:"wallet_address,omitempty"`
+
+	// WalletId Legacy alias for `wallet_address`. Prefer `wallet_address` —
+	// this field is accepted for backwards compatibility and may
+	// be removed in a future major version.
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
 	WalletId *string `json:"wallet_id,omitempty"`
 }
 
@@ -4840,7 +5547,33 @@ type SimulateInboundJSONBody struct {
 type SimulateInboundParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+
+	// XSandboxScenario Sandbox-only. Applies a preset failure or behavior mode for the request, selecting a coherent combination of error step, status, and message. The full set of scenarios is also exposed dynamically via `GET /sandbox/scenarios` along with descriptions and per-rail applicability.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxScenario *SimulateInboundParamsXSandboxScenario `json:"X-Sandbox-Scenario,omitempty"`
+
+	// XSandboxErrorStep Sandbox-only. Names the pipeline step at which the injected error fires. Pair with `X-Sandbox-Error-Status` and (optionally) `X-Sandbox-Error-Message` to drive a deterministic failure mode at a known point in the request lifecycle. Values longer than 100 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStep *SimulateInboundParamsXSandboxErrorStep `json:"X-Sandbox-Error-Step,omitempty"`
+
+	// XSandboxErrorStatus Sandbox-only. Sets the HTTP status code returned when the sandbox injects an error at the configured step (see `X-Sandbox-Error-Step`). Must be a valid HTTP status code in the range 100-599; values outside that range are ignored. Status codes >= 400 cause the request to short-circuit immediately with a structured error response.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStatus *SandboxErrorStatusHeader `json:"X-Sandbox-Error-Status,omitempty"`
+
+	// XSandboxErrorMessage Sandbox-only. Sets the human-readable `message` field of the injected sandbox error response. Truncated values longer than 500 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorMessage *SandboxErrorMessageHeader `json:"X-Sandbox-Error-Message,omitempty"`
+
+	// XSandboxInstantCompletion Sandbox-only. When `true`, asynchronous simulation flows complete immediately rather than progressing through their normal timed states. Useful for fast end-to-end test runs that do not need to exercise intermediate webhook events. Accepts `true`/`false` (also `1`/`0`, `yes`/`no`); other values are treated as `false`.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxInstantCompletion *SandboxInstantCompletionHeader `json:"X-Sandbox-Instant-Completion,omitempty"`
 }
+
+// SimulateInboundParamsXSandboxScenario defines parameters for SimulateInbound.
+type SimulateInboundParamsXSandboxScenario string
+
+// SimulateInboundParamsXSandboxErrorStep defines parameters for SimulateInbound.
+type SimulateInboundParamsXSandboxErrorStep string
 
 // SimulateInboundJSONBodyType defines parameters for SimulateInbound.
 type SimulateInboundJSONBodyType string
@@ -4870,7 +5603,37 @@ type SimulateOnboardingJSONBody struct {
 type SimulateOnboardingParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+
+	// XSandboxScenario Sandbox-only. Applies a preset failure or behavior mode for the request, selecting a coherent combination of error step, status, and message. The full set of scenarios is also exposed dynamically via `GET /sandbox/scenarios` along with descriptions and per-rail applicability.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxScenario *SimulateOnboardingParamsXSandboxScenario `json:"X-Sandbox-Scenario,omitempty"`
+
+	// XSandboxErrorStep Sandbox-only. Names the pipeline step at which the injected error fires. Pair with `X-Sandbox-Error-Status` and (optionally) `X-Sandbox-Error-Message` to drive a deterministic failure mode at a known point in the request lifecycle. Values longer than 100 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStep *SimulateOnboardingParamsXSandboxErrorStep `json:"X-Sandbox-Error-Step,omitempty"`
+
+	// XSandboxErrorStatus Sandbox-only. Sets the HTTP status code returned when the sandbox injects an error at the configured step (see `X-Sandbox-Error-Step`). Must be a valid HTTP status code in the range 100-599; values outside that range are ignored. Status codes >= 400 cause the request to short-circuit immediately with a structured error response.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStatus *SandboxErrorStatusHeader `json:"X-Sandbox-Error-Status,omitempty"`
+
+	// XSandboxErrorMessage Sandbox-only. Sets the human-readable `message` field of the injected sandbox error response. Truncated values longer than 500 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorMessage *SandboxErrorMessageHeader `json:"X-Sandbox-Error-Message,omitempty"`
+
+	// XSandboxInstantCompletion Sandbox-only. When `true`, asynchronous simulation flows complete immediately rather than progressing through their normal timed states. Useful for fast end-to-end test runs that do not need to exercise intermediate webhook events. Accepts `true`/`false` (also `1`/`0`, `yes`/`no`); other values are treated as `false`.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxInstantCompletion *SandboxInstantCompletionHeader `json:"X-Sandbox-Instant-Completion,omitempty"`
+
+	// XSandboxSkipAutoApproval Sandbox-only. When `true`, prevents the default 5-second KYB auto-approval that the sandbox applies to newly created customers. Use this header (typically with `X-Sandbox-Scenario: kyb_manual_review` or `kyb_rejected`) to keep an application in `pending` so integrators can exercise manual-review and rejection flows. Accepts `true`/`false` (also `1`/`0`, `yes`/`no`); other values are treated as `false`.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxSkipAutoApproval *SandboxSkipAutoApprovalHeader `json:"X-Sandbox-Skip-Auto-Approval,omitempty"`
 }
+
+// SimulateOnboardingParamsXSandboxScenario defines parameters for SimulateOnboarding.
+type SimulateOnboardingParamsXSandboxScenario string
+
+// SimulateOnboardingParamsXSandboxErrorStep defines parameters for SimulateOnboarding.
+type SimulateOnboardingParamsXSandboxErrorStep string
 
 // SimulateOnboardingJSONBodyType defines parameters for SimulateOnboarding.
 type SimulateOnboardingJSONBodyType string
@@ -4957,19 +5720,97 @@ type ListTransactionsParams struct {
 
 	// DestinationAsset Filter one-off transactions by destination asset.
 	DestinationAsset *string `form:"destination_asset,omitempty" json:"destination_asset,omitempty"`
+
+	// SortBy Field to sort one-off transactions by. Defaults to `created_at`.
+	SortBy *ListTransactionsParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+
+	// SortDir Sort direction. Defaults to `desc`.
+	SortDir *ListTransactionsParamsSortDir `form:"sort_dir,omitempty" json:"sort_dir,omitempty"`
+
+	// CreatedAtFrom Filter one-off transactions created at or after this ISO 8601 datetime (e.g. 2024-01-01T00:00:00Z).
+	CreatedAtFrom *time.Time `form:"created_at_from,omitempty" json:"created_at_from,omitempty"`
+
+	// CreatedAtTo Filter one-off transactions created at or before this ISO 8601 datetime (e.g. 2024-12-31T23:59:59Z).
+	CreatedAtTo *time.Time `form:"created_at_to,omitempty" json:"created_at_to,omitempty"`
+
+	// AmountMin Filter one-off transactions by minimum destination amount (inclusive).
+	AmountMin *string `form:"amount_min,omitempty" json:"amount_min,omitempty"`
+
+	// AmountMax Filter one-off transactions by maximum destination amount (inclusive).
+	AmountMax *string `form:"amount_max,omitempty" json:"amount_max,omitempty"`
+
+	// Search Free-text search across customer name, customer email, and transaction ID.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Statuses Comma-separated list of statuses to filter by (e.g. `pending,completed,failed`). Takes precedence over `status` when both are provided.
+	Statuses *string `form:"statuses,omitempty" json:"statuses,omitempty"`
 }
+
+// ListTransactionsParamsSortBy defines parameters for ListTransactions.
+type ListTransactionsParamsSortBy string
+
+// ListTransactionsParamsSortDir defines parameters for ListTransactions.
+type ListTransactionsParamsSortDir string
 
 // CreateTransactionParams defines parameters for CreateTransaction.
 type CreateTransactionParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+
+	// XSandboxScenario Sandbox-only. Applies a preset failure or behavior mode for the request, selecting a coherent combination of error step, status, and message. The full set of scenarios is also exposed dynamically via `GET /sandbox/scenarios` along with descriptions and per-rail applicability.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxScenario *CreateTransactionParamsXSandboxScenario `json:"X-Sandbox-Scenario,omitempty"`
+
+	// XSandboxErrorStep Sandbox-only. Names the pipeline step at which the injected error fires. Pair with `X-Sandbox-Error-Status` and (optionally) `X-Sandbox-Error-Message` to drive a deterministic failure mode at a known point in the request lifecycle. Values longer than 100 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStep *CreateTransactionParamsXSandboxErrorStep `json:"X-Sandbox-Error-Step,omitempty"`
+
+	// XSandboxErrorStatus Sandbox-only. Sets the HTTP status code returned when the sandbox injects an error at the configured step (see `X-Sandbox-Error-Step`). Must be a valid HTTP status code in the range 100-599; values outside that range are ignored. Status codes >= 400 cause the request to short-circuit immediately with a structured error response.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStatus *SandboxErrorStatusHeader `json:"X-Sandbox-Error-Status,omitempty"`
+
+	// XSandboxErrorMessage Sandbox-only. Sets the human-readable `message` field of the injected sandbox error response. Truncated values longer than 500 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorMessage *SandboxErrorMessageHeader `json:"X-Sandbox-Error-Message,omitempty"`
+
+	// XSandboxInstantCompletion Sandbox-only. When `true`, asynchronous simulation flows complete immediately rather than progressing through their normal timed states. Useful for fast end-to-end test runs that do not need to exercise intermediate webhook events. Accepts `true`/`false` (also `1`/`0`, `yes`/`no`); other values are treated as `false`.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxInstantCompletion *SandboxInstantCompletionHeader `json:"X-Sandbox-Instant-Completion,omitempty"`
 }
+
+// CreateTransactionParamsXSandboxScenario defines parameters for CreateTransaction.
+type CreateTransactionParamsXSandboxScenario string
+
+// CreateTransactionParamsXSandboxErrorStep defines parameters for CreateTransaction.
+type CreateTransactionParamsXSandboxErrorStep string
 
 // CreateTransactionCancellationParams defines parameters for CreateTransactionCancellation.
 type CreateTransactionCancellationParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+
+	// XSandboxScenario Sandbox-only. Applies a preset failure or behavior mode for the request, selecting a coherent combination of error step, status, and message. The full set of scenarios is also exposed dynamically via `GET /sandbox/scenarios` along with descriptions and per-rail applicability.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxScenario *CreateTransactionCancellationParamsXSandboxScenario `json:"X-Sandbox-Scenario,omitempty"`
+
+	// XSandboxErrorStep Sandbox-only. Names the pipeline step at which the injected error fires. Pair with `X-Sandbox-Error-Status` and (optionally) `X-Sandbox-Error-Message` to drive a deterministic failure mode at a known point in the request lifecycle. Values longer than 100 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStep *CreateTransactionCancellationParamsXSandboxErrorStep `json:"X-Sandbox-Error-Step,omitempty"`
+
+	// XSandboxErrorStatus Sandbox-only. Sets the HTTP status code returned when the sandbox injects an error at the configured step (see `X-Sandbox-Error-Step`). Must be a valid HTTP status code in the range 100-599; values outside that range are ignored. Status codes >= 400 cause the request to short-circuit immediately with a structured error response.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorStatus *SandboxErrorStatusHeader `json:"X-Sandbox-Error-Status,omitempty"`
+
+	// XSandboxErrorMessage Sandbox-only. Sets the human-readable `message` field of the injected sandbox error response. Truncated values longer than 500 characters are ignored.
+	// Effective only on `https://api.platform.sandbox.dakota.xyz`. Ignored in production.
+	XSandboxErrorMessage *SandboxErrorMessageHeader `json:"X-Sandbox-Error-Message,omitempty"`
 }
+
+// CreateTransactionCancellationParamsXSandboxScenario defines parameters for CreateTransactionCancellation.
+type CreateTransactionCancellationParamsXSandboxScenario string
+
+// CreateTransactionCancellationParamsXSandboxErrorStep defines parameters for CreateTransactionCancellation.
+type CreateTransactionCancellationParamsXSandboxErrorStep string
 
 // ListClientUsersParams defines parameters for ListClientUsers.
 type ListClientUsersParams struct {
@@ -4981,7 +5822,31 @@ type ListClientUsersParams struct {
 
 	// EndingBefore A cursor for use in pagination. `ending_before` is a KSUID for the object you are listing that defines your place in the list. For instance, if you make a list request and receive 100 objects, starting with ID `2B5J8KZ9N7M1K3P6Q8R4T7V9`, your subsequent call can include `ending_before=2B5J8KZ9N7M1K3P6Q8R4T7V9` in order to fetch the previous page of the list.
 	EndingBefore *EndingBeforeParam `form:"ending_before,omitempty" json:"ending_before,omitempty"`
+
+	// Search Fuzzy search across first/last name, email, and user ID.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// CreatedAtFrom Filter users created at or after this ISO 8601 datetime (e.g. 2024-01-01T00:00:00Z).
+	CreatedAtFrom *time.Time `form:"created_at_from,omitempty" json:"created_at_from,omitempty"`
+
+	// CreatedAtTo Filter users created at or before this ISO 8601 datetime (e.g. 2024-12-31T23:59:59Z).
+	CreatedAtTo *time.Time `form:"created_at_to,omitempty" json:"created_at_to,omitempty"`
+
+	// Roles Filter users by one or more roles. Comma-separated list (e.g. `admin,member`).
+	Roles *string `form:"roles,omitempty" json:"roles,omitempty"`
+
+	// SortBy Field to sort users by. Defaults to `created_at`.
+	SortBy *ListClientUsersParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+
+	// SortDir Sort direction. Defaults to `desc`.
+	SortDir *ListClientUsersParamsSortDir `form:"sort_dir,omitempty" json:"sort_dir,omitempty"`
 }
+
+// ListClientUsersParamsSortBy defines parameters for ListClientUsers.
+type ListClientUsersParamsSortBy string
+
+// ListClientUsersParamsSortDir defines parameters for ListClientUsers.
+type ListClientUsersParamsSortDir string
 
 // CreateClientUserParams defines parameters for CreateClientUser.
 type CreateClientUserParams struct {
@@ -5111,6 +5976,9 @@ type UpdateIndividualApplicationDetailsJSONRequestBody = IndividualRequest
 
 // CreateCustomerJSONRequestBody defines body for CreateCustomer for application/json ContentType.
 type CreateCustomerJSONRequestBody = CustomerCreateRequest
+
+// BulkImportFromSumsubTokensJSONRequestBody defines body for BulkImportFromSumsubTokens for application/json ContentType.
+type BulkImportFromSumsubTokensJSONRequestBody BulkImportFromSumsubTokensJSONBody
 
 // CreateRecipientJSONRequestBody defines body for CreateRecipient for application/json ContentType.
 type CreateRecipientJSONRequestBody = RecipientRequest
@@ -6062,6 +6930,11 @@ type ClientInterface interface {
 
 	CreateCustomer(ctx context.Context, params *CreateCustomerParams, body CreateCustomerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// BulkImportFromSumsubTokensWithBody request with any body
+	BulkImportFromSumsubTokensWithBody(ctx context.Context, params *BulkImportFromSumsubTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	BulkImportFromSumsubTokens(ctx context.Context, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetSubClientSummary request
 	GetSubClientSummary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -6173,6 +7046,9 @@ type ClientInterface interface {
 
 	// ListSelfServeCreditsLedger request
 	ListSelfServeCreditsLedger(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSelfServeCreditsPricing request
+	GetSelfServeCreditsPricing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateSelfServeCreditsPurchaseWithBody request with any body
 	CreateSelfServeCreditsPurchaseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6882,6 +7758,30 @@ func (c *APIClient) CreateCustomer(ctx context.Context, params *CreateCustomerPa
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) BulkImportFromSumsubTokensWithBody(ctx context.Context, params *BulkImportFromSumsubTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBulkImportFromSumsubTokensRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) BulkImportFromSumsubTokens(ctx context.Context, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBulkImportFromSumsubTokensRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetSubClientSummary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSubClientSummaryRequest(c.Server)
 	if err != nil {
@@ -7376,6 +8276,18 @@ func (c *APIClient) GetSelfServeCreditsBalance(ctx context.Context, reqEditors .
 
 func (c *APIClient) ListSelfServeCreditsLedger(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListSelfServeCreditsLedgerRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetSelfServeCreditsPricing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSelfServeCreditsPricingRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -8151,6 +9063,50 @@ func NewCreateAccountRequestWithBody(server string, params *CreateAccountParams,
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+		if params.XSandboxScenario != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Scenario", runtime.ParamLocationHeader, *params.XSandboxScenario)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Scenario", headerParam1)
+		}
+
+		if params.XSandboxErrorStep != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Step", runtime.ParamLocationHeader, *params.XSandboxErrorStep)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Step", headerParam2)
+		}
+
+		if params.XSandboxErrorStatus != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Status", runtime.ParamLocationHeader, *params.XSandboxErrorStatus)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Status", headerParam3)
+		}
+
+		if params.XSandboxErrorMessage != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Message", runtime.ParamLocationHeader, *params.XSandboxErrorMessage)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Message", headerParam4)
+		}
+
 	}
 
 	return req, nil
@@ -8368,6 +9324,70 @@ func NewListApiKeysRequest(server string, params *ListApiKeysParams) (*http.Requ
 		if params.EndingBefore != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "ending_before", runtime.ParamLocationQuery, *params.EndingBefore); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtFrom != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_from", runtime.ParamLocationQuery, *params.CreatedAtFrom); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtTo != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_to", runtime.ParamLocationQuery, *params.CreatedAtTo); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_by", runtime.ParamLocationQuery, *params.SortBy); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDir != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_dir", runtime.ParamLocationQuery, *params.SortDir); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -9981,6 +11001,102 @@ func NewListAutoTransactionsRequest(server string, params *ListAutoTransactionsP
 
 		}
 
+		if params.Statuses != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "statuses", runtime.ParamLocationQuery, *params.Statuses); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Types != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "types", runtime.ParamLocationQuery, *params.Types); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OutgoingAmountMin != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "outgoing_amount_min", runtime.ParamLocationQuery, *params.OutgoingAmountMin); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OutgoingAmountMax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "outgoing_amount_max", runtime.ParamLocationQuery, *params.OutgoingAmountMax); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_by", runtime.ParamLocationQuery, *params.SortBy); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDir != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_dir", runtime.ParamLocationQuery, *params.SortDir); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -10198,6 +11314,38 @@ func NewListCustomersRequest(server string, params *ListCustomersParams) (*http.
 
 		}
 
+		if params.KybStatuses != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "kyb_statuses", runtime.ParamLocationQuery, *params.KybStatuses); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.KycStatuses != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "kyc_statuses", runtime.ParamLocationQuery, *params.KycStatuses); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.SubClientId != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sub_client_id", runtime.ParamLocationQuery, *params.SubClientId); err != nil {
@@ -10217,6 +11365,70 @@ func NewListCustomersRequest(server string, params *ListCustomersParams) (*http.
 		if params.IsSubClient != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "is_sub_client", runtime.ParamLocationQuery, *params.IsSubClient); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_by", runtime.ParamLocationQuery, *params.SortBy); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDir != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_dir", runtime.ParamLocationQuery, *params.SortDir); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtFrom != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_from", runtime.ParamLocationQuery, *params.CreatedAtFrom); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtTo != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_to", runtime.ParamLocationQuery, *params.CreatedAtTo); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -10262,6 +11474,114 @@ func NewCreateCustomerRequestWithBody(server string, params *CreateCustomerParam
 	}
 
 	operationPath := fmt.Sprintf("/customers")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+		if params.XSandboxScenario != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Scenario", runtime.ParamLocationHeader, *params.XSandboxScenario)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Scenario", headerParam1)
+		}
+
+		if params.XSandboxErrorStep != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Step", runtime.ParamLocationHeader, *params.XSandboxErrorStep)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Step", headerParam2)
+		}
+
+		if params.XSandboxErrorStatus != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Status", runtime.ParamLocationHeader, *params.XSandboxErrorStatus)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Status", headerParam3)
+		}
+
+		if params.XSandboxErrorMessage != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Message", runtime.ParamLocationHeader, *params.XSandboxErrorMessage)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Message", headerParam4)
+		}
+
+		if params.XSandboxSkipAutoApproval != nil {
+			var headerParam5 string
+
+			headerParam5, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Skip-Auto-Approval", runtime.ParamLocationHeader, *params.XSandboxSkipAutoApproval)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Skip-Auto-Approval", headerParam5)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewBulkImportFromSumsubTokensRequest calls the generic BulkImportFromSumsubTokens builder with application/json body
+func NewBulkImportFromSumsubTokensRequest(server string, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewBulkImportFromSumsubTokensRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewBulkImportFromSumsubTokensRequestWithBody generates requests for BulkImportFromSumsubTokens with any type of body
+func NewBulkImportFromSumsubTokensRequestWithBody(server string, params *BulkImportFromSumsubTokensParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/bulk-import-sumsub-tokens")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11595,6 +12915,61 @@ func NewSimulateInboundRequestWithBody(server string, params *SimulateInboundPar
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+		if params.XSandboxScenario != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Scenario", runtime.ParamLocationHeader, *params.XSandboxScenario)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Scenario", headerParam1)
+		}
+
+		if params.XSandboxErrorStep != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Step", runtime.ParamLocationHeader, *params.XSandboxErrorStep)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Step", headerParam2)
+		}
+
+		if params.XSandboxErrorStatus != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Status", runtime.ParamLocationHeader, *params.XSandboxErrorStatus)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Status", headerParam3)
+		}
+
+		if params.XSandboxErrorMessage != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Message", runtime.ParamLocationHeader, *params.XSandboxErrorMessage)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Message", headerParam4)
+		}
+
+		if params.XSandboxInstantCompletion != nil {
+			var headerParam5 string
+
+			headerParam5, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Instant-Completion", runtime.ParamLocationHeader, *params.XSandboxInstantCompletion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Instant-Completion", headerParam5)
+		}
+
 	}
 
 	return req, nil
@@ -11647,6 +13022,72 @@ func NewSimulateOnboardingRequestWithBody(server string, params *SimulateOnboard
 		}
 
 		req.Header.Set("x-idempotency-key", headerParam0)
+
+		if params.XSandboxScenario != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Scenario", runtime.ParamLocationHeader, *params.XSandboxScenario)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Scenario", headerParam1)
+		}
+
+		if params.XSandboxErrorStep != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Step", runtime.ParamLocationHeader, *params.XSandboxErrorStep)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Step", headerParam2)
+		}
+
+		if params.XSandboxErrorStatus != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Status", runtime.ParamLocationHeader, *params.XSandboxErrorStatus)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Status", headerParam3)
+		}
+
+		if params.XSandboxErrorMessage != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Message", runtime.ParamLocationHeader, *params.XSandboxErrorMessage)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Message", headerParam4)
+		}
+
+		if params.XSandboxInstantCompletion != nil {
+			var headerParam5 string
+
+			headerParam5, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Instant-Completion", runtime.ParamLocationHeader, *params.XSandboxInstantCompletion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Instant-Completion", headerParam5)
+		}
+
+		if params.XSandboxSkipAutoApproval != nil {
+			var headerParam6 string
+
+			headerParam6, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Skip-Auto-Approval", runtime.ParamLocationHeader, *params.XSandboxSkipAutoApproval)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Skip-Auto-Approval", headerParam6)
+		}
 
 	}
 
@@ -11832,6 +13273,33 @@ func NewListSelfServeCreditsLedgerRequest(server string, params *ListSelfServeCr
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSelfServeCreditsPricingRequest generates requests for GetSelfServeCreditsPricing
+func NewGetSelfServeCreditsPricingRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/self-serve/credits/pricing")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -12460,6 +13928,134 @@ func NewListTransactionsRequest(server string, params *ListTransactionsParams) (
 
 		}
 
+		if params.SortBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_by", runtime.ParamLocationQuery, *params.SortBy); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDir != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_dir", runtime.ParamLocationQuery, *params.SortDir); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtFrom != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_from", runtime.ParamLocationQuery, *params.CreatedAtFrom); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtTo != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_to", runtime.ParamLocationQuery, *params.CreatedAtTo); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AmountMin != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "amount_min", runtime.ParamLocationQuery, *params.AmountMin); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AmountMax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "amount_max", runtime.ParamLocationQuery, *params.AmountMax); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "search", runtime.ParamLocationQuery, *params.Search); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Statuses != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "statuses", runtime.ParamLocationQuery, *params.Statuses); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -12518,6 +14114,61 @@ func NewCreateTransactionRequestWithBody(server string, params *CreateTransactio
 		}
 
 		req.Header.Set("x-idempotency-key", headerParam0)
+
+		if params.XSandboxScenario != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Scenario", runtime.ParamLocationHeader, *params.XSandboxScenario)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Scenario", headerParam1)
+		}
+
+		if params.XSandboxErrorStep != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Step", runtime.ParamLocationHeader, *params.XSandboxErrorStep)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Step", headerParam2)
+		}
+
+		if params.XSandboxErrorStatus != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Status", runtime.ParamLocationHeader, *params.XSandboxErrorStatus)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Status", headerParam3)
+		}
+
+		if params.XSandboxErrorMessage != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Message", runtime.ParamLocationHeader, *params.XSandboxErrorMessage)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Message", headerParam4)
+		}
+
+		if params.XSandboxInstantCompletion != nil {
+			var headerParam5 string
+
+			headerParam5, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Instant-Completion", runtime.ParamLocationHeader, *params.XSandboxInstantCompletion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Instant-Completion", headerParam5)
+		}
 
 	}
 
@@ -12600,6 +14251,50 @@ func NewCreateTransactionCancellationRequest(server string, transactionId KSUID,
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+		if params.XSandboxScenario != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Scenario", runtime.ParamLocationHeader, *params.XSandboxScenario)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Scenario", headerParam1)
+		}
+
+		if params.XSandboxErrorStep != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Step", runtime.ParamLocationHeader, *params.XSandboxErrorStep)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Step", headerParam2)
+		}
+
+		if params.XSandboxErrorStatus != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Status", runtime.ParamLocationHeader, *params.XSandboxErrorStatus)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Status", headerParam3)
+		}
+
+		if params.XSandboxErrorMessage != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Sandbox-Error-Message", runtime.ParamLocationHeader, *params.XSandboxErrorMessage)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Sandbox-Error-Message", headerParam4)
+		}
+
 	}
 
 	return req, nil
@@ -12662,6 +14357,102 @@ func NewListClientUsersRequest(server string, params *ListClientUsersParams) (*h
 		if params.EndingBefore != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "ending_before", runtime.ParamLocationQuery, *params.EndingBefore); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "search", runtime.ParamLocationQuery, *params.Search); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtFrom != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_from", runtime.ParamLocationQuery, *params.CreatedAtFrom); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CreatedAtTo != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "created_at_to", runtime.ParamLocationQuery, *params.CreatedAtTo); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Roles != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "roles", runtime.ParamLocationQuery, *params.Roles); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_by", runtime.ParamLocationQuery, *params.SortBy); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDir != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort_dir", runtime.ParamLocationQuery, *params.SortDir); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -13799,6 +15590,11 @@ type ClientWithResponsesInterface interface {
 
 	CreateCustomerWithResponse(ctx context.Context, params *CreateCustomerParams, body CreateCustomerJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateCustomerResponse, error)
 
+	// BulkImportFromSumsubTokensWithBodyWithResponse request with any body
+	BulkImportFromSumsubTokensWithBodyWithResponse(ctx context.Context, params *BulkImportFromSumsubTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BulkImportFromSumsubTokensResponse, error)
+
+	BulkImportFromSumsubTokensWithResponse(ctx context.Context, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkImportFromSumsubTokensResponse, error)
+
 	// GetSubClientSummaryWithResponse request
 	GetSubClientSummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubClientSummaryResponse, error)
 
@@ -13910,6 +15706,9 @@ type ClientWithResponsesInterface interface {
 
 	// ListSelfServeCreditsLedgerWithResponse request
 	ListSelfServeCreditsLedgerWithResponse(ctx context.Context, params *ListSelfServeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*ListSelfServeCreditsLedgerResponse, error)
+
+	// GetSelfServeCreditsPricingWithResponse request
+	GetSelfServeCreditsPricingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSelfServeCreditsPricingResponse, error)
 
 	// CreateSelfServeCreditsPurchaseWithBodyWithResponse request with any body
 	CreateSelfServeCreditsPurchaseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSelfServeCreditsPurchaseResponse, error)
@@ -14799,6 +16598,7 @@ type CreateApplicationSubmissionResponse struct {
 	JSON200                       *Application
 	JSON400                       *ApplicationNotReadyError
 	ApplicationproblemJSON401     *ProblemDetails
+	JSON402                       *InsufficientCreditsError
 	ApplicationproblemJSON403     *ProblemDetails
 	ApplicationproblemJSON404     *ProblemDetails
 	ApplicationproblemJSONDefault *ProblemDetails
@@ -14966,6 +16766,41 @@ func (r CreateCustomerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateCustomerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type BulkImportFromSumsubTokensResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Failed  *int `json:"failed,omitempty"`
+		Results *[]struct {
+			ApplicationId *string `json:"application_id,omitempty"`
+			CustomerId    *string `json:"customer_id,omitempty"`
+			Error         *string `json:"error,omitempty"`
+			Name          *string `json:"name,omitempty"`
+			Success       *bool   `json:"success,omitempty"`
+		} `json:"results,omitempty"`
+		Succeeded *int `json:"succeeded,omitempty"`
+		Total     *int `json:"total,omitempty"`
+	}
+	JSON400 *ProblemDetails
+	JSON401 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r BulkImportFromSumsubTokensResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BulkImportFromSumsubTokensResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15734,6 +17569,30 @@ func (r ListSelfServeCreditsLedgerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ListSelfServeCreditsLedgerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSelfServeCreditsPricingResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ClientPricingConfig
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSelfServeCreditsPricingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSelfServeCreditsPricingResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -17005,6 +18864,23 @@ func (c *ClientWithResponses) CreateCustomerWithResponse(ctx context.Context, pa
 	return ParseCreateCustomerResponse(rsp)
 }
 
+// BulkImportFromSumsubTokensWithBodyWithResponse request with arbitrary body returning *BulkImportFromSumsubTokensResponse
+func (c *ClientWithResponses) BulkImportFromSumsubTokensWithBodyWithResponse(ctx context.Context, params *BulkImportFromSumsubTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BulkImportFromSumsubTokensResponse, error) {
+	rsp, err := c.BulkImportFromSumsubTokensWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBulkImportFromSumsubTokensResponse(rsp)
+}
+
+func (c *ClientWithResponses) BulkImportFromSumsubTokensWithResponse(ctx context.Context, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkImportFromSumsubTokensResponse, error) {
+	rsp, err := c.BulkImportFromSumsubTokens(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBulkImportFromSumsubTokensResponse(rsp)
+}
+
 // GetSubClientSummaryWithResponse request returning *GetSubClientSummaryResponse
 func (c *ClientWithResponses) GetSubClientSummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubClientSummaryResponse, error) {
 	rsp, err := c.GetSubClientSummary(ctx, reqEditors...)
@@ -17367,6 +19243,15 @@ func (c *ClientWithResponses) ListSelfServeCreditsLedgerWithResponse(ctx context
 		return nil, err
 	}
 	return ParseListSelfServeCreditsLedgerResponse(rsp)
+}
+
+// GetSelfServeCreditsPricingWithResponse request returning *GetSelfServeCreditsPricingResponse
+func (c *ClientWithResponses) GetSelfServeCreditsPricingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSelfServeCreditsPricingResponse, error) {
+	rsp, err := c.GetSelfServeCreditsPricing(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSelfServeCreditsPricingResponse(rsp)
 }
 
 // CreateSelfServeCreditsPurchaseWithBodyWithResponse request with arbitrary body returning *CreateSelfServeCreditsPurchaseResponse
@@ -19429,6 +21314,13 @@ func ParseCreateApplicationSubmissionResponse(rsp *http.Response) (*CreateApplic
 		}
 		response.ApplicationproblemJSON401 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 402:
+		var dest InsufficientCreditsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON402 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
 		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -19715,6 +21607,57 @@ func ParseCreateCustomerResponse(rsp *http.Response) (*CreateCustomerResponse, e
 			return nil, err
 		}
 		response.ApplicationproblemJSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBulkImportFromSumsubTokensResponse parses an HTTP response from a BulkImportFromSumsubTokensWithResponse call
+func ParseBulkImportFromSumsubTokensResponse(rsp *http.Response) (*BulkImportFromSumsubTokensResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BulkImportFromSumsubTokensResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Failed  *int `json:"failed,omitempty"`
+			Results *[]struct {
+				ApplicationId *string `json:"application_id,omitempty"`
+				CustomerId    *string `json:"customer_id,omitempty"`
+				Error         *string `json:"error,omitempty"`
+				Name          *string `json:"name,omitempty"`
+				Success       *bool   `json:"success,omitempty"`
+			} `json:"results,omitempty"`
+			Succeeded *int `json:"succeeded,omitempty"`
+			Total     *int `json:"total,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 
@@ -21289,6 +23232,46 @@ func ParseListSelfServeCreditsLedgerResponse(rsp *http.Response) (*ListSelfServe
 			return nil, err
 		}
 		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSelfServeCreditsPricingResponse parses an HTTP response from a GetSelfServeCreditsPricingWithResponse call
+func ParseGetSelfServeCreditsPricingResponse(rsp *http.Response) (*GetSelfServeCreditsPricingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSelfServeCreditsPricingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ClientPricingConfig
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ProblemDetails
