@@ -2,6 +2,78 @@
 
 All notable changes to the Dakota Go SDK are documented in this file.
 
+## [0.4.0] - 2026-06-17
+
+### Summary
+
+Sync against platform OpenAPI spec — nine platform commits since 0.3.0
+(2026-05-11). Regenerated `client/gen/client.gen.go` from the latest
+`openapi.public.yaml`. Adds 4 new operations, 2 new types, and field
+additions across customers, transactions, wallet transactions, and
+send-transaction intents.
+
+### Added
+
+#### Wallets read-only UI (ENG-1886/1887/1888/1889/1890/1891)
+- `GetWalletWithResponse(ctx, walletId)` — fetch one wallet by id
+  (`GET /wallets/{walletId}`).
+- `GetPoliciesForWalletWithResponse(ctx, walletId)` — list policies
+  attached to a wallet (`GET /wallets/{walletId}/policies`).
+- `GetWalletsForPolicyWithResponse(ctx, policyId)` — list wallets
+  attached to a policy (`GET /policies/{policyId}/wallets`).
+- `GetWalletsForSignerGroupWithResponse(ctx, signerGroupId)` — list
+  wallets attached to a signer group
+  (`GET /signer-groups/{signerGroupId}/wallets`).
+
+#### New generated types
+- `AttachedPolicy` — slim `{id, name}` reference for policies attached
+  to a wallet.
+- `AttachedWallet` — slim `{id, name, family}` reference for wallets
+  attached to a policy or signer group.
+
+#### New optional fields
+
+- **Customers (ENG-2454):** `Customer.IsSubClient *bool` +
+  `CustomerCreateRequest.IsSubClient *bool`. Designate a customer as a
+  sub-client at creation. A regular customer cannot be promoted to a
+  sub-client afterwards; cannot be combined with `SubClientId`.
+- **Transactions list (ENG-2368):** `ListTransactionsParams.WalletId *KSUID`
+  + `ListTransactionsParams.Direction` (`in`, `out`). Both filter wallet
+  transactions and require `TransactionType=wallet`.
+- **Wallet transactions (ENG-2368):** `WalletTransaction.CreatedAt *int64`
+  + `WalletTransaction.ConfirmedAt *int64` (Unix seconds; `ConfirmedAt`
+  absent until on-chain confirmation).
+- **Send transaction intent (ENG-1962):** `SendTransactionIntent.ContextDigest *string`
+  — optional opaque SHA-256d digest of an upstream operator-meaningful
+  context envelope. Policy-engine includes it in canonical hashing so
+  the WebAuthn signature commits to it; the pre-image is persisted
+  upstream for forensic / non-repudiation purposes.
+
+### Changed
+
+- Regenerated `client/gen/client.gen.go` from
+  `~/Work/dakota/platform/openapi.public.yaml` (HEAD as of 2026-06-17).
+- Wallet balance description tightened (ENG-2064): `total_amount_usd`
+  and `amount_usd` are rounded DOWN to cents (truncated toward zero),
+  never up, so the value never exceeds the holder's spendable balance.
+  Description only — no schema impact.
+- Webhook target URL validation now rejects loopback and private IPs
+  in both sandbox and production (ENG-1997). Server-side enforcement
+  only — the SDK's `WebhookTarget` types are unchanged.
+- Transaction amount validation tightened at the platform endpoints
+  (ENG-1959). Server-side only.
+- Onboarding: original customer is now kept parented to Dakota on
+  Provider (ENG-1227). Doc text on the application document upload
+  endpoint about the rolling 7-day individual-PoA limit.
+- Self-serve credit tiles: removed $5k and $10k presets (ENG-2008).
+
+### Validated
+
+- `go build ./...` clean.
+- `go vet ./...` clean.
+- `go test ./...` passes (`client`, `errors`, `log`, `webhook`,
+  `webhook/idempotency`, `webhook/types`).
+
 ## [0.3.0] - 2026-05-11
 
 ### Summary
