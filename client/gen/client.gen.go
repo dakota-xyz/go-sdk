@@ -69,6 +69,14 @@ const (
 	ApplicationDecisionMethodOverride ApplicationDecisionMethod = "override"
 )
 
+// Defines values for ApplicationPoaStatus.
+const (
+	ApplicationPoaStatusApproved               ApplicationPoaStatus = "approved"
+	ApplicationPoaStatusMissing                ApplicationPoaStatus = "missing"
+	ApplicationPoaStatusRejected               ApplicationPoaStatus = "rejected"
+	ApplicationPoaStatusSubmittedPendingReview ApplicationPoaStatus = "submitted_pending_review"
+)
+
 // Defines values for ApplicationDocumentType.
 const (
 	ApplicationDocumentTypeArticlesOfAssociation      ApplicationDocumentType = "articles_of_association"
@@ -127,6 +135,7 @@ const (
 	ApplicationStatusAdminRevision         ApplicationStatus = "admin_revision"
 	ApplicationStatusApproved              ApplicationStatus = "approved"
 	ApplicationStatusCompleted             ApplicationStatus = "completed"
+	ApplicationStatusComplianceReview      ApplicationStatus = "compliance_review"
 	ApplicationStatusDeclined              ApplicationStatus = "declined"
 	ApplicationStatusPending               ApplicationStatus = "pending"
 	ApplicationStatusRequestForInformation ApplicationStatus = "request_for_information"
@@ -755,6 +764,7 @@ const (
 const (
 	PaymentCapabilityAch           PaymentCapability = "ach"
 	PaymentCapabilityFedwire       PaymentCapability = "fedwire"
+	PaymentCapabilitySepa          PaymentCapability = "sepa"
 	PaymentCapabilitySwift         PaymentCapability = "swift"
 	PaymentCapabilityUsBankAccount PaymentCapability = "us_bank_account"
 )
@@ -1092,12 +1102,13 @@ const (
 
 // Defines values for ListCustomersParamsSortBy.
 const (
-	ListCustomersParamsSortByCreatedAt    ListCustomersParamsSortBy = "created_at"
-	ListCustomersParamsSortByCustomerType ListCustomersParamsSortBy = "customer_type"
-	ListCustomersParamsSortById           ListCustomersParamsSortBy = "id"
-	ListCustomersParamsSortByKybStatus    ListCustomersParamsSortBy = "kyb_status"
-	ListCustomersParamsSortByKycStatus    ListCustomersParamsSortBy = "kyc_status"
-	ListCustomersParamsSortByName         ListCustomersParamsSortBy = "name"
+	ListCustomersParamsSortByApplicationStatus ListCustomersParamsSortBy = "application_status"
+	ListCustomersParamsSortByCreatedAt         ListCustomersParamsSortBy = "created_at"
+	ListCustomersParamsSortByCustomerType      ListCustomersParamsSortBy = "customer_type"
+	ListCustomersParamsSortById                ListCustomersParamsSortBy = "id"
+	ListCustomersParamsSortByKybStatus         ListCustomersParamsSortBy = "kyb_status"
+	ListCustomersParamsSortByKycStatus         ListCustomersParamsSortBy = "kyc_status"
+	ListCustomersParamsSortByName              ListCustomersParamsSortBy = "name"
 )
 
 // Defines values for ListCustomersParamsSortDir.
@@ -1243,6 +1254,12 @@ const (
 	ListSelfServeCreditsLedgerParamsTypeDeduction ListSelfServeCreditsLedgerParamsType = "deduction"
 	ListSelfServeCreditsLedgerParamsTypePurchase  ListSelfServeCreditsLedgerParamsType = "purchase"
 	ListSelfServeCreditsLedgerParamsTypeRefund    ListSelfServeCreditsLedgerParamsType = "refund"
+)
+
+// Defines values for ListTransactionsParamsDirection.
+const (
+	ListTransactionsParamsDirectionIn  ListTransactionsParamsDirection = "in"
+	ListTransactionsParamsDirectionOut ListTransactionsParamsDirection = "out"
 )
 
 // Defines values for ListTransactionsParamsSortBy.
@@ -1573,6 +1590,11 @@ type Application struct {
 	// - `approved` - Application approved
 	// - `declined` - Application declined
 	// - `completed` - Legacy status (deprecated, use approved/declined instead)
+	// - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+	//   document. Set when an individual applicant uploads a PoA-equivalent document
+	//   (proof_of_address, bank_statement, or utility_bill) after their application has
+	//   already been approved or completed. The customer remains active but is subject to
+	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// ApplicationSubmittedAt When the application was submitted (null if not yet submitted)
@@ -1597,6 +1619,21 @@ type Application struct {
 	// Entities The entities (people/businesses) being onboarded in this application
 	Entities *ApplicationEntities `json:"entities,omitempty"`
 
+	// PoaStatus Tracks the review state of the Proof of Address for individual applications.
+	// Null for business applications and for non-primary-individual rows.
+	//
+	// - `missing` — No Proof of Address has been submitted. The individual is subject
+	//   to the $3,000 USD-equivalent rolling 7-day transaction limit.
+	// - `submitted_pending_review` — A PoA-equivalent document (proof_of_address,
+	//   bank_statement, or utility_bill) has been uploaded and is awaiting compliance
+	//   review. The individual remains subject to the transaction limit until the review
+	//   concludes.
+	// - `approved` — The Proof of Address has been reviewed and approved. The individual
+	//   is exempt from the $3,000 / 7-day rolling transaction threshold.
+	// - `rejected` — The submitted Proof of Address was rejected. The individual
+	//   remains subject to the transaction limit and may re-upload a new document.
+	PoaStatus *ApplicationPoaStatus `json:"poa_status"`
+
 	// RiskRating Risk rating assessment for an application
 	RiskRating *RiskRating `json:"risk_rating,omitempty"`
 
@@ -1612,6 +1649,21 @@ type ApplicationApplicationType string
 
 // ApplicationDecisionMethod How the decision was reached: 'manual' for operator-driven decisions, 'auto' for automated approvals, 'override' reserved for future escalation. Null if no decision has been made.
 type ApplicationDecisionMethod string
+
+// ApplicationPoaStatus Tracks the review state of the Proof of Address for individual applications.
+// Null for business applications and for non-primary-individual rows.
+//
+//   - `missing` — No Proof of Address has been submitted. The individual is subject
+//     to the $3,000 USD-equivalent rolling 7-day transaction limit.
+//   - `submitted_pending_review` — A PoA-equivalent document (proof_of_address,
+//     bank_statement, or utility_bill) has been uploaded and is awaiting compliance
+//     review. The individual remains subject to the transaction limit until the review
+//     concludes.
+//   - `approved` — The Proof of Address has been reviewed and approved. The individual
+//     is exempt from the $3,000 / 7-day rolling transaction threshold.
+//   - `rejected` — The submitted Proof of Address was rejected. The individual
+//     remains subject to the transaction limit and may re-upload a new document.
+type ApplicationPoaStatus string
 
 // ApplicationDocumentType Type of application-level document (business or EDD)
 type ApplicationDocumentType string
@@ -1716,6 +1768,11 @@ type ApplicationListItem struct {
 	// - `approved` - Application approved
 	// - `declined` - Application declined
 	// - `completed` - Legacy status (deprecated, use approved/declined instead)
+	// - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+	//   document. Set when an individual applicant uploads a PoA-equivalent document
+	//   (proof_of_address, bank_statement, or utility_bill) after their application has
+	//   already been approved or completed. The customer remains active but is subject to
+	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// ApplicationType Type of application
@@ -1773,14 +1830,19 @@ type ApplicationNotReadyError struct {
 // ApplicationStatus Current status of an application in the onboarding flow.
 //
 // Status flow:
-// - `pending` - Initial state, not yet submitted
-// - `submitted` - Submitted for verification
-// - `under_review` - Being reviewed by compliance team
-// - `request_for_information` - Admin requesting additional info/documents from applicant
-// - `admin_revision` - Admin making corrections to application data
-// - `approved` - Application approved
-// - `declined` - Application declined
-// - `completed` - Legacy status (deprecated, use approved/declined instead)
+//   - `pending` - Initial state, not yet submitted
+//   - `submitted` - Submitted for verification
+//   - `under_review` - Being reviewed by compliance team
+//   - `request_for_information` - Admin requesting additional info/documents from applicant
+//   - `admin_revision` - Admin making corrections to application data
+//   - `approved` - Application approved
+//   - `declined` - Application declined
+//   - `completed` - Legacy status (deprecated, use approved/declined instead)
+//   - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+//     document. Set when an individual applicant uploads a PoA-equivalent document
+//     (proof_of_address, bank_statement, or utility_bill) after their application has
+//     already been approved or completed. The customer remains active but is subject to
+//     the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 type ApplicationStatus string
 
 // ApplicationValidation Complete validation state for an application (computed at retrieval time)
@@ -1810,7 +1872,7 @@ type Asset = string
 
 // AssetBalance Balance for a specific asset on a specific network
 type AssetBalance struct {
-	// AmountUsd USD value of this asset balance
+	// AmountUsd USD value of this asset balance, as a decimal string with 2 decimal places (cents). Rounded DOWN (truncated toward zero), never rounded up, so the value never exceeds the holder's spendable balance.
 	AmountUsd string          `json:"amount_usd"`
 	Asset     AssetDeployment `json:"asset"`
 }
@@ -1933,6 +1995,11 @@ type AssociatedIndividualResponse struct {
 	// - `approved` - Application approved
 	// - `declined` - Application declined
 	// - `completed` - Legacy status (deprecated, use approved/declined instead)
+	// - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+	//   document. Set when an individual applicant uploads a PoA-equivalent document
+	//   (proof_of_address, bank_statement, or utility_bill) after their application has
+	//   already been approved or completed. The customer remains active but is subject to
+	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 	ApplicationStatus ApplicationStatus          `json:"application_status"`
 	Individual        AssociatedIndividualEntity `json:"individual"`
 }
@@ -1971,6 +2038,27 @@ type AttachPolicyToWalletIntent struct {
 
 // AttachPolicyToWalletIntentType defines model for AttachPolicyToWalletIntent.Type.
 type AttachPolicyToWalletIntentType string
+
+// AttachedPolicy Slim reference to a policy attached to a wallet (id + name only).
+type AttachedPolicy struct {
+	// Id Policy id.
+	Id string `json:"id"`
+
+	// Name Policy name.
+	Name string `json:"name"`
+}
+
+// AttachedWallet Slim reference to a wallet attached to a policy or signer group (id + name + family).
+type AttachedWallet struct {
+	// Family Blockchain family for the crypto account.
+	Family Family `json:"family"`
+
+	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	Id KSUID `json:"id"`
+
+	// Name Wallet name.
+	Name string `json:"name"`
+}
 
 // AttestationData Attestation records showing what has been attested to
 type AttestationData struct {
@@ -2273,6 +2361,11 @@ type BusinessDetailsResponse struct {
 	// - `approved` - Application approved
 	// - `declined` - Application declined
 	// - `completed` - Legacy status (deprecated, use approved/declined instead)
+	// - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+	//   document. Set when an individual applicant uploads a PoA-equivalent document
+	//   (proof_of_address, bank_statement, or utility_bill) after their application has
+	//   already been approved or completed. The customer remains active but is subject to
+	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// Business Business entity data (entity information only, no validation)
@@ -2412,7 +2505,7 @@ type ClientPricingConfig struct {
 	// MonthlyMinimumCents Monthly minimum fee in cents
 	MonthlyMinimumCents int `json:"monthlyMinimumCents"`
 
-	// SepaFeeCents Per-SWIFT transaction fee in cents
+	// SepaFeeCents Per-SEPA transaction fee in cents
 	SepaFeeCents int `json:"sepaFeeCents"`
 
 	// SwiftFeeCents Per-Swift-transfer banking fee in USD cents.
@@ -2581,6 +2674,17 @@ type Customer struct {
 	// ApplicationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	ApplicationId *KSUID `json:"application_id,omitempty"`
 
+	// ApplicationStatus Current lifecycle state of the customer's onboarding application
+	// (e.g. `pending`, `submitted`, `under_review`, `approved`,
+	// `declined`). Omitted when the customer has no application.
+	//
+	// Use this field to drive workflow UI — it tracks where the
+	// customer is in the onboarding flow. For the orthogonal questions
+	// "is this customer cleared to transact?" and "what's the
+	// provider-agnostic KYC verdict?", see `kyb_status` and
+	// `kyc_status` respectively.
+	ApplicationStatus *ApplicationStatus `json:"application_status,omitempty"`
+
 	// ApplicationUrl URL for accessing the onboarding application
 	ApplicationUrl *string `json:"application_url,omitempty"`
 
@@ -2602,7 +2706,7 @@ type Customer struct {
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
-	// IsSubClient Whether this customer is acting as a sub-client (has other customers associated with it).
+	// IsSubClient Whether this customer is a sub-client. This is set when the customer is created and cannot be changed afterwards.
 	IsSubClient *bool `json:"is_sub_client,omitempty"`
 
 	// KybLinks KYB Links for different providers used in the KYB process.
@@ -2664,6 +2768,9 @@ type CustomerCreateRequest struct {
 
 	// ExternalId Unique identifier for the customer in the client's system. This ID is used to track the customer in the client's database.
 	ExternalId *string `json:"external_id,omitempty"`
+
+	// IsSubClient When true, create this customer as a sub-client. A customer can only be designated a sub-client at creation time; a regular customer cannot be promoted to a sub-client afterwards. Cannot be combined with sub_client_id.
+	IsSubClient *bool `json:"is_sub_client,omitempty"`
 
 	// Name Name of the customer - either a person's name or company name. Must contain at least one non-whitespace character.
 	Name string `json:"name"`
@@ -2983,6 +3090,11 @@ type EDDWithApplicationID struct {
 	// - `approved` - Application approved
 	// - `declined` - Application declined
 	// - `completed` - Legacy status (deprecated, use approved/declined instead)
+	// - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+	//   document. Set when an individual applicant uploads a PoA-equivalent document
+	//   (proof_of_address, bank_statement, or utility_bill) after their application has
+	//   already been approved or completed. The customer remains active but is subject to
+	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 	Edd               EDDResponse       `json:"edd"`
 }
@@ -3043,7 +3155,7 @@ type Event struct {
 
 // EventData defines model for EventData.
 type EventData struct {
-	// Object Event resource snapshot after provider-field sanitization.
+	// Object Event resource snapshot after provider-field sanitization. The shape varies by event type; see the `GET /events` example responses for representative payloads.
 	Object map[string]interface{} `json:"object"`
 
 	// PreviousAttributes Sparse set of attributes before an update, when available.
@@ -3079,7 +3191,7 @@ type FiatIBANDestinationRequest struct {
 	BankAddress *Address `json:"bank_address,omitempty"`
 	BankName    string   `json:"bank_name"`
 
-	// Bic BIC/SWIFT code for the international bank account (optional for required for SWIFT).
+	// Bic BIC/SWIFT code for the international bank account (optional for SEPA, required for SWIFT).
 	Bic *string `json:"bic,omitempty"`
 
 	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
@@ -3116,7 +3228,7 @@ type FiatIBANDestinationResponse struct {
 	// BankName Name of the bank.
 	BankName *string `json:"bank_name,omitempty"`
 
-	// Bic BIC/SWIFT code for the international bank account (optional for required for SWIFT).
+	// Bic BIC/SWIFT code for the international bank account (optional for SEPA, required for SWIFT).
 	Bic *string `json:"bic,omitempty"`
 
 	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
@@ -3259,6 +3371,11 @@ type IndividualDetailsResponse struct {
 	// - `approved` - Application approved
 	// - `declined` - Application declined
 	// - `completed` - Legacy status (deprecated, use approved/declined instead)
+	// - `compliance_review` - Application is awaiting compliance review of a Proof of Address
+	//   document. Set when an individual applicant uploads a PoA-equivalent document
+	//   (proof_of_address, bank_statement, or utility_bill) after their application has
+	//   already been approved or completed. The customer remains active but is subject to
+	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// Individual Individual entity data (entity information only, no validation)
@@ -3544,7 +3661,7 @@ type Meta struct {
 	TotalCount int `json:"total_count"`
 }
 
-// MissingDocument Information about a required document that hasn't been uploaded yet
+// MissingDocument Information about a missing document the applicant has not yet uploaded. Includes both required documents (whose absence blocks readiness) and optional ones (e.g. Proof of Address for individuals when the PoA-optional flow is enabled — surfaced so the UI can render an upload affordance without gating submission).
 type MissingDocument struct {
 	// AcceptedTypes Document type identifiers that can satisfy this requirement. Single-option requirements have one element, multi-option requirements have multiple.
 	AcceptedTypes []MissingDocumentAcceptedTypes `json:"accepted_types"`
@@ -3554,6 +3671,9 @@ type MissingDocument struct {
 
 	// Purpose The purpose this document serves in the onboarding requirements
 	Purpose MissingDocumentPurpose `json:"purpose"`
+
+	// Required Whether this document must be uploaded for the application to be ready for review. When false, the document is optional — typically because an alternative gating mechanism applies (e.g. the post-onboarding $3,000 / 7-day rolling-window threshold for Proof of Address on individual applications under the PoA-optional flow).
+	Required *bool `json:"required,omitempty"`
 }
 
 // MissingDocumentAcceptedTypes defines model for MissingDocument.AcceptedTypes.
@@ -3602,7 +3722,7 @@ type NestedTransaction struct {
 // NetworkId Identifier for a blockchain network
 type NetworkId string
 
-// OneOffTransaction A one-off transaction response. Used for single on/off-ramp transactions.
+// OneOffTransaction A one-off transaction response. Used for single-use offramp (crypto-to-fiat) and swap (crypto-to-crypto) transfers; the destination type determines which.
 type OneOffTransaction struct {
 	// Amount Original requested amount
 	Amount *string `json:"amount,omitempty"`
@@ -3658,7 +3778,7 @@ type OneOffTransaction struct {
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
-	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT reference)
+	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT or SEPA reference)
 	PaymentReference *string `json:"payment_reference"`
 
 	// Receipt Detailed receipt information for a transaction
@@ -3688,6 +3808,9 @@ type OneOffTransaction struct {
 	// SendAmount Amount that should be sent (may be higher than requested amount due to fees)
 	SendAmount *string `json:"send_amount,omitempty"`
 
+	// SenderDetails Originating sender details for onramp/offramp/swap transactions. Populated when source-side metadata is available (e.g., from inbound wire/ACH source data).
+	SenderDetails *SenderDetails `json:"sender_details,omitempty"`
+
 	// SourceAsset Source crypto asset symbol
 	SourceAsset string `json:"source_asset"`
 
@@ -3701,15 +3824,29 @@ type OneOffTransaction struct {
 	UpdatedAt int `json:"updated_at"`
 }
 
-// OneOffTransactionRequest Request to create a one-off offramp transaction
+// OneOffTransactionRequest Request to create a one-off transfer. The transfer type is determined by
+// the destination type referenced by `destination_id`:
+//   - **Offramp** when the destination is a fiat bank account (fiat_us or
+//     fiat_iban). `destination_payment_rail` is honored; `destination_network_id`
+//     is ignored.
+//   - **Swap** when the destination is a crypto address.
+//     `destination_network_id` is required and selects the destination
+//     chain.
+//
+// The platform generates a single-use deposit address and finalizes the
+// transfer once the source-asset deposit arrives.
 type OneOffTransactionRequest struct {
-	// Amount Amount to transfer as a decimal string
-	Amount string `json:"amount"`
+	// Amount Optional expected destination amount as a decimal string. When
+	// omitted, the resulting transaction's destination amount is
+	// populated from the actual deposit once funds arrive. When
+	// provided, must be at least 0.01 and is enforced by sandbox
+	// amount caps where applicable.
+	Amount *string `json:"amount,omitempty"`
 
 	// CustomerId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	CustomerId KSUID `json:"customer_id"`
 
-	// DestinationAsset Destination fiat currency
+	// DestinationAsset Destination asset symbol. For offramps this is a fiat currency (e.g. `USD`, `EUR`). For swaps this is the destination stablecoin (e.g. `USDC`, `DKUSD`).
 	DestinationAsset string `json:"destination_asset"`
 
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -3724,7 +3861,7 @@ type OneOffTransactionRequest struct {
 	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%). Overrides the default client fee for this transaction.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
-	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-10 chars), Wire (1-140 chars) (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
+	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-10 chars), Wire (1-140 chars), SEPA (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
 	PaymentReference *string `json:"payment_reference,omitempty"`
 
 	// SourceAsset Source crypto asset symbol
@@ -3795,6 +3932,14 @@ type PaginatedOneOffTransactionResponse struct {
 // PaginatedTransactionResourceResponse defines model for PaginatedTransactionResourceResponse.
 type PaginatedTransactionResourceResponse struct {
 	union json.RawMessage
+}
+
+// PaginatedWalletTransactionResponse defines model for PaginatedWalletTransactionResponse.
+type PaginatedWalletTransactionResponse struct {
+	Data []WalletTransaction `json:"data"`
+
+	// Meta Meta information about the response
+	Meta Meta `json:"meta"`
 }
 
 // PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
@@ -4125,6 +4270,20 @@ type SelfServeCreditsPurchaseResponse struct {
 type SendTransactionIntent struct {
 	// Caip2 CAIP-2 chain identifier for the target blockchain network
 	Caip2 string `json:"caip2"`
+
+	// ContextDigest Optional opaque SHA-256d digest (base64-encoded) of an upstream
+	// operator-meaningful context envelope produced by the originating
+	// service (e.g. financial-account).
+	//
+	// Neither platform nor policy-engine interprets the semantic
+	// content. Policy-engine includes the field in canonical hashing
+	// so the WebAuthn signature commits to it; beyond that the digest
+	// is never read, validated, or logged. The pre-image is persisted
+	// upstream and exists for forensic / non-repudiation purposes
+	// (see ENG-1962).
+	//
+	// Intents predating this field validate as today (empty / omitted).
+	ContextDigest *string `json:"context_digest,omitempty"`
 
 	// IdempotencyKey A unique key to ensure idempotency of the request
 	IdempotencyKey string               `json:"idempotency_key"`
@@ -4528,7 +4687,10 @@ type TransactionCryptoDetails struct {
 
 // TransactionOperation defines model for TransactionOperation.
 type TransactionOperation struct {
-	// Amount Amount to be transferred (for transfer operations)
+	// Amount Amount to be transferred as a non-negative decimal string. Required for
+	// transfer operations; optional for contract calls (defaults to zero).
+	// Leading zeros, signs, commas, and non-finite values are rejected.
+	// For transfer operations the handler additionally requires the value to be greater than zero.
 	Amount *string `json:"amount,omitempty"`
 
 	// Args Arguments for the contract method call
@@ -4735,8 +4897,14 @@ type Wallet struct {
 	// ClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	ClientId KSUID `json:"client_id"`
 
+	// CreatedAt Created-at unix timestamp. Populated on GET responses.
+	CreatedAt *int `json:"created_at,omitempty"`
+
 	// CustomerId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	CustomerId *KSUID `json:"customer_id,omitempty"`
+
+	// CustomerName Customer name joined server-side. Populated on GET responses; omitted from create responses.
+	CustomerName *string `json:"customer_name"`
 
 	// Family Blockchain family for the crypto account.
 	Family Family `json:"family"`
@@ -4756,7 +4924,7 @@ type WalletBalances struct {
 	// Balances List of asset balances
 	Balances []AssetBalance `json:"balances"`
 
-	// TotalAmountUsd Total USD value of all balances
+	// TotalAmountUsd Total USD value of all balances, as a decimal string with 2 decimal places (cents). Rounded DOWN (truncated toward zero), never rounded up, so the value never exceeds the holder's spendable balance.
 	TotalAmountUsd string `json:"total_amount_usd"`
 
 	// WalletId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -4788,6 +4956,12 @@ type WalletTransaction struct {
 
 	// Asset ISO 4217 symbol representing a fiat asset.
 	Asset *Asset `json:"asset,omitempty"`
+
+	// ConfirmedAt Unix time the transaction was confirmed on chain; absent until confirmed.
+	ConfirmedAt *int64 `json:"confirmed_at,omitempty"`
+
+	// CreatedAt Unix time the transaction was created.
+	CreatedAt *int64 `json:"created_at,omitempty"`
 
 	// From The source address
 	From *string `json:"from,omitempty"`
@@ -5295,10 +5469,16 @@ type ListCustomersParams struct {
 	// `approved`, `expired`, `rejected`).
 	KycStatuses *string `form:"kyc_statuses,omitempty" json:"kyc_statuses,omitempty"`
 
+	// ApplicationStatuses Filter customers by one or more onboarding application statuses.
+	// Comma-separated list (e.g. `submitted,under_review`). Values
+	// mirror the `ApplicationStatus` enum. Customers without an
+	// application are excluded when this filter is set.
+	ApplicationStatuses *string `form:"application_statuses,omitempty" json:"application_statuses,omitempty"`
+
 	// SubClientId Filter customers by sub-client association. Returns only customers associated with the specified sub-client.
 	SubClientId *KSUID `form:"sub_client_id,omitempty" json:"sub_client_id,omitempty"`
 
-	// IsSubClient When set to true, returns only customers that are acting as sub-clients (have other customers associated with them).
+	// IsSubClient When true, returns only customers that are sub-clients (designated as such at creation). When false or omitted, returns all customers.
 	IsSubClient *bool `form:"is_sub_client,omitempty" json:"is_sub_client,omitempty"`
 
 	// SortBy Field to sort customers by. Defaults to `name`.
@@ -5706,6 +5886,12 @@ type ListTransactionsParams struct {
 	// CustomerId Filter transactions by customer ID.
 	CustomerId *KSUID `form:"customer_id,omitempty" json:"customer_id,omitempty"`
 
+	// WalletId Filter wallet transactions by wallet ID. Only valid with `transaction_type=wallet`.
+	WalletId *KSUID `form:"wallet_id,omitempty" json:"wallet_id,omitempty"`
+
+	// Direction Filter wallet transactions by direction relative to the wallet: `out` matches transactions sent from the wallet; `in` matches transactions recorded with the wallet as the recipient. Only valid with `transaction_type=wallet`.
+	Direction *ListTransactionsParamsDirection `form:"direction,omitempty" json:"direction,omitempty"`
+
 	// DestinationId Filter transactions by destination ID.
 	DestinationId *KSUID `form:"destination_id,omitempty" json:"destination_id,omitempty"`
 
@@ -5745,6 +5931,9 @@ type ListTransactionsParams struct {
 	// Statuses Comma-separated list of statuses to filter by (e.g. `pending,completed,failed`). Takes precedence over `status` when both are provided.
 	Statuses *string `form:"statuses,omitempty" json:"statuses,omitempty"`
 }
+
+// ListTransactionsParamsDirection defines parameters for ListTransactions.
+type ListTransactionsParamsDirection string
 
 // ListTransactionsParamsSortBy defines parameters for ListTransactions.
 type ListTransactionsParamsSortBy string
@@ -6595,6 +6784,32 @@ func (t *PaginatedTransactionResourceResponse) MergePaginatedCustomerTransaction
 	return err
 }
 
+// AsPaginatedWalletTransactionResponse returns the union data inside the PaginatedTransactionResourceResponse as a PaginatedWalletTransactionResponse
+func (t PaginatedTransactionResourceResponse) AsPaginatedWalletTransactionResponse() (PaginatedWalletTransactionResponse, error) {
+	var body PaginatedWalletTransactionResponse
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPaginatedWalletTransactionResponse overwrites any union data inside the PaginatedTransactionResourceResponse as the provided PaginatedWalletTransactionResponse
+func (t *PaginatedTransactionResourceResponse) FromPaginatedWalletTransactionResponse(v PaginatedWalletTransactionResponse) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePaginatedWalletTransactionResponse performs a merge with any union data inside the PaginatedTransactionResourceResponse, using the provided PaginatedWalletTransactionResponse
+func (t *PaginatedTransactionResourceResponse) MergePaginatedWalletTransactionResponse(v PaginatedWalletTransactionResponse) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t PaginatedTransactionResourceResponse) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	return b, err
@@ -6988,6 +7203,9 @@ type ClientInterface interface {
 
 	UpdatePolicyRule(ctx context.Context, policyId string, ruleId string, params *UpdatePolicyRuleParams, body UpdatePolicyRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetWalletsForPolicy request
+	GetWalletsForPolicy(ctx context.Context, policyId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeletePolicyWalletRelationshipWithBody request with any body
 	DeletePolicyWalletRelationshipWithBody(ctx context.Context, policyId string, walletId KSUID, params *DeletePolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -7077,6 +7295,9 @@ type ClientInterface interface {
 	// DeleteSignerGroupSigner request
 	DeleteSignerGroupSigner(ctx context.Context, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetWalletsForSignerGroup request
+	GetWalletsForSignerGroup(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateSignerWithBody request with any body
 	CreateSignerWithBody(ctx context.Context, params *CreateSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -7120,8 +7341,14 @@ type ClientInterface interface {
 
 	CreateWallet(ctx context.Context, params *CreateWalletParams, body CreateWalletJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetWallet request
+	GetWallet(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetWalletBalances request
 	GetWalletBalances(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPoliciesForWallet request
+	GetPoliciesForWallet(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSignerGroupsForWallet request
 	GetSignerGroupsForWallet(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -8022,6 +8249,18 @@ func (c *APIClient) UpdatePolicyRule(ctx context.Context, policyId string, ruleI
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) GetWalletsForPolicy(ctx context.Context, policyId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetWalletsForPolicyRequest(c.Server, policyId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) DeletePolicyWalletRelationshipWithBody(ctx context.Context, policyId string, walletId KSUID, params *DeletePolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeletePolicyWalletRelationshipRequestWithBody(c.Server, policyId, walletId, params, contentType, body)
 	if err != nil {
@@ -8418,6 +8657,18 @@ func (c *APIClient) DeleteSignerGroupSigner(ctx context.Context, signerGroupId K
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) GetWalletsForSignerGroup(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetWalletsForSignerGroupRequest(c.Server, signerGroupId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) CreateSignerWithBody(ctx context.Context, params *CreateSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateSignerRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
@@ -8610,8 +8861,32 @@ func (c *APIClient) CreateWallet(ctx context.Context, params *CreateWalletParams
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) GetWallet(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetWalletRequest(c.Server, walletId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetWalletBalances(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetWalletBalancesRequest(c.Server, walletId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetPoliciesForWallet(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPoliciesForWalletRequest(c.Server, walletId)
 	if err != nil {
 		return nil, err
 	}
@@ -11346,6 +11621,22 @@ func NewListCustomersRequest(server string, params *ListCustomersParams) (*http.
 
 		}
 
+		if params.ApplicationStatuses != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "application_statuses", runtime.ParamLocationQuery, *params.ApplicationStatuses); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.SubClientId != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sub_client_id", runtime.ParamLocationQuery, *params.SubClientId); err != nil {
@@ -12368,6 +12659,40 @@ func NewUpdatePolicyRuleRequestWithBody(server string, policyId string, ruleId s
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+	}
+
+	return req, nil
+}
+
+// NewGetWalletsForPolicyRequest generates requests for GetWalletsForPolicy
+func NewGetWalletsForPolicyRequest(server string, policyId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "policy_id", runtime.ParamLocationPath, policyId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/policies/%s/wallets", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -13659,6 +13984,40 @@ func NewDeleteSignerGroupSignerRequest(server string, signerGroupId KSUID, signe
 	return req, nil
 }
 
+// NewGetWalletsForSignerGroupRequest generates requests for GetWalletsForSignerGroup
+func NewGetWalletsForSignerGroupRequest(server string, signerGroupId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "signer_group_id", runtime.ParamLocationPath, signerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/signer-groups/%s/wallets", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreateSignerRequest calls the generic CreateSigner builder with application/json body
 func NewCreateSignerRequest(server string, params *CreateSignerParams, body CreateSignerJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -13835,6 +14194,38 @@ func NewListTransactionsRequest(server string, params *ListTransactionsParams) (
 		if params.CustomerId != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "customer_id", runtime.ParamLocationQuery, *params.CustomerId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.WalletId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "wallet_id", runtime.ParamLocationQuery, *params.WalletId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Direction != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "direction", runtime.ParamLocationQuery, *params.Direction); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -14677,6 +15068,40 @@ func NewCreateWalletRequestWithBody(server string, params *CreateWalletParams, c
 	return req, nil
 }
 
+// NewGetWalletRequest generates requests for GetWallet
+func NewGetWalletRequest(server string, walletId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "wallet_id", runtime.ParamLocationPath, walletId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/wallets/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetWalletBalancesRequest generates requests for GetWalletBalances
 func NewGetWalletBalancesRequest(server string, walletId KSUID) (*http.Request, error) {
 	var err error
@@ -14694,6 +15119,40 @@ func NewGetWalletBalancesRequest(server string, walletId KSUID) (*http.Request, 
 	}
 
 	operationPath := fmt.Sprintf("/wallets/%s/balances", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPoliciesForWalletRequest generates requests for GetPoliciesForWallet
+func NewGetPoliciesForWalletRequest(server string, walletId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "wallet_id", runtime.ParamLocationPath, walletId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/wallets/%s/policies", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -15648,6 +16107,9 @@ type ClientWithResponsesInterface interface {
 
 	UpdatePolicyRuleWithResponse(ctx context.Context, policyId string, ruleId string, params *UpdatePolicyRuleParams, body UpdatePolicyRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePolicyRuleResponse, error)
 
+	// GetWalletsForPolicyWithResponse request
+	GetWalletsForPolicyWithResponse(ctx context.Context, policyId string, reqEditors ...RequestEditorFn) (*GetWalletsForPolicyResponse, error)
+
 	// DeletePolicyWalletRelationshipWithBodyWithResponse request with any body
 	DeletePolicyWalletRelationshipWithBodyWithResponse(ctx context.Context, policyId string, walletId KSUID, params *DeletePolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeletePolicyWalletRelationshipResponse, error)
 
@@ -15737,6 +16199,9 @@ type ClientWithResponsesInterface interface {
 	// DeleteSignerGroupSignerWithResponse request
 	DeleteSignerGroupSignerWithResponse(ctx context.Context, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*DeleteSignerGroupSignerResponse, error)
 
+	// GetWalletsForSignerGroupWithResponse request
+	GetWalletsForSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*GetWalletsForSignerGroupResponse, error)
+
 	// CreateSignerWithBodyWithResponse request with any body
 	CreateSignerWithBodyWithResponse(ctx context.Context, params *CreateSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSignerResponse, error)
 
@@ -15780,8 +16245,14 @@ type ClientWithResponsesInterface interface {
 
 	CreateWalletWithResponse(ctx context.Context, params *CreateWalletParams, body CreateWalletJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateWalletResponse, error)
 
+	// GetWalletWithResponse request
+	GetWalletWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetWalletResponse, error)
+
 	// GetWalletBalancesWithResponse request
 	GetWalletBalancesWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetWalletBalancesResponse, error)
+
+	// GetPoliciesForWalletWithResponse request
+	GetPoliciesForWalletWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetPoliciesForWalletResponse, error)
 
 	// GetSignerGroupsForWalletWithResponse request
 	GetSignerGroupsForWalletWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetSignerGroupsForWalletResponse, error)
@@ -17161,6 +17632,32 @@ func (r UpdatePolicyRuleResponse) StatusCode() int {
 	return 0
 }
 
+type GetWalletsForPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *[]AttachedWallet
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetWalletsForPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetWalletsForPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DeletePolicyWalletRelationshipResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
@@ -17789,6 +18286,32 @@ func (r DeleteSignerGroupSignerResponse) StatusCode() int {
 	return 0
 }
 
+type GetWalletsForSignerGroupResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *[]AttachedWallet
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetWalletsForSignerGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetWalletsForSignerGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreateSignerResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -18088,6 +18611,32 @@ func (r CreateWalletResponse) StatusCode() int {
 	return 0
 }
 
+type GetWalletResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *Wallet
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetWalletResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetWalletResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetWalletBalancesResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -18108,6 +18657,32 @@ func (r GetWalletBalancesResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetWalletBalancesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPoliciesForWalletResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *[]AttachedPolicy
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPoliciesForWalletResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPoliciesForWalletResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19054,6 +19629,15 @@ func (c *ClientWithResponses) UpdatePolicyRuleWithResponse(ctx context.Context, 
 	return ParseUpdatePolicyRuleResponse(rsp)
 }
 
+// GetWalletsForPolicyWithResponse request returning *GetWalletsForPolicyResponse
+func (c *ClientWithResponses) GetWalletsForPolicyWithResponse(ctx context.Context, policyId string, reqEditors ...RequestEditorFn) (*GetWalletsForPolicyResponse, error) {
+	rsp, err := c.GetWalletsForPolicy(ctx, policyId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetWalletsForPolicyResponse(rsp)
+}
+
 // DeletePolicyWalletRelationshipWithBodyWithResponse request with arbitrary body returning *DeletePolicyWalletRelationshipResponse
 func (c *ClientWithResponses) DeletePolicyWalletRelationshipWithBodyWithResponse(ctx context.Context, policyId string, walletId KSUID, params *DeletePolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeletePolicyWalletRelationshipResponse, error) {
 	rsp, err := c.DeletePolicyWalletRelationshipWithBody(ctx, policyId, walletId, params, contentType, body, reqEditors...)
@@ -19341,6 +19925,15 @@ func (c *ClientWithResponses) DeleteSignerGroupSignerWithResponse(ctx context.Co
 	return ParseDeleteSignerGroupSignerResponse(rsp)
 }
 
+// GetWalletsForSignerGroupWithResponse request returning *GetWalletsForSignerGroupResponse
+func (c *ClientWithResponses) GetWalletsForSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*GetWalletsForSignerGroupResponse, error) {
+	rsp, err := c.GetWalletsForSignerGroup(ctx, signerGroupId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetWalletsForSignerGroupResponse(rsp)
+}
+
 // CreateSignerWithBodyWithResponse request with arbitrary body returning *CreateSignerResponse
 func (c *ClientWithResponses) CreateSignerWithBodyWithResponse(ctx context.Context, params *CreateSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSignerResponse, error) {
 	rsp, err := c.CreateSignerWithBody(ctx, params, contentType, body, reqEditors...)
@@ -19480,6 +20073,15 @@ func (c *ClientWithResponses) CreateWalletWithResponse(ctx context.Context, para
 	return ParseCreateWalletResponse(rsp)
 }
 
+// GetWalletWithResponse request returning *GetWalletResponse
+func (c *ClientWithResponses) GetWalletWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetWalletResponse, error) {
+	rsp, err := c.GetWallet(ctx, walletId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetWalletResponse(rsp)
+}
+
 // GetWalletBalancesWithResponse request returning *GetWalletBalancesResponse
 func (c *ClientWithResponses) GetWalletBalancesWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetWalletBalancesResponse, error) {
 	rsp, err := c.GetWalletBalances(ctx, walletId, reqEditors...)
@@ -19487,6 +20089,15 @@ func (c *ClientWithResponses) GetWalletBalancesWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseGetWalletBalancesResponse(rsp)
+}
+
+// GetPoliciesForWalletWithResponse request returning *GetPoliciesForWalletResponse
+func (c *ClientWithResponses) GetPoliciesForWalletWithResponse(ctx context.Context, walletId KSUID, reqEditors ...RequestEditorFn) (*GetPoliciesForWalletResponse, error) {
+	rsp, err := c.GetPoliciesForWallet(ctx, walletId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPoliciesForWalletResponse(rsp)
 }
 
 // GetSignerGroupsForWalletWithResponse request returning *GetSignerGroupsForWalletResponse
@@ -22406,6 +23017,60 @@ func ParseUpdatePolicyRuleResponse(rsp *http.Response) (*UpdatePolicyRuleRespons
 	return response, nil
 }
 
+// ParseGetWalletsForPolicyResponse parses an HTTP response from a GetWalletsForPolicyWithResponse call
+func ParseGetWalletsForPolicyResponse(rsp *http.Response) (*GetWalletsForPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetWalletsForPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []AttachedWallet
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDeletePolicyWalletRelationshipResponse parses an HTTP response from a DeletePolicyWalletRelationshipWithResponse call
 func ParseDeletePolicyWalletRelationshipResponse(rsp *http.Response) (*DeletePolicyWalletRelationshipResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -23696,6 +24361,60 @@ func ParseDeleteSignerGroupSignerResponse(rsp *http.Response) (*DeleteSignerGrou
 	return response, nil
 }
 
+// ParseGetWalletsForSignerGroupResponse parses an HTTP response from a GetWalletsForSignerGroupWithResponse call
+func ParseGetWalletsForSignerGroupResponse(rsp *http.Response) (*GetWalletsForSignerGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetWalletsForSignerGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []AttachedWallet
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateSignerResponse parses an HTTP response from a CreateSignerWithResponse call
 func ParseCreateSignerResponse(rsp *http.Response) (*CreateSignerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -24351,6 +25070,60 @@ func ParseCreateWalletResponse(rsp *http.Response) (*CreateWalletResponse, error
 	return response, nil
 }
 
+// ParseGetWalletResponse parses an HTTP response from a GetWalletWithResponse call
+func ParseGetWalletResponse(rsp *http.Response) (*GetWalletResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetWalletResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Wallet
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetWalletBalancesResponse parses an HTTP response from a GetWalletBalancesWithResponse call
 func ParseGetWalletBalancesResponse(rsp *http.Response) (*GetWalletBalancesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -24367,6 +25140,60 @@ func ParseGetWalletBalancesResponse(rsp *http.Response) (*GetWalletBalancesRespo
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest WalletBalances
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPoliciesForWalletResponse parses an HTTP response from a GetPoliciesForWalletWithResponse call
+func ParseGetPoliciesForWalletResponse(rsp *http.Response) (*GetPoliciesForWalletResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPoliciesForWalletResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []AttachedPolicy
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
