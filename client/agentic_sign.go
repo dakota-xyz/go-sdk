@@ -105,6 +105,33 @@ func derefInt64(p *int64) int64 {
 	return *p
 }
 
+// AttachGroupPayload is the canonical bytes a recognized wallet signer endorses
+// to attach a signer group to a wallet — JCS JSON of
+// {type:"attach_group_to_wallet", wallet_id, group_id, idempotency_key}. The
+// idempotency_key is part of the signed bytes, so reuse the SAME key on the
+// attach request. Used in agent provisioning (the group attach the customer
+// endorses).
+func AttachGroupPayload(walletID, groupID, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "attach_group_to_wallet",
+		"wallet_id":       walletID,
+		"group_id":        groupID,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
+// AttachPolicyPayload is the canonical bytes a recognized wallet signer endorses
+// to attach a policy to a wallet — JCS JSON of
+// {type:"attach_policy_to_wallet", wallet_id, policy_id, idempotency_key}.
+func AttachPolicyPayload(walletID, policyID, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "attach_policy_to_wallet",
+		"wallet_id":       walletID,
+		"policy_id":       policyID,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
 // ---------------------------------------------------------------------------
 // P256Signer — default in-memory signer (sandbox / tests)
 // ---------------------------------------------------------------------------

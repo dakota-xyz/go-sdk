@@ -97,3 +97,23 @@ func TestMandateSignPayload_MissingFields(t *testing.T) {
 		t.Fatal("want an error for a mandate with no id / bound_signer / rule")
 	}
 }
+
+// TestAttachPayloads_ByteExact pins the JCS canonical form of the two wallet
+// endorsement payloads (sorted keys, no whitespace) — the bytes the customer
+// signs during agent provisioning. Matches Nimbus's proven attach payloads.
+func TestAttachPayloads_ByteExact(t *testing.T) {
+	group, err := AttachGroupPayload("wallet_W", "group_G", "idem_K")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(group), `{"group_id":"group_G","idempotency_key":"idem_K","type":"attach_group_to_wallet","wallet_id":"wallet_W"}`; got != want {
+		t.Fatalf("attach-group payload:\n got:  %s\n want: %s", got, want)
+	}
+	policy, err := AttachPolicyPayload("wallet_W", "policy_P", "idem_K")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(policy), `{"idempotency_key":"idem_K","policy_id":"policy_P","type":"attach_policy_to_wallet","wallet_id":"wallet_W"}`; got != want {
+		t.Fatalf("attach-policy payload:\n got:  %s\n want: %s", got, want)
+	}
+}
