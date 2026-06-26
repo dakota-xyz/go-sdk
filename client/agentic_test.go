@@ -5,109 +5,143 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-// TestAuthorizeAgentOnWalletWithDefaultPolicy verifies the one-call spend
-// authorization against a fake platform: it must create a solo signer group with
-// the agent's key, create a DEFAULT allow policy, and perform the two
-// customer-endorsed attaches whose signatures verify byte-exactly over the
-// canonical attach payloads (idempotency key consistent across payload, intent,
-// and header).
-func TestAuthorizeAgentOnWalletWithDefaultPolicy(t *testing.T) {
-	t.Parallel()
+type fakeMember struct{ id, key string }
 
-	walletSigner, err := NewP256Signer() // the recognized wallet signer (endorser)
-	require.NoError(t, err)
-	agentSigner, err := NewP256Signer() // only its public key matters here
-	require.NoError(t, err)
-	agentPub := agentSigner.PublicKeyBase64()
-
-	var (
-		groupCreate, policyCreate map[string]any
-		endorsed                  = map[string]struct {
-			Signatures []string       `json:"signatures"`
-			Intent     map[string]any `json:"intent"`
-		}{}
-		idemHeader = map[string]string{}
-	)
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// newAgenticServer fakes the endpoints AttachUserToWallet / DetachUserFromWallet
+// touch. *posted captures the member_key sent to the add endpoint; *deletedID
+// captures the signer id sent to the delete endpoint (both empty if never called).
+func newAgenticServer(t *testing.T, walletGroups []string, members []fakeMember, posted, deletedID *string) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/signer-groups":
-			_ = json.NewDecoder(r.Body).Decode(&groupCreate)
-			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write([]byte(`{"id":"grp_1"}`))
-		case r.Method == http.MethodPost && r.URL.Path == "/policies":
-			_ = json.NewDecoder(r.Body).Decode(&policyCreate)
-			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write([]byte(`{"id":"pol_1"}`))
-		case r.Method == http.MethodPut && r.URL.Path == "/wallets/wlt_1/signer-groups/grp_1":
+		case r.Method == http.MethodGet && r.URL.Path == "/wallets/wlt_1/signer-groups":
+			groups := make([]map[string]any, 0, len(walletGroups))
+			for _, id := range walletGroups {
+				groups = append(groups, map[string]any{"id": id})
+			}
+			_ = json.NewEncoder(w).Encode(groups)
+		case r.Method == http.MethodGet && r.URL.Path == "/signer-groups/spend_grp":
+			ms := make([]map[string]any, 0, len(members))
+			for _, m := range members {
+				ms = append(ms, map[string]any{"id": m.id, "public_key": m.key})
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": "spend_grp", "members": ms})
+		case r.Method == http.MethodPost && r.URL.Path == "/signer-groups/spend_grp/signers":
 			var b struct {
-				Signatures []string       `json:"signatures"`
-				Intent     map[string]any `json:"intent"`
+				MemberKey string `json:"member_key"`
 			}
 			_ = json.NewDecoder(r.Body).Decode(&b)
-			endorsed["group"] = b
-			idemHeader["group"] = r.Header.Get("X-Idempotency-Key")
-			w.WriteHeader(http.StatusOK)
+			*posted = b.MemberKey
+			w.WriteHeader(http.StatusCreated)
 			_, _ = w.Write([]byte(`{}`))
-		case r.Method == http.MethodPut && r.URL.Path == "/policies/pol_1/wallets/wlt_1":
-			var b struct {
-				Signatures []string       `json:"signatures"`
-				Intent     map[string]any `json:"intent"`
-			}
-			_ = json.NewDecoder(r.Body).Decode(&b)
-			endorsed["policy"] = b
-			idemHeader["policy"] = r.Header.Get("X-Idempotency-Key")
+		case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/signer-groups/spend_grp/signers/"):
+			*deletedID = strings.TrimPrefix(r.URL.Path, "/signer-groups/spend_grp/signers/")
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`{}`))
+			_, _ = w.Write([]byte(`{"id":"spend_grp"}`))
 		default:
 			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
-	defer srv.Close()
+}
 
-	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+// TestAttachUserToWallet: adds the signer to an existing wallet group (no signature,
+// no policy creation), idempotent when already a member, errors when the group
+// isn't attached to the wallet.
+func TestAttachUserToWallet(t *testing.T) {
+	t.Parallel()
+	signer, err := NewP256Signer()
 	require.NoError(t, err)
+	pub := signer.PublicKeyBase64()
 
-	auth, err := c.AuthorizeAgentOnWalletWithDefaultPolicy(context.Background(), "wlt_1", "Billpay", agentPub, walletSigner)
+	t.Run("adds signer to the group", func(t *testing.T) {
+		var posted, deleted string
+		srv := newAgenticServer(t, []string{"spend_grp"}, []fakeMember{{"sig_other", "someoneelse"}}, &posted, &deleted)
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
+
+		already, err := c.AttachUserToWallet(context.Background(), "wlt_1", pub, "spend_grp")
+		require.NoError(t, err)
+		require.False(t, already)
+		require.Equal(t, pub, posted, "signer key added to the group")
+	})
+
+	t.Run("idempotent when already a member", func(t *testing.T) {
+		var posted, deleted string
+		srv := newAgenticServer(t, []string{"spend_grp"}, []fakeMember{{"sig_self", pub}}, &posted, &deleted)
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
+
+		already, err := c.AttachUserToWallet(context.Background(), "wlt_1", pub, "spend_grp")
+		require.NoError(t, err)
+		require.True(t, already)
+		require.Empty(t, posted, "no add when already a member")
+	})
+
+	t.Run("errors when group not on wallet", func(t *testing.T) {
+		var posted, deleted string
+		srv := newAgenticServer(t, []string{"other_grp"}, nil, &posted, &deleted)
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
+
+		_, err = c.AttachUserToWallet(context.Background(), "wlt_1", pub, "spend_grp")
+		require.Error(t, err)
+		require.Empty(t, posted)
+	})
+}
+
+// TestDetachUserFromWallet: removes the signer from the named group (resolving its
+// key→id), idempotent when not a member, errors when the group isn't on the wallet.
+func TestDetachUserFromWallet(t *testing.T) {
+	t.Parallel()
+	signer, err := NewP256Signer()
 	require.NoError(t, err)
-	require.Equal(t, "grp_1", auth.SignerGroupID)
-	require.Equal(t, "pol_1", auth.PolicyID)
+	pub := signer.PublicKeyBase64()
 
-	// Group created holding the agent's signer key.
-	require.Equal(t, []any{agentPub}, groupCreate["member_keys"])
+	t.Run("removes signer from the group", func(t *testing.T) {
+		var posted, deleted string
+		srv := newAgenticServer(t, []string{"spend_grp"}, []fakeMember{{"sig_self", pub}, {"sig_other", "someoneelse"}}, &posted, &deleted)
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
 
-	// Default policy carries exactly one ALLOW approval-threshold rule.
-	rules, ok := policyCreate["rules"].([]any)
-	require.True(t, ok)
-	require.Len(t, rules, 1)
-	rule := rules[0].(map[string]any)
-	require.Equal(t, "allow", rule["action"])
-	require.Equal(t, "approval_threshold", rule["rule_type"])
+		was, err := c.DetachUserFromWallet(context.Background(), "wlt_1", pub, "spend_grp")
+		require.NoError(t, err)
+		require.True(t, was)
+		require.Equal(t, "sig_self", deleted, "removed by the signer's resource id, not its key")
+	})
 
-	// Each endorsed attach: signature verifies byte-exactly over the canonical
-	// payload, and the idempotency key is consistent across intent + header.
-	gIdem, _ := endorsed["group"].Intent["idempotency_key"].(string)
-	require.NotEmpty(t, gIdem)
-	require.Equal(t, gIdem, idemHeader["group"])
-	require.Len(t, endorsed["group"].Signatures, 1)
-	gPayload, err := AttachGroupPayload("wlt_1", "grp_1", gIdem)
-	require.NoError(t, err)
-	require.NoError(t, VerifyMandateSignature(walletSigner.PublicKeyBase64(), gPayload, endorsed["group"].Signatures[0]),
-		"group attach endorsement must verify over the canonical payload")
+	t.Run("idempotent when not a member", func(t *testing.T) {
+		var posted, deleted string
+		srv := newAgenticServer(t, []string{"spend_grp"}, []fakeMember{{"sig_other", "someoneelse"}}, &posted, &deleted)
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
 
-	pIdem, _ := endorsed["policy"].Intent["idempotency_key"].(string)
-	require.NotEmpty(t, pIdem)
-	require.Equal(t, pIdem, idemHeader["policy"])
-	require.Len(t, endorsed["policy"].Signatures, 1)
-	pPayload, err := AttachPolicyPayload("wlt_1", "pol_1", pIdem)
-	require.NoError(t, err)
-	require.NoError(t, VerifyMandateSignature(walletSigner.PublicKeyBase64(), pPayload, endorsed["policy"].Signatures[0]),
-		"policy attach endorsement must verify over the canonical payload")
+		was, err := c.DetachUserFromWallet(context.Background(), "wlt_1", pub, "spend_grp")
+		require.NoError(t, err)
+		require.False(t, was)
+		require.Empty(t, deleted, "no delete when not a member")
+	})
+
+	t.Run("errors when group not on wallet", func(t *testing.T) {
+		var posted, deleted string
+		srv := newAgenticServer(t, []string{"other_grp"}, nil, &posted, &deleted)
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
+
+		_, err = c.DetachUserFromWallet(context.Background(), "wlt_1", pub, "spend_grp")
+		require.Error(t, err)
+		require.Empty(t, deleted)
+	})
 }

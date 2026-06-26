@@ -8,154 +8,141 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
-
 	"github.com/dakota-xyz/go-sdk/client/gen"
 )
 
-// AgentWalletAuthorization is the result of AuthorizeAgentOnWalletWithDefaultPolicy:
-// the signer group and policy created to let the agent spend from the wallet.
-type AgentWalletAuthorization struct {
-	// SignerGroupID is the solo group created for the agent's signer and attached to the wallet.
-	SignerGroupID string
-	// PolicyID is the default allow policy created for the group and attached to the wallet.
-	PolicyID string
+// AttachUserToWallet grants a principal — a user OR an agent, both are just
+// signers — permission to spend from a wallet by adding its signer to an EXISTING
+// signer group on that wallet: the group whose attached policies should govern it.
+//
+// That membership change is the whole operation, and it is UNENDORSED: group
+// membership is a client-admin action, not a wallet endorsement, so it needs NO
+// signature — not from the wallet owner, not from the principal being added. From
+// then on the principal's transactions are subject to exactly the policies bound to
+// spendingGroupID, the same as any other member of that group. The per-payment
+// spend bound remains the agentic mandate gate, not the policy.
+//
+// It deliberately reuses the wallet's pre-built policies and creates NO per-signer
+// policy. Two policy-engine realities make a per-signer policy the wrong tool: a
+// policy→wallet attach is endorsed by the policy's OWN signer group (so only that
+// group's key could attach it), and an unconditional approval-threshold ALLOW
+// policy inverts to a deny for any transaction its group didn't sign, so a second
+// signer's policy would veto the first. Prepare the wallet's groups + policies in
+// advance and point each principal at the group whose constraints you want it to
+// inherit.
+//
+// The call is idempotent: if the signer is already a member, it is a no-op and
+// returns alreadyMember=true. It errors if spendingGroupID is not attached to
+// walletID, so a wrong group fails loudly instead of silently granting nothing.
+//
+// signerPublicKey is the principal's registered signer key (base64 PKIX) — e.g. the
+// key returned by CreateAgent for a hosted agent.
+func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (alreadyMember bool, err error) {
+	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
+		return false, fmt.Errorf("walletID, signerPublicKey and spendingGroupID are all required")
+	}
+
+	if err := c.requireGroupOnWallet(ctx, walletID, spendingGroupID); err != nil {
+		return false, err
+	}
+
+	// Idempotency: skip the add if the signer's key is already a member.
+	grp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, spendingGroupID))
+	if err != nil {
+		return false, fmt.Errorf("get signer group: %w", err)
+	}
+	if grp.JSON200 == nil {
+		return false, fmt.Errorf("get signer group: empty response body")
+	}
+	for _, m := range grp.JSON200.Members {
+		if m.PublicKey == signerPublicKey {
+			return true, nil
+		}
+	}
+
+	// Add the signer to the group (unendorsed; the SDK auto-sets the POST
+	// idempotency key).
+	if _, err := CheckResponse(c.Raw().CreateSignerGroupSignerWithResponse(ctx, spendingGroupID, nil, gen.CreateSignerGroupSignerRequest{
+		MemberKey: signerPublicKey,
+	})); err != nil {
+		return false, fmt.Errorf("add signer to group: %w", err)
+	}
+	return false, nil
 }
 
-// AuthorizeAgentOnWalletWithDefaultPolicy grants a hosted agent permission to
-// spend from a wallet, in one call. It:
+// DetachUserFromWallet revokes a principal's spend permission by removing its
+// signer from spendingGroupID — the inverse of AttachUserToWallet, and likewise
+// UNENDORSED (no signature).
 //
-//  1. creates a solo signer group holding the agent's signer key,
-//  2. creates a DEFAULT no-cap "allow" policy for that group — any single member
-//     signature passes; the real per-payment spend bounds are enforced by the
-//     agentic mandate gate, NOT this policy, and
-//  3. performs the two customer-endorsed attaches (group→wallet, policy→wallet),
-//     each signed by walletSigner over the canonical attach payload.
+// It is deliberately SCOPED to the one group you pass, NOT a sweep across every
+// group on the wallet, for two reasons:
+//   - signer groups are NOT wallet-exclusive — the same group can govern multiple
+//     wallets — so removing a signer from a group revokes it on EVERY wallet that
+//     group governs; passing one explicit group keeps that blast radius known
+//     instead of multiplying it across all of the wallet's groups;
+//   - a sweep cannot tell "added for this agent" from "belongs here for another
+//     reason" (e.g. the human owner sitting in the admin group), so it can lock out
+//     a legitimate member.
 //
-// walletSigner must already be a signer RECOGNIZED on the wallet (e.g. the
-// customer/owner whose key created it) — the platform verifies its endorsement.
-// The SDK never holds the key: walletSigner does the signing.
+// Pass the same group you used to attach. Idempotent: if the signer isn't a member,
+// it's a no-op (wasMember=false). Errors if spendingGroupID isn't attached to
+// walletID.
 //
-// agentSignerPublicKey is the agent's signer public key (base64 PKIX) as returned
-// by CreateAgent; name labels the created group and policy.
-//
-// After this returns, the agent's signer is recognized on the wallet and its
-// approved mandates can move funds. To authorize the same agent on another
-// wallet, call again (a fresh group + policy is created per wallet); for finer
-// control, compose Raw().CreateSignerGroup / CreatePolicy with the endorsed
-// attach steps yourself.
-func (c *Client) AuthorizeAgentOnWalletWithDefaultPolicy(ctx context.Context, walletID, name, agentSignerPublicKey string, walletSigner Signer) (AgentWalletAuthorization, error) {
-	var out AgentWalletAuthorization
-	if walletSigner == nil {
-		return out, fmt.Errorf("walletSigner is required (a recognized signer of the wallet endorses the attaches)")
+// NOTE: this does not guard against removing a group's LAST member — emptying the
+// group that governs a wallet can leave it with no authorized signer. The caller
+// must avoid stranding the wallet. For a hosted agent, prefer the platform's
+// RevokeAgent (it destroys the agent's key, so the signer can authorize nothing
+// even while still listed) and use this for membership hygiene.
+func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (wasMember bool, err error) {
+	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
+		return false, fmt.Errorf("walletID, signerPublicKey and spendingGroupID are all required")
 	}
 
-	// 1. Solo signer group holding the agent's signer key.
-	grp, err := CheckResponse(c.Raw().CreateSignerGroupWithResponse(ctx, nil, gen.SignerGroupCreateRequest{
-		Name:       name + " agent group",
-		MemberKeys: []string{agentSignerPublicKey},
-	}))
+	if err := c.requireGroupOnWallet(ctx, walletID, spendingGroupID); err != nil {
+		return false, err
+	}
+
+	// Resolve the signer's public key → its resource id within the group: the delete
+	// endpoint addresses members by id, not key. Absent ⇒ idempotent no-op.
+	grp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, spendingGroupID))
 	if err != nil {
-		return out, fmt.Errorf("create signer group: %w", err)
+		return false, fmt.Errorf("get signer group: %w", err)
 	}
-	if grp.JSON201 == nil {
-		return out, fmt.Errorf("create signer group: empty response body")
+	if grp.JSON200 == nil {
+		return false, fmt.Errorf("get signer group: empty response body")
 	}
-	out.SignerGroupID = grp.JSON201.Id
+	signerID := ""
+	for _, m := range grp.JSON200.Members {
+		if m.PublicKey == signerPublicKey {
+			signerID = m.Id
+			break
+		}
+	}
+	if signerID == "" {
+		return false, nil
+	}
 
-	// 2. Default allow policy for the group. A rule-less policy never APPLIES
-	// (policy-engine default-deny), so carry one explicit allow rule; the spend
-	// limits live in the agentic mandate gate, not here.
-	desc := "Default allow policy — per-payment spend bounds enforced by the agentic mandate gate"
-	pol, err := CheckResponse(c.Raw().CreatePolicyWithResponse(ctx, nil, gen.CreatePolicyRequest{
-		Name:          name + " agent allow policy",
-		Description:   &desc,
-		SignerGroupId: &out.SignerGroupID,
-		Rules: &[]gen.CreatePolicyRuleRequest{{
-			RuleType: gen.CreatePolicyRuleRequestRuleTypeApprovalThreshold,
-			Action:   gen.CreatePolicyRuleRequestActionAllow,
-			Definition: map[string]any{
-				"threshold":   1,
-				"description": "Any group member's signature allows",
-			},
-		}},
-	}))
-	if err != nil {
-		return out, fmt.Errorf("create policy: %w", err)
+	if _, err := CheckResponse(c.Raw().DeleteSignerGroupSignerWithResponse(ctx, spendingGroupID, signerID, nil)); err != nil {
+		return false, fmt.Errorf("remove signer from group: %w", err)
 	}
-	if pol.JSON201 == nil {
-		return out, fmt.Errorf("create policy: empty response body")
-	}
-	out.PolicyID = pol.JSON201.Id
-
-	// 3. The two customer-endorsed attaches.
-	if err := c.attachGroupToWallet(ctx, walletID, out.SignerGroupID, walletSigner); err != nil {
-		return out, err
-	}
-	if err := c.attachPolicyToWallet(ctx, walletID, out.PolicyID, walletSigner); err != nil {
-		return out, err
-	}
-	return out, nil
+	return true, nil
 }
 
-// attachGroupToWallet performs the customer-endorsed signer-group→wallet attach.
-// The idempotency key is part of the SIGNED payload, so it must be the same value
-// in the canonical bytes, the intent, and the request header.
-func (c *Client) attachGroupToWallet(ctx context.Context, walletID, groupID string, signer Signer) error {
-	idem := uuid.NewString()
-	payload, err := AttachGroupPayload(walletID, groupID, idem)
+// requireGroupOnWallet errors unless spendingGroupID is one of the signer groups
+// attached to walletID — so attach/detach can't silently operate on a group that
+// has nothing to do with the named wallet.
+func (c *Client) requireGroupOnWallet(ctx context.Context, walletID, spendingGroupID string) error {
+	groups, err := CheckResponse(c.Raw().GetSignerGroupsForWalletWithResponse(ctx, walletID))
 	if err != nil {
-		return fmt.Errorf("build group-attach payload: %w", err)
+		return fmt.Errorf("list wallet signer groups: %w", err)
 	}
-	sig, err := signer.Sign(payload)
-	if err != nil {
-		return fmt.Errorf("sign group attach: %w", err)
+	if groups.JSON200 == nil {
+		return fmt.Errorf("list wallet signer groups: empty response body")
 	}
-	var intent gen.EndorsedRequest_Intent
-	if err := intent.FromAttachGroupToWalletIntent(gen.AttachGroupToWalletIntent{
-		Type:           gen.AttachGroupToWalletIntentTypeAttachGroupToWallet,
-		WalletId:       walletID,
-		GroupId:        groupID,
-		IdempotencyKey: idem,
-	}); err != nil {
-		return fmt.Errorf("build group-attach intent: %w", err)
+	for _, g := range *groups.JSON200 {
+		if g.Id == spendingGroupID {
+			return nil
+		}
 	}
-	if _, err := CheckResponse(c.Raw().UpsertWalletSignerGroupRelationshipWithResponse(
-		ctx, walletID, groupID,
-		&gen.UpsertWalletSignerGroupRelationshipParams{XIdempotencyKey: uuid.MustParse(idem)},
-		gen.EndorsedRequest{Signatures: []string{sig}, Intent: intent},
-	)); err != nil {
-		return fmt.Errorf("attach group to wallet: %w", err)
-	}
-	return nil
-}
-
-// attachPolicyToWallet performs the customer-endorsed policy→wallet attach.
-func (c *Client) attachPolicyToWallet(ctx context.Context, walletID, policyID string, signer Signer) error {
-	idem := uuid.NewString()
-	payload, err := AttachPolicyPayload(walletID, policyID, idem)
-	if err != nil {
-		return fmt.Errorf("build policy-attach payload: %w", err)
-	}
-	sig, err := signer.Sign(payload)
-	if err != nil {
-		return fmt.Errorf("sign policy attach: %w", err)
-	}
-	var intent gen.EndorsedRequest_Intent
-	if err := intent.FromAttachPolicyToWalletIntent(gen.AttachPolicyToWalletIntent{
-		Type:           gen.AttachPolicyToWalletIntentTypeAttachPolicyToWallet,
-		WalletId:       walletID,
-		PolicyId:       policyID,
-		IdempotencyKey: idem,
-	}); err != nil {
-		return fmt.Errorf("build policy-attach intent: %w", err)
-	}
-	if _, err := CheckResponse(c.Raw().UpsertPolicyWalletRelationshipWithResponse(
-		ctx, policyID, walletID,
-		&gen.UpsertPolicyWalletRelationshipParams{XIdempotencyKey: uuid.MustParse(idem)},
-		gen.EndorsedRequest{Signatures: []string{sig}, Intent: intent},
-	)); err != nil {
-		return fmt.Errorf("attach policy to wallet: %w", err)
-	}
-	return nil
+	return fmt.Errorf("signer group %s is not attached to wallet %s", spendingGroupID, walletID)
 }
