@@ -1765,6 +1765,9 @@ type AgenticProposalsResult struct {
 
 	// Reply The agent's conversational reply — a clarifying question or confirmation. Present without proposals when the agent needs more from the user; may accompany proposals as a short note.
 	Reply *string `json:"reply,omitempty"`
+
+	// ConversationStatus How the boundary screen treated this turn: "ok" | "warned" | "blocked".
+	ConversationStatus *string `json:"conversation_status,omitempty"`
 }
 
 // AmountDetails Detailed representation of an amount with its asset and optional metadata
