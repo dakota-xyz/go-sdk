@@ -41,6 +41,13 @@ func newAgenticServer(t *testing.T, walletGroups []string, members []fakeMember,
 			w.WriteHeader(http.StatusCreated)
 			_, _ = w.Write([]byte(`{}`))
 		case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/signer-groups/spend_grp/signers/"):
+			// The real platform requires an idempotency key on this DELETE; reject
+			// without one so a missing key is a test failure, not a silent pass.
+			if r.Header.Get("x-idempotency-key") == "" {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":"x-idempotency-key is required"}`))
+				return
+			}
 			*deletedID = strings.TrimPrefix(r.URL.Path, "/signer-groups/spend_grp/signers/")
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte(`{"id":"spend_grp"}`))

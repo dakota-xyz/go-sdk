@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/dakota-xyz/go-sdk/client/gen"
+	"github.com/google/uuid"
 )
 
 // AttachUserToWallet grants a principal — a user OR an agent, both are just
@@ -122,7 +123,18 @@ func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPubli
 		return false, nil
 	}
 
-	if _, err := CheckResponse(c.Raw().DeleteSignerGroupSignerWithResponse(ctx, spendingGroupID, signerID, nil)); err != nil {
+	// The platform requires an x-idempotency-key header on this DELETE. The
+	// client's idempotency transport only auto-injects a key on POSTs, so the add
+	// path (CreateSignerGroupSigner) gets one for free but this DELETE does not —
+	// pass it explicitly, or the platform rejects the request as missing a
+	// required header.
+	idemKey, err := uuid.NewRandom()
+	if err != nil {
+		return false, fmt.Errorf("generate idempotency key: %w", err)
+	}
+	if _, err := CheckResponse(c.Raw().DeleteSignerGroupSignerWithResponse(ctx, spendingGroupID, signerID, &gen.DeleteSignerGroupSignerParams{
+		XIdempotencyKey: idemKey,
+	})); err != nil {
 		return false, fmt.Errorf("remove signer from group: %w", err)
 	}
 	return true, nil
