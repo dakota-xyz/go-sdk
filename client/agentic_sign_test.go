@@ -117,3 +117,42 @@ func TestAttachPayloads_ByteExact(t *testing.T) {
 		t.Fatalf("attach-policy payload:\n got:  %s\n want: %s", got, want)
 	}
 }
+
+// TestEndorsementPayloads_ByteExact pins the JCS canonical form of the remaining
+// endorsed-intent payloads — the bytes a recognized signer signs to detach a
+// group/policy, delete a policy, or add/update/remove a policy rule. Each must
+// match the platform policy engine's intent reconstruction byte-for-byte, or the
+// endorsement won't verify server-side.
+func TestEndorsementPayloads_ByteExact(t *testing.T) {
+	cases := []struct {
+		name string
+		got  func() ([]byte, error)
+		want string
+	}{
+		{"detach_group", func() ([]byte, error) { return DetachGroupPayload("wallet_W", "group_G", "idem_K") },
+			`{"group_id":"group_G","idempotency_key":"idem_K","type":"detach_group_from_wallet","wallet_id":"wallet_W"}`},
+		{"detach_policy", func() ([]byte, error) { return DetachPolicyPayload("wallet_W", "policy_P", "idem_K") },
+			`{"idempotency_key":"idem_K","policy_id":"policy_P","type":"detach_policy_from_wallet","wallet_id":"wallet_W"}`},
+		{"delete_policy", func() ([]byte, error) { return DeletePolicyPayload("policy_P", "idem_K") },
+			`{"idempotency_key":"idem_K","policy_id":"policy_P","type":"delete_policy"}`},
+		{"remove_policy_rule", func() ([]byte, error) { return RemovePolicyRulePayload("policy_P", "rule_R", "idem_K") },
+			`{"idempotency_key":"idem_K","policy_id":"policy_P","rule_id":"rule_R","type":"remove_policy_rule"}`},
+		{"update_policy_rule", func() ([]byte, error) { return UpdatePolicyRulePayload("policy_P", "rule_R", "def_str", "idem_K") },
+			`{"idempotency_key":"idem_K","policy_id":"policy_P","rule_id":"rule_R","type":"update_policy_rule","updated_definition":"def_str"}`},
+		{"add_policy_rule", func() ([]byte, error) {
+			return AddPolicyRulePayload("policy_P", "allow", "amount_threshold", map[string]any{"threshold": "100"}, "idem_K")
+		},
+			`{"action":"allow","definition":{"threshold":"100"},"idempotency_key":"idem_K","policy_id":"policy_P","rule_type":"amount_threshold","type":"add_policy_rule"}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, err := tc.got()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := string(b); got != tc.want {
+				t.Fatalf("%s payload:\n got:  %s\n want: %s", tc.name, got, tc.want)
+			}
+		})
+	}
+}

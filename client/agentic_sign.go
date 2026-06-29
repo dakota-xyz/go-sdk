@@ -132,6 +132,92 @@ func AttachPolicyPayload(walletID, policyID, idempotencyKey string) ([]byte, err
 	})
 }
 
+// The remaining endorsed-intent payloads complete the wallet/policy mutation
+// surface alongside the attach helpers above. Each reproduces, byte-for-byte,
+// the canonical map the platform's policy engine rebuilds to verify the
+// endorsement (its intent reconstruction), so a signature produced here verifies
+// server-side. As with the attach payloads, the idempotency_key is part of the
+// signed bytes — reuse the SAME key on the corresponding request.
+
+// DetachGroupPayload is the canonical bytes a recognized wallet signer endorses
+// to remove a signer group from a wallet — the inverse of AttachGroupPayload.
+// JCS JSON of {type:"detach_group_from_wallet", wallet_id, group_id, idempotency_key}.
+func DetachGroupPayload(walletID, groupID, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "detach_group_from_wallet",
+		"wallet_id":       walletID,
+		"group_id":        groupID,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
+// DetachPolicyPayload is the canonical bytes a recognized wallet signer endorses
+// to remove a policy from a wallet — the inverse of AttachPolicyPayload.
+// JCS JSON of {type:"detach_policy_from_wallet", wallet_id, policy_id, idempotency_key}.
+func DetachPolicyPayload(walletID, policyID, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "detach_policy_from_wallet",
+		"wallet_id":       walletID,
+		"policy_id":       policyID,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
+// DeletePolicyPayload is the canonical bytes a member of the policy's governing
+// signer group endorses to delete a policy — JCS JSON of
+// {type:"delete_policy", policy_id, idempotency_key}.
+func DeletePolicyPayload(policyID, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "delete_policy",
+		"policy_id":       policyID,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
+// RemovePolicyRulePayload is the canonical bytes a member of the policy's
+// governing signer group endorses to remove a rule from a policy — JCS JSON of
+// {type:"remove_policy_rule", policy_id, rule_id, idempotency_key}.
+func RemovePolicyRulePayload(policyID, ruleID, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "remove_policy_rule",
+		"policy_id":       policyID,
+		"rule_id":         ruleID,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
+// UpdatePolicyRulePayload is the canonical bytes a member of the policy's
+// governing signer group endorses to update a rule's definition — JCS JSON of
+// {type:"update_policy_rule", policy_id, rule_id, updated_definition, idempotency_key}.
+// updatedDefinition is the rule definition as a JSON STRING; it is signed
+// opaquely, exactly as sent on the update request.
+func UpdatePolicyRulePayload(policyID, ruleID, updatedDefinition, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":               "update_policy_rule",
+		"policy_id":          policyID,
+		"rule_id":            ruleID,
+		"updated_definition": updatedDefinition,
+		"idempotency_key":    idempotencyKey,
+	})
+}
+
+// AddPolicyRulePayload is the canonical bytes a member of the policy's governing
+// signer group endorses to add a rule to a policy — JCS JSON of
+// {type:"add_policy_rule", action, rule_type, policy_id, definition, idempotency_key}.
+// action (e.g. "allow"), ruleType (e.g. "amount_threshold"), and definition (the
+// rule-type-specific config, in API format) must match the values sent on the
+// add request, or the endorsement won't verify against it.
+func AddPolicyRulePayload(policyID, action, ruleType string, definition map[string]any, idempotencyKey string) ([]byte, error) {
+	return canonicalJSON(map[string]any{
+		"type":            "add_policy_rule",
+		"action":          action,
+		"rule_type":       ruleType,
+		"policy_id":       policyID,
+		"definition":      definition,
+		"idempotency_key": idempotencyKey,
+	})
+}
+
 // ---------------------------------------------------------------------------
 // P256Signer — default in-memory signer (sandbox / tests)
 // ---------------------------------------------------------------------------
