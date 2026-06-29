@@ -120,13 +120,18 @@ func RequestEditorWithIdempotencyKey(key string) gen.RequestEditorFn {
 
 type idempotencyKeyContextKey struct{}
 
+// idempotencyTransport auto-injects an x-idempotency-key header on mutating
+// requests (POST/PUT/PATCH/DELETE) that don't already carry one. The platform
+// declares the header on create/update/delete operations across all four
+// methods, so keying it per-method — rather than per-operation — covers them
+// all; an operation that doesn't declare the header simply ignores an extra one.
 type idempotencyTransport struct {
 	next      http.RoundTripper
 	generator IdempotencyKeyGenerator
 }
 
 func (t *idempotencyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if req.Method != http.MethodPost {
+	if !methodTakesIdempotencyKey(req.Method) {
 		return t.next.RoundTrip(req)
 	}
 	if req.Header.Get("x-idempotency-key") != "" {
@@ -149,6 +154,23 @@ func (t *idempotencyTransport) RoundTrip(req *http.Request) (*http.Response, err
 	}
 	cloned.Header.Set("x-idempotency-key", key)
 	return t.next.RoundTrip(cloned)
+}
+
+// methodTakesIdempotencyKey reports whether the platform may require an
+// x-idempotency-key on this HTTP method. The API declares the header on
+// create/update/delete operations across POST, PUT, PATCH and DELETE (their
+// generated *Params carry an XIdempotencyKey field); GET/HEAD and friends never
+// take it. Injecting per-method is safe even for an operation that doesn't
+// declare the header: the generated server binds only declared params, so an
+// extra header is dropped — the same reason blind POST injection has always
+// been safe.
+func methodTakesIdempotencyKey(method string) bool {
+	switch method {
+	case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+		return true
+	default:
+		return false
+	}
 }
 
 type retryTransport struct {

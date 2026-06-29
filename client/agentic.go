@@ -123,11 +123,11 @@ func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPubli
 		return false, nil
 	}
 
-	// The platform requires an x-idempotency-key header on this DELETE. The
-	// client's idempotency transport only auto-injects a key on POSTs, so the add
-	// path (CreateSignerGroupSigner) gets one for free but this DELETE does not —
-	// pass it explicitly, or the platform rejects the request as missing a
-	// required header.
+	// The platform requires an x-idempotency-key on this DELETE. The idempotency
+	// transport now injects one on DELETEs too, but set it explicitly here anyway:
+	// revoking spend permission is security-relevant, so this path must not depend
+	// on transport configuration (e.g. WithAutomaticIdempotency(false) would
+	// otherwise let a detach silently 400 and leave the signer authorized).
 	idemKey, err := uuid.NewRandom()
 	if err != nil {
 		return false, fmt.Errorf("generate idempotency key: %w", err)
