@@ -63,6 +63,7 @@ const (
 
 // Defines values for AgenticActionType.
 const (
+	AgenticActionTypeCreateAutoAccount       AgenticActionType = "create_auto_account"
 	AgenticActionTypeCreateBankDestination   AgenticActionType = "create_bank_destination"
 	AgenticActionTypeCreateCryptoDestination AgenticActionType = "create_crypto_destination"
 	AgenticActionTypeCreateMandate           AgenticActionType = "create_mandate"
@@ -386,6 +387,12 @@ const (
 // Defines values for CreateAgentRequestType.
 const (
 	CreateAgentRequestTypePayment CreateAgentRequestType = "payment"
+)
+
+// Defines values for CreateAutoAccountActionRoutingPreference.
+const (
+	CreateAutoAccountActionRoutingPreferenceCheapest CreateAutoAccountActionRoutingPreference = "cheapest"
+	CreateAutoAccountActionRoutingPreferenceFastest  CreateAutoAccountActionRoutingPreference = "fastest"
 )
 
 // Defines values for CreateBankDestinationActionAccountType.
@@ -1668,6 +1675,8 @@ type AgentSignerGroupRef struct {
 
 // AgenticAction Tagged union - exactly one payload field matching `type` is set.
 type AgenticAction struct {
+	// CreateAutoAccount Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
+	CreateAutoAccount       *CreateAutoAccountAction       `json:"create_auto_account,omitempty"`
 	CreateBankDestination   *CreateBankDestinationAction   `json:"create_bank_destination,omitempty"`
 	CreateCryptoDestination *CreateCryptoDestinationAction `json:"create_crypto_destination,omitempty"`
 	CreateMandate           *CreateMandateAction           `json:"create_mandate,omitempty"`
@@ -1689,6 +1698,8 @@ type AgenticActionType string
 
 // AgenticActionDownstream defines model for AgenticActionDownstream.
 type AgenticActionDownstream struct {
+	// AutoAccountId The provisioned auto-account (set for a create_auto_account action).
+	AutoAccountId       *string   `json:"auto_account_id,omitempty"`
 	DestinationId       *string   `json:"destination_id,omitempty"`
 	MandateId           *string   `json:"mandate_id,omitempty"`
 	RecipientId         *string   `json:"recipient_id,omitempty"`
@@ -1760,14 +1771,14 @@ type AgenticProposal struct {
 
 // AgenticProposalsResult The agent's next step. At least one of `proposals` or `reply` is always present in a successful response — `proposals` at high confidence (optionally with a short `reply` note), or `reply` alone when the agent needs more from the user.
 type AgenticProposalsResult struct {
+	// ConversationStatus How the boundary screen treated this turn: `ok` is a normal payments turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat.
+	ConversationStatus *string `json:"conversation_status,omitempty"`
+
 	// Proposals Validated action-series proposals, ready to accept via POST /instructions. Present only at high confidence.
 	Proposals *[]AgenticProposal `json:"proposals,omitempty"`
 
 	// Reply The agent's conversational reply — a clarifying question or confirmation. Present without proposals when the agent needs more from the user; may accompany proposals as a short note.
 	Reply *string `json:"reply,omitempty"`
-
-	// ConversationStatus How the boundary screen treated this turn: "ok" | "warned" | "blocked".
-	ConversationStatus *string `json:"conversation_status,omitempty"`
 }
 
 // AmountDetails Detailed representation of an amount with its asset and optional metadata
@@ -2840,6 +2851,31 @@ type CreateApiKeyForClientRequest struct {
 	// ClientId Client ID to create the API key for
 	ClientId KSUID `json:"client_id"`
 }
+
+// CreateAutoAccountAction Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
+type CreateAutoAccountAction struct {
+	// DestinationId The REAL destination the auto-account forwards to: a crypto destination (⇒ swap) or a bank destination (⇒ offramp). Empty = the destination created in this proposal.
+	DestinationId *string `json:"destination_id,omitempty"`
+
+	// FeeBps Optional developer fee in basis points (0–10000).
+	FeeBps *int32 `json:"fee_bps,omitempty"`
+
+	// OutputAsset The asset the recipient receives (a currency such as USD for a bank offramp).
+	OutputAsset string `json:"output_asset"`
+
+	// Rail Outbound rail — REQUIRED for a bank offramp (e.g. ach, fedwire, swift, sepa); omit for a crypto swap.
+	Rail              *string                                   `json:"rail,omitempty"`
+	RoutingPreference *CreateAutoAccountActionRoutingPreference `json:"routing_preference,omitempty"`
+
+	// SourceAsset The asset the agent deposits and the scheduled payment sends (may be the ANY wildcard).
+	SourceAsset string `json:"source_asset"`
+
+	// SourceNetworkId Identifier for a blockchain network
+	SourceNetworkId NetworkId `json:"source_network_id"`
+}
+
+// CreateAutoAccountActionRoutingPreference defines model for CreateAutoAccountAction.RoutingPreference.
+type CreateAutoAccountActionRoutingPreference string
 
 // CreateBankDestinationAction defines model for CreateBankDestinationAction.
 type CreateBankDestinationAction struct {

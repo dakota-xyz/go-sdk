@@ -19305,7 +19305,7 @@ components:
       properties:
         type:
           type: string
-          enum: [create_recipient, create_crypto_destination, create_bank_destination, create_mandate, create_scheduled_payments]
+          enum: [create_recipient, create_crypto_destination, create_bank_destination, create_mandate, create_scheduled_payments, create_auto_account]
         create_recipient:
           $ref: "#/components/schemas/RecipientRequest"
         create_crypto_destination:
@@ -19316,6 +19316,8 @@ components:
           $ref: "#/components/schemas/CreateMandateAction"
         create_scheduled_payments:
           $ref: "#/components/schemas/CreateScheduledPaymentsAction"
+        create_auto_account:
+          $ref: "#/components/schemas/CreateAutoAccountAction"
 
     AgenticActionDownstream:
       type: object
@@ -19330,6 +19332,9 @@ components:
           type: array
           items:
             type: string
+        auto_account_id:
+          type: string
+          description: The provisioned auto-account (set for a create_auto_account action).
 
     AgenticAttachment:
       type: object
@@ -19448,6 +19453,9 @@ components:
         reply:
           type: string
           description: The agent's conversational reply — a clarifying question or confirmation. Present without proposals when the agent needs more from the user; may accompany proposals as a short note.
+        conversation_status:
+          type: string
+          description: "How the boundary screen treated this turn: `ok` is a normal payments turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat."
 
     ApproveMandateRequest:
       type: object
@@ -19603,6 +19611,40 @@ components:
         start_at:
           type: integer
           format: int64
+
+    CreateAutoAccountAction:
+      type: object
+      description: >
+        Provision a provider-managed convert-and-forward "auto-account" so a
+        payment can cross chain families (crypto→crypto swap) or exit to a bank
+        (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on
+        source_network_id (on the funding wallet's own family) and the provider
+        converts source_asset→output_asset and forwards to destination_id. A
+        scheduled payment then targets the deposit; the mandate still targets the
+        real recipient.
+      required: [source_asset, source_network_id, output_asset]
+      properties:
+        destination_id:
+          type: string
+          description: "The REAL destination the auto-account forwards to: a crypto destination (⇒ swap) or a bank destination (⇒ offramp). Empty = the destination created in this proposal."
+        source_asset:
+          type: string
+          description: The asset the agent deposits and the scheduled payment sends (may be the ANY wildcard).
+        source_network_id:
+          $ref: "#/components/schemas/NetworkId"
+        output_asset:
+          type: string
+          description: The asset the recipient receives (a currency such as USD for a bank offramp).
+        rail:
+          type: string
+          description: Outbound rail — REQUIRED for a bank offramp (e.g. ach, fedwire, swift, sepa); omit for a crypto swap.
+        routing_preference:
+          type: string
+          enum: [fastest, cheapest]
+        fee_bps:
+          type: integer
+          format: int32
+          description: Optional developer fee in basis points (0–10000).
 
     Mandate:
       type: object
