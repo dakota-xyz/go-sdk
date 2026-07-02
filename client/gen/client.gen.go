@@ -4648,18 +4648,24 @@ type SandboxScenario struct {
 
 // ScheduledPaymentResponse defines model for ScheduledPaymentResponse.
 type ScheduledPaymentResponse struct {
-	Address    *string `json:"address,omitempty"`
-	Amount     *string `json:"amount,omitempty"`
-	Asset      *string `json:"asset,omitempty"`
-	ExecutedAt *int64  `json:"executed_at,omitempty"`
+	Address *string `json:"address,omitempty"`
+	Amount  *string `json:"amount,omitempty"`
+	Asset   *string `json:"asset,omitempty"`
+
+	// DestinationId The REAL destination this settles to (a bank for an offramp, a crypto destination otherwise). For an auto-account payment the address is the crypto DEPOSIT while this names the bank/crypto target.
+	DestinationId *string `json:"destination_id,omitempty"`
+	ExecutedAt    *int64  `json:"executed_at,omitempty"`
 
 	// FailureReason Why the payment failed (e.g. the mandate gate's denied dimensions); absent unless status is failed.
 	FailureReason *string `json:"failure_reason,omitempty"`
 	Id            *string `json:"id,omitempty"`
 
 	// MandateId AUDIT — the mandate that covered this payment at fire time. Absent until the payment executes (coverage is decided at fire time, not bound at rest).
-	MandateId   *string `json:"mandate_id,omitempty"`
-	NetworkId   *string `json:"network_id,omitempty"`
+	MandateId *string `json:"mandate_id,omitempty"`
+	NetworkId *string `json:"network_id,omitempty"`
+
+	// RecipientId The recipient this payment pays, when created from a destination. Absent for a direct-address payment. Use this — NOT the address — to resolve the payee (two payees can share a destination address).
+	RecipientId *string `json:"recipient_id,omitempty"`
 	ScheduledAt *int64  `json:"scheduled_at,omitempty"`
 
 	// SignerId The signer (hosted agent) this payment fires under. Updatable via PATCH while scheduled.

@@ -19765,6 +19765,12 @@ components:
         failure_reason:
           type: string
           description: Why the payment failed (e.g. the mandate gate's denied dimensions); absent unless status is failed.
+        recipient_id:
+          type: string
+          description: The recipient this payment pays, when created from a destination. Absent for a direct-address payment. Use this — NOT the address — to resolve the payee (two payees can share a destination address).
+        destination_id:
+          type: string
+          description: The REAL destination this settles to (a bank for an offramp, a crypto destination otherwise). For an auto-account payment the address is the crypto DEPOSIT while this names the bank/crypto target.
         address:
           type: string
         network_id:
