@@ -19771,6 +19771,19 @@ components:
         destination_id:
           type: string
           description: The REAL destination this settles to (a bank for an offramp, a crypto destination otherwise). For an auto-account payment the address is the crypto DEPOSIT while this names the bank/crypto target.
+        destination_type:
+          type: string
+          enum: [bank, crypto]
+          description: The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+        destination_label:
+          type: string
+          description: A human label for the real destination — e.g. "Chase ••••5432" for a bank, or a shortened address for crypto — so a client shows which account the payment settles to without a second lookup.
+        destination_rail:
+          type: string
+          description: For a bank destination, the payout rail (e.g. ach, fedwire, swift, sepa). Absent for crypto.
+        output_asset:
+          type: string
+          description: The asset the recipient ULTIMATELY receives — the fiat currency (e.g. USD) for an offramp, else equal to `asset`. Stablecoin conversion is 1:1, so the output amount equals `amount`.
         address:
           type: string
         network_id:

@@ -925,6 +925,12 @@ const (
 	RiskRatingLevelMedium RiskRatingLevel = "medium"
 )
 
+// Defines values for ScheduledPaymentResponseDestinationType.
+const (
+	ScheduledPaymentResponseDestinationTypeBank   ScheduledPaymentResponseDestinationType = "bank"
+	ScheduledPaymentResponseDestinationTypeCrypto ScheduledPaymentResponseDestinationType = "crypto"
+)
+
 // Defines values for ScheduledPaymentResponseStatus.
 const (
 	ScheduledPaymentResponseStatusCancelled ScheduledPaymentResponseStatus = "cancelled"
@@ -4654,7 +4660,16 @@ type ScheduledPaymentResponse struct {
 
 	// DestinationId The REAL destination this settles to (a bank for an offramp, a crypto destination otherwise). For an auto-account payment the address is the crypto DEPOSIT while this names the bank/crypto target.
 	DestinationId *string `json:"destination_id,omitempty"`
-	ExecutedAt    *int64  `json:"executed_at,omitempty"`
+
+	// DestinationLabel A human label for the real destination — e.g. "Chase ••••5432" for a bank, or a shortened address for crypto — so a client shows which account the payment settles to without a second lookup.
+	DestinationLabel *string `json:"destination_label,omitempty"`
+
+	// DestinationRail For a bank destination, the payout rail (e.g. ach, fedwire, swift, sepa). Absent for crypto.
+	DestinationRail *string `json:"destination_rail,omitempty"`
+
+	// DestinationType The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+	DestinationType *ScheduledPaymentResponseDestinationType `json:"destination_type,omitempty"`
+	ExecutedAt      *int64                                   `json:"executed_at,omitempty"`
 
 	// FailureReason Why the payment failed (e.g. the mandate gate's denied dimensions); absent unless status is failed.
 	FailureReason *string `json:"failure_reason,omitempty"`
@@ -4663,6 +4678,9 @@ type ScheduledPaymentResponse struct {
 	// MandateId AUDIT — the mandate that covered this payment at fire time. Absent until the payment executes (coverage is decided at fire time, not bound at rest).
 	MandateId *string `json:"mandate_id,omitempty"`
 	NetworkId *string `json:"network_id,omitempty"`
+
+	// OutputAsset The asset the recipient ULTIMATELY receives — the fiat currency (e.g. USD) for an offramp, else equal to `asset`. Stablecoin conversion is 1:1, so the output amount equals `amount`.
+	OutputAsset *string `json:"output_asset,omitempty"`
 
 	// RecipientId The recipient this payment pays, when created from a destination. Absent for a direct-address payment. Use this — NOT the address — to resolve the payee (two payees can share a destination address).
 	RecipientId *string `json:"recipient_id,omitempty"`
@@ -4678,6 +4696,9 @@ type ScheduledPaymentResponse struct {
 	// WalletTransactionId AUDIT — the money-path transaction created when this payment fired. Absent until the payment executes.
 	WalletTransactionId *string `json:"wallet_transaction_id,omitempty"`
 }
+
+// ScheduledPaymentResponseDestinationType The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+type ScheduledPaymentResponseDestinationType string
 
 // ScheduledPaymentResponseStatus defines model for ScheduledPaymentResponse.Status.
 type ScheduledPaymentResponseStatus string
