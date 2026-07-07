@@ -4682,6 +4682,9 @@ type ScheduledPaymentResponse struct {
 	// OutputAsset The asset the recipient ULTIMATELY receives — the fiat currency (e.g. USD) for an offramp, else equal to `asset`. Stablecoin conversion is 1:1, so the output amount equals `amount`.
 	OutputAsset *string `json:"output_asset,omitempty"`
 
+	// OutputNetwork For a crypto destination, the network the recipient receives on — differs from `network_id` (the deposit network) for a cross-family swap (e.g. solana-devnet vs base-sepolia); equals `network_id` for a direct crypto payment; absent for a bank offramp.
+	OutputNetwork *string `json:"output_network,omitempty"`
+
 	// RecipientId The recipient this payment pays, when created from a destination. Absent for a direct-address payment. Use this — NOT the address — to resolve the payee (two payees can share a destination address).
 	RecipientId *string `json:"recipient_id,omitempty"`
 	ScheduledAt *int64  `json:"scheduled_at,omitempty"`

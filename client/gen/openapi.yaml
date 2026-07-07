@@ -19784,6 +19784,9 @@ components:
         output_asset:
           type: string
           description: The asset the recipient ULTIMATELY receives — the fiat currency (e.g. USD) for an offramp, else equal to `asset`. Stablecoin conversion is 1:1, so the output amount equals `amount`.
+        output_network:
+          type: string
+          description: For a crypto destination, the network the recipient receives on — differs from `network_id` (the deposit network) for a cross-family swap (e.g. solana-devnet vs base-sepolia); equals `network_id` for a direct crypto payment; absent for a bank offramp.
         address:
           type: string
         network_id:
