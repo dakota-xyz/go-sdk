@@ -61,6 +61,9 @@ type Signer interface {
 // signs for one §8 action on a mandate. Build it straight from the mandate as
 // returned by GetMandate/ListMandates — no server state is needed, and field
 // order is irrelevant (JCS sorts). The result is what a Signer signs.
+//
+// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// the platform) and may change without a major-version bump.
 func MandateSignPayload(m gen.Mandate, action MandateAction) ([]byte, error) {
 	switch {
 	case m.Id == nil || *m.Id == "":

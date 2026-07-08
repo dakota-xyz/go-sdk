@@ -38,6 +38,9 @@ import (
 //
 // signerPublicKey is the principal's registered signer key (base64 PKIX) — e.g. the
 // key returned by CreatePaymentAgent for a hosted agent.
+//
+// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// the platform) and may change without a major-version bump.
 func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (alreadyMember bool, err error) {
 	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
 		return false, fmt.Errorf("walletID, signerPublicKey and spendingGroupID are all required")

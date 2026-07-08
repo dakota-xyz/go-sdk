@@ -43,6 +43,9 @@ type AgentConversation struct {
 }
 
 // NewAgentConversation starts a fresh conversation with the agent.
+//
+// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// the platform) and may change without a major-version bump.
 func (c *Client) NewAgentConversation(agentID string) *AgentConversation {
 	return &AgentConversation{client: c, agentID: agentID}
 }
