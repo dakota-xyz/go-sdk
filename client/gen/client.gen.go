@@ -49,18 +49,6 @@ const (
 	AddPolicyRuleIntentTypeAddPolicyRule AddPolicyRuleIntentType = "add_policy_rule"
 )
 
-// Defines values for AgentResponseState.
-const (
-	AgentResponseStateActive  AgentResponseState = "active"
-	AgentResponseStatePending AgentResponseState = "pending"
-	AgentResponseStateRevoked AgentResponseState = "revoked"
-)
-
-// Defines values for AgentResponseType.
-const (
-	AgentResponseTypePayment AgentResponseType = "payment"
-)
-
 // Defines values for AgenticActionType.
 const (
 	AgenticActionTypeCreateAutoAccount       AgenticActionType = "create_auto_account"
@@ -382,11 +370,6 @@ const (
 const (
 	ClientUserRoleAdmin  ClientUserRole = "admin"
 	ClientUserRoleViewer ClientUserRole = "viewer"
-)
-
-// Defines values for CreateAgentRequestType.
-const (
-	CreateAgentRequestTypePayment CreateAgentRequestType = "payment"
 )
 
 // Defines values for CreateAutoAccountActionRoutingPreference.
@@ -857,6 +840,13 @@ const (
 // Defines values for OneOffTransactionType.
 const (
 	OneOffTransactionTypeOneOff OneOffTransactionType = "one_off"
+)
+
+// Defines values for PaymentAgentResponseState.
+const (
+	PaymentAgentResponseStateActive  PaymentAgentResponseState = "active"
+	PaymentAgentResponseStatePending PaymentAgentResponseState = "pending"
+	PaymentAgentResponseStateRevoked PaymentAgentResponseState = "revoked"
 )
 
 // Defines values for PaymentCapability.
@@ -1645,40 +1635,6 @@ type AdvanceSimulationResult struct {
 	SimulationId string `json:"simulation_id"`
 }
 
-// AgentResponse defines model for AgentResponse.
-type AgentResponse struct {
-	CustomerId *string `json:"customer_id,omitempty"`
-	Hosted     *bool   `json:"hosted,omitempty"`
-	Id         *string `json:"id,omitempty"`
-	Name       *string `json:"name,omitempty"`
-
-	// SignerGroupCleanup Present on revoke: the signer groups the (now-revoked) agent's signer still belongs to. A revoked signer can't sign, but its group membership lingers — remove signer_id from each (DELETE /signer-groups/{signer_group_id}/signers/{signer_id}) to finish de-provisioning. Absent when there is nothing to clean up.
-	SignerGroupCleanup *[]AgentSignerGroupRef `json:"signer_group_cleanup,omitempty"`
-	SignerId           *string                `json:"signer_id,omitempty"`
-
-	// SignerPublicKey base64 P-256 SPKI
-	SignerPublicKey *string `json:"signer_public_key,omitempty"`
-
-	// State pending is DERIVED - a non-revoked agent recognized on no wallet. It cannot accept instructions until a wallet attach is endorsed.
-	State *AgentResponseState `json:"state,omitempty"`
-	Type  *AgentResponseType  `json:"type,omitempty"`
-
-	// WalletIds DERIVED - wallets whose attached signer groups contain the agent's signer. Empty until the customer's endorsed attaches land.
-	WalletIds *[]string `json:"wallet_ids,omitempty"`
-}
-
-// AgentResponseState pending is DERIVED - a non-revoked agent recognized on no wallet. It cannot accept instructions until a wallet attach is endorsed.
-type AgentResponseState string
-
-// AgentResponseType defines model for AgentResponse.Type.
-type AgentResponseType string
-
-// AgentSignerGroupRef A signer-group reference (id + display name).
-type AgentSignerGroupRef struct {
-	Name          string `json:"name"`
-	SignerGroupId string `json:"signer_group_id"`
-}
-
 // AgenticAction Tagged union - exactly one payload field matching `type` is set.
 type AgenticAction struct {
 	// CreateAutoAccount Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
@@ -1751,11 +1707,11 @@ type AgenticDocumentAttachmentMediaType string
 
 // AgenticInstruction defines model for AgenticInstruction.
 type AgenticInstruction struct {
-	Actions    *[]AgenticAction           `json:"actions,omitempty"`
-	AgentId    *string                    `json:"agent_id,omitempty"`
-	Downstream *[]AgenticActionDownstream `json:"downstream,omitempty"`
-	Id         *string                    `json:"id,omitempty"`
-	Status     *AgenticInstructionStatus  `json:"status,omitempty"`
+	Actions        *[]AgenticAction           `json:"actions,omitempty"`
+	Downstream     *[]AgenticActionDownstream `json:"downstream,omitempty"`
+	Id             *string                    `json:"id,omitempty"`
+	PaymentAgentId *string                    `json:"payment_agent_id,omitempty"`
+	Status         *AgenticInstructionStatus  `json:"status,omitempty"`
 }
 
 // AgenticInstructionStatus defines model for AgenticInstruction.Status.
@@ -2839,19 +2795,6 @@ type Country struct {
 	Name string `json:"name"`
 }
 
-// CreateAgentRequest defines model for CreateAgentRequest.
-type CreateAgentRequest struct {
-	CustomerId string `json:"customer_id"`
-
-	// Hosted Must be true. Only hosted agents (signing keys custodied by the isolated agent-signer service) are supported today; bring-your-own-signer agents are not yet available, so the API rejects hosted=false.
-	Hosted bool                   `json:"hosted"`
-	Name   string                 `json:"name"`
-	Type   CreateAgentRequestType `json:"type"`
-}
-
-// CreateAgentRequestType defines model for CreateAgentRequest.Type.
-type CreateAgentRequestType string
-
 // CreateApiKeyForClientRequest defines model for CreateApiKeyForClientRequest.
 type CreateApiKeyForClientRequest struct {
 	// ClientId Client ID to create the API key for
@@ -2926,8 +2869,8 @@ type CreateCryptoDestinationAction struct {
 
 // CreateInstructionsRequest defines model for CreateInstructionsRequest.
 type CreateInstructionsRequest struct {
-	AgentId   string            `json:"agent_id"`
-	Proposals []AgenticProposal `json:"proposals"`
+	PaymentAgentId string            `json:"payment_agent_id"`
+	Proposals      []AgenticProposal `json:"proposals"`
 }
 
 // CreateMandateAction defines model for CreateMandateAction.
@@ -2939,11 +2882,20 @@ type CreateMandateAction struct {
 
 // CreateMandateRequest defines model for CreateMandateRequest.
 type CreateMandateRequest struct {
-	// AgentId The mandate binds this agent's signer.
-	AgentId    string      `json:"agent_id"`
-	Rule       MandateRule `json:"rule"`
-	ValidFrom  *int64      `json:"valid_from,omitempty"`
-	ValidUntil *int64      `json:"valid_until,omitempty"`
+	// PaymentAgentId The mandate binds this agent's signer.
+	PaymentAgentId string      `json:"payment_agent_id"`
+	Rule           MandateRule `json:"rule"`
+	ValidFrom      *int64      `json:"valid_from,omitempty"`
+	ValidUntil     *int64      `json:"valid_until,omitempty"`
+}
+
+// CreatePaymentAgentRequest defines model for CreatePaymentAgentRequest.
+type CreatePaymentAgentRequest struct {
+	CustomerId string `json:"customer_id"`
+
+	// Hosted Must be true. Only hosted agents (signing keys custodied by the isolated agent-signer service) are supported today; bring-your-own-signer agents are not yet available, so the API rejects hosted=false.
+	Hosted bool   `json:"hosted"`
+	Name   string `json:"name"`
 }
 
 // CreatePolicyRequest defines model for CreatePolicyRequest.
@@ -4386,6 +4338,36 @@ type PaginatedWalletTransactionResponse struct {
 
 	// Meta Meta information about the response
 	Meta Meta `json:"meta"`
+}
+
+// PaymentAgentResponse defines model for PaymentAgentResponse.
+type PaymentAgentResponse struct {
+	CustomerId *string `json:"customer_id,omitempty"`
+	Hosted     *bool   `json:"hosted,omitempty"`
+	Id         *string `json:"id,omitempty"`
+	Name       *string `json:"name,omitempty"`
+
+	// SignerGroupCleanup Present on revoke: the signer groups the (now-revoked) agent's signer still belongs to. A revoked signer can't sign, but its group membership lingers — remove signer_id from each (DELETE /signer-groups/{signer_group_id}/signers/{signer_id}) to finish de-provisioning. Absent when there is nothing to clean up.
+	SignerGroupCleanup *[]PaymentAgentSignerGroupRef `json:"signer_group_cleanup,omitempty"`
+	SignerId           *string                       `json:"signer_id,omitempty"`
+
+	// SignerPublicKey base64 P-256 SPKI
+	SignerPublicKey *string `json:"signer_public_key,omitempty"`
+
+	// State pending is DERIVED - a non-revoked agent recognized on no wallet. It cannot accept instructions until a wallet attach is endorsed.
+	State *PaymentAgentResponseState `json:"state,omitempty"`
+
+	// WalletIds DERIVED - wallets whose attached signer groups contain the agent's signer. Empty until the customer's endorsed attaches land.
+	WalletIds *[]string `json:"wallet_ids,omitempty"`
+}
+
+// PaymentAgentResponseState pending is DERIVED - a non-revoked agent recognized on no wallet. It cannot accept instructions until a wallet attach is endorsed.
+type PaymentAgentResponseState string
+
+// PaymentAgentSignerGroupRef A signer-group reference (id + display name).
+type PaymentAgentSignerGroupRef struct {
+	Name          string `json:"name"`
+	SignerGroupId string `json:"signer_group_id"`
 }
 
 // PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
@@ -6660,12 +6642,6 @@ type CreateAccountJSONRequestBody = AccountCreateRequest
 // UpdateAccountJSONRequestBody defines body for UpdateAccount for application/json ContentType.
 type UpdateAccountJSONRequestBody = AccountUpdateRequest
 
-// CreateAgentJSONRequestBody defines body for CreateAgent for application/json ContentType.
-type CreateAgentJSONRequestBody = CreateAgentRequest
-
-// CreateProposalsJSONRequestBody defines body for CreateProposals for application/json ContentType.
-type CreateProposalsJSONRequestBody = CreateProposalsRequest
-
 // CreateApiKeyForClientJSONRequestBody defines body for CreateApiKeyForClient for application/json ContentType.
 type CreateApiKeyForClientJSONRequestBody = CreateApiKeyForClientRequest
 
@@ -6722,6 +6698,12 @@ type ApproveMandateJSONRequestBody = ApproveMandateRequest
 
 // CancelMandateJSONRequestBody defines body for CancelMandate for application/json ContentType.
 type CancelMandateJSONRequestBody = CancelMandateRequest
+
+// CreatePaymentAgentJSONRequestBody defines body for CreatePaymentAgent for application/json ContentType.
+type CreatePaymentAgentJSONRequestBody = CreatePaymentAgentRequest
+
+// CreatePaymentAgentProposalsJSONRequestBody defines body for CreatePaymentAgentProposals for application/json ContentType.
+type CreatePaymentAgentProposalsJSONRequestBody = CreateProposalsRequest
 
 // CreatePolicyJSONRequestBody defines body for CreatePolicy for application/json ContentType.
 type CreatePolicyJSONRequestBody = CreatePolicyRequest
@@ -7579,19 +7561,6 @@ type ClientInterface interface {
 
 	UpdateAccount(ctx context.Context, accountId KSUID, params *UpdateAccountParams, body UpdateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// CreateAgentWithBody request with any body
-	CreateAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	CreateAgent(ctx context.Context, body CreateAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateProposalsWithBody request with any body
-	CreateProposalsWithBody(ctx context.Context, agentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	CreateProposals(ctx context.Context, agentId string, body CreateProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// RevokeAgent request
-	RevokeAgent(ctx context.Context, agentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// DeleteAllApiKeys request
 	DeleteAllApiKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -7761,6 +7730,19 @@ type ClientInterface interface {
 	CancelMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CancelMandate(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePaymentAgentWithBody request with any body
+	CreatePaymentAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreatePaymentAgent(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePaymentAgentProposalsWithBody request with any body
+	CreatePaymentAgentProposalsWithBody(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreatePaymentAgentProposals(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RevokePaymentAgent request
+	RevokePaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListPolicies request
 	ListPolicies(ctx context.Context, params *ListPoliciesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -8067,66 +8049,6 @@ func (c *APIClient) UpdateAccountWithBody(ctx context.Context, accountId KSUID, 
 
 func (c *APIClient) UpdateAccount(ctx context.Context, accountId KSUID, params *UpdateAccountParams, body UpdateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateAccountRequest(c.Server, accountId, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *APIClient) CreateAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAgentRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *APIClient) CreateAgent(ctx context.Context, body CreateAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAgentRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *APIClient) CreateProposalsWithBody(ctx context.Context, agentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateProposalsRequestWithBody(c.Server, agentId, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *APIClient) CreateProposals(ctx context.Context, agentId string, body CreateProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateProposalsRequest(c.Server, agentId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *APIClient) RevokeAgent(ctx context.Context, agentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRevokeAgentRequest(c.Server, agentId)
 	if err != nil {
 		return nil, err
 	}
@@ -8883,6 +8805,66 @@ func (c *APIClient) CancelMandateWithBody(ctx context.Context, mandateId string,
 
 func (c *APIClient) CancelMandate(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCancelMandateRequest(c.Server, mandateId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgent(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgentProposalsWithBody(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentProposalsRequestWithBody(c.Server, paymentAgentId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgentProposals(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentProposalsRequest(c.Server, paymentAgentId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) RevokePaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokePaymentAgentRequest(c.Server, paymentAgentId)
 	if err != nil {
 		return nil, err
 	}
@@ -10322,127 +10304,6 @@ func NewUpdateAccountRequestWithBody(server string, accountId KSUID, params *Upd
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
-	}
-
-	return req, nil
-}
-
-// NewCreateAgentRequest calls the generic CreateAgent builder with application/json body
-func NewCreateAgentRequest(server string, body CreateAgentJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateAgentRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewCreateAgentRequestWithBody generates requests for CreateAgent with any type of body
-func NewCreateAgentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewCreateProposalsRequest calls the generic CreateProposals builder with application/json body
-func NewCreateProposalsRequest(server string, agentId string, body CreateProposalsJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateProposalsRequestWithBody(server, agentId, "application/json", bodyReader)
-}
-
-// NewCreateProposalsRequestWithBody generates requests for CreateProposals with any type of body
-func NewCreateProposalsRequestWithBody(server string, agentId string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "agent_id", runtime.ParamLocationPath, agentId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents/%s/proposals", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewRevokeAgentRequest generates requests for RevokeAgent
-func NewRevokeAgentRequest(server string, agentId string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "agent_id", runtime.ParamLocationPath, agentId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents/%s/revoke", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
 	}
 
 	return req, nil
@@ -13494,6 +13355,127 @@ func NewCancelMandateRequestWithBody(server string, mandateId string, contentTyp
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreatePaymentAgentRequest calls the generic CreatePaymentAgent builder with application/json body
+func NewCreatePaymentAgentRequest(server string, body CreatePaymentAgentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePaymentAgentRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreatePaymentAgentRequestWithBody generates requests for CreatePaymentAgent with any type of body
+func NewCreatePaymentAgentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreatePaymentAgentProposalsRequest calls the generic CreatePaymentAgentProposals builder with application/json body
+func NewCreatePaymentAgentProposalsRequest(server string, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePaymentAgentProposalsRequestWithBody(server, paymentAgentId, "application/json", bodyReader)
+}
+
+// NewCreatePaymentAgentProposalsRequestWithBody generates requests for CreatePaymentAgentProposals with any type of body
+func NewCreatePaymentAgentProposalsRequestWithBody(server string, paymentAgentId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "payment_agent_id", runtime.ParamLocationPath, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents/%s/proposals", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRevokePaymentAgentRequest generates requests for RevokePaymentAgent
+func NewRevokePaymentAgentRequest(server string, paymentAgentId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "payment_agent_id", runtime.ParamLocationPath, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents/%s/revoke", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -17338,19 +17320,6 @@ type ClientWithResponsesInterface interface {
 
 	UpdateAccountWithResponse(ctx context.Context, accountId KSUID, params *UpdateAccountParams, body UpdateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAccountResponse, error)
 
-	// CreateAgentWithBodyWithResponse request with any body
-	CreateAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAgentResponse, error)
-
-	CreateAgentWithResponse(ctx context.Context, body CreateAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAgentResponse, error)
-
-	// CreateProposalsWithBodyWithResponse request with any body
-	CreateProposalsWithBodyWithResponse(ctx context.Context, agentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProposalsResponse, error)
-
-	CreateProposalsWithResponse(ctx context.Context, agentId string, body CreateProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProposalsResponse, error)
-
-	// RevokeAgentWithResponse request
-	RevokeAgentWithResponse(ctx context.Context, agentId string, reqEditors ...RequestEditorFn) (*RevokeAgentResponse, error)
-
 	// DeleteAllApiKeysWithResponse request
 	DeleteAllApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteAllApiKeysResponse, error)
 
@@ -17520,6 +17489,19 @@ type ClientWithResponsesInterface interface {
 	CancelMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error)
 
 	CancelMandateWithResponse(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error)
+
+	// CreatePaymentAgentWithBodyWithResponse request with any body
+	CreatePaymentAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error)
+
+	CreatePaymentAgentWithResponse(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error)
+
+	// CreatePaymentAgentProposalsWithBodyWithResponse request with any body
+	CreatePaymentAgentProposalsWithBodyWithResponse(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error)
+
+	CreatePaymentAgentProposalsWithResponse(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error)
+
+	// RevokePaymentAgentWithResponse request
+	RevokePaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*RevokePaymentAgentResponse, error)
 
 	// ListPoliciesWithResponse request
 	ListPoliciesWithResponse(ctx context.Context, params *ListPoliciesParams, reqEditors ...RequestEditorFn) (*ListPoliciesResponse, error)
@@ -17887,78 +17869,6 @@ func (r UpdateAccountResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateAccountResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type CreateAgentResponse struct {
-	Body                      []byte
-	HTTPResponse              *http.Response
-	JSON201                   *AgentResponse
-	ApplicationproblemJSON400 *ProblemDetails
-	ApplicationproblemJSON404 *ProblemDetails
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateAgentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateAgentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type CreateProposalsResponse struct {
-	Body                      []byte
-	HTTPResponse              *http.Response
-	JSON200                   *AgenticProposalsResult
-	ApplicationproblemJSON400 *ProblemDetails
-	ApplicationproblemJSON404 *ProblemDetails
-	ApplicationproblemJSON429 *ProblemDetails
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateProposalsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateProposalsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type RevokeAgentResponse struct {
-	Body                      []byte
-	HTTPResponse              *http.Response
-	JSON200                   *AgentResponse
-	ApplicationproblemJSON404 *ProblemDetails
-}
-
-// Status returns HTTPResponse.Status
-func (r RevokeAgentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RevokeAgentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19120,6 +19030,78 @@ func (r CancelMandateResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CancelMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreatePaymentAgentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *PaymentAgentResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePaymentAgentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePaymentAgentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreatePaymentAgentProposalsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AgenticProposalsResult
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON429 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePaymentAgentProposalsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePaymentAgentProposalsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RevokePaymentAgentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *PaymentAgentResponse
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r RevokePaymentAgentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RevokePaymentAgentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -20812,49 +20794,6 @@ func (c *ClientWithResponses) UpdateAccountWithResponse(ctx context.Context, acc
 	return ParseUpdateAccountResponse(rsp)
 }
 
-// CreateAgentWithBodyWithResponse request with arbitrary body returning *CreateAgentResponse
-func (c *ClientWithResponses) CreateAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAgentResponse, error) {
-	rsp, err := c.CreateAgentWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAgentResponse(rsp)
-}
-
-func (c *ClientWithResponses) CreateAgentWithResponse(ctx context.Context, body CreateAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAgentResponse, error) {
-	rsp, err := c.CreateAgent(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAgentResponse(rsp)
-}
-
-// CreateProposalsWithBodyWithResponse request with arbitrary body returning *CreateProposalsResponse
-func (c *ClientWithResponses) CreateProposalsWithBodyWithResponse(ctx context.Context, agentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProposalsResponse, error) {
-	rsp, err := c.CreateProposalsWithBody(ctx, agentId, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateProposalsResponse(rsp)
-}
-
-func (c *ClientWithResponses) CreateProposalsWithResponse(ctx context.Context, agentId string, body CreateProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProposalsResponse, error) {
-	rsp, err := c.CreateProposals(ctx, agentId, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateProposalsResponse(rsp)
-}
-
-// RevokeAgentWithResponse request returning *RevokeAgentResponse
-func (c *ClientWithResponses) RevokeAgentWithResponse(ctx context.Context, agentId string, reqEditors ...RequestEditorFn) (*RevokeAgentResponse, error) {
-	rsp, err := c.RevokeAgent(ctx, agentId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRevokeAgentResponse(rsp)
-}
-
 // DeleteAllApiKeysWithResponse request returning *DeleteAllApiKeysResponse
 func (c *ClientWithResponses) DeleteAllApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteAllApiKeysResponse, error) {
 	rsp, err := c.DeleteAllApiKeys(ctx, reqEditors...)
@@ -21401,6 +21340,49 @@ func (c *ClientWithResponses) CancelMandateWithResponse(ctx context.Context, man
 		return nil, err
 	}
 	return ParseCancelMandateResponse(rsp)
+}
+
+// CreatePaymentAgentWithBodyWithResponse request with arbitrary body returning *CreatePaymentAgentResponse
+func (c *ClientWithResponses) CreatePaymentAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error) {
+	rsp, err := c.CreatePaymentAgentWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreatePaymentAgentWithResponse(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error) {
+	rsp, err := c.CreatePaymentAgent(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentResponse(rsp)
+}
+
+// CreatePaymentAgentProposalsWithBodyWithResponse request with arbitrary body returning *CreatePaymentAgentProposalsResponse
+func (c *ClientWithResponses) CreatePaymentAgentProposalsWithBodyWithResponse(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error) {
+	rsp, err := c.CreatePaymentAgentProposalsWithBody(ctx, paymentAgentId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentProposalsResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreatePaymentAgentProposalsWithResponse(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error) {
+	rsp, err := c.CreatePaymentAgentProposals(ctx, paymentAgentId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentProposalsResponse(rsp)
+}
+
+// RevokePaymentAgentWithResponse request returning *RevokePaymentAgentResponse
+func (c *ClientWithResponses) RevokePaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*RevokePaymentAgentResponse, error) {
+	rsp, err := c.RevokePaymentAgent(ctx, paymentAgentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRevokePaymentAgentResponse(rsp)
 }
 
 // ListPoliciesWithResponse request returning *ListPoliciesResponse
@@ -22484,126 +22466,6 @@ func ParseUpdateAccountResponse(rsp *http.Response) (*UpdateAccountResponse, err
 			return nil, err
 		}
 		response.ApplicationproblemJSON503 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateAgentResponse parses an HTTP response from a CreateAgentWithResponse call
-func ParseCreateAgentResponse(rsp *http.Response) (*CreateAgentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateAgentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest AgentResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateProposalsResponse parses an HTTP response from a CreateProposalsWithResponse call
-func ParseCreateProposalsResponse(rsp *http.Response) (*CreateProposalsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateProposalsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AgenticProposalsResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON429 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseRevokeAgentResponse parses an HTTP response from a RevokeAgentWithResponse call
-func ParseRevokeAgentResponse(rsp *http.Response) (*RevokeAgentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &RevokeAgentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AgentResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON404 = &dest
 
 	}
 
@@ -24846,6 +24708,126 @@ func ParseCancelMandateResponse(rsp *http.Response) (*CancelMandateResponse, err
 			return nil, err
 		}
 		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePaymentAgentResponse parses an HTTP response from a CreatePaymentAgentWithResponse call
+func ParseCreatePaymentAgentResponse(rsp *http.Response) (*CreatePaymentAgentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePaymentAgentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PaymentAgentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePaymentAgentProposalsResponse parses an HTTP response from a CreatePaymentAgentProposalsWithResponse call
+func ParseCreatePaymentAgentProposalsResponse(rsp *http.Response) (*CreatePaymentAgentProposalsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePaymentAgentProposalsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgenticProposalsResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRevokePaymentAgentResponse parses an HTTP response from a RevokePaymentAgentWithResponse call
+func ParseRevokePaymentAgentResponse(rsp *http.Response) (*RevokePaymentAgentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RevokePaymentAgentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaymentAgentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ProblemDetails

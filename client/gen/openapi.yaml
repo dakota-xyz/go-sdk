@@ -12624,7 +12624,7 @@ paths:
         default:
           description: Unexpected error
   # --- Agentic Payments (ported from platform spec, ENG-2484 Phase 0) ---
-  /agents:
+  /payment-agents:
     x-alpha: true
     post:
       tags:
@@ -12634,17 +12634,16 @@ paths:
         Creates a payment agent with a real signer row for its derived key
         (an agent is an ordinary signer). Wallet access is granted separately
         through the endorsed signer-group / policy attach flow.
-      operationId: createAgent
+      operationId: createPaymentAgent
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAgentRequest"
+              $ref: "#/components/schemas/CreatePaymentAgentRequest"
             example:
               customer_id: 2vWxCustomer0000000000000000
               name: My Bill Pay
-              type: payment
               hosted: true
       responses:
         "201":
@@ -12652,10 +12651,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AgentResponse"
+                $ref: "#/components/schemas/PaymentAgentResponse"
               example:
                 id: 2vWxAgent0000000000000000000
-                type: payment
                 name: My Bill Pay
                 customer_id: 2vWxCustomer0000000000000000
                 hosted: true
@@ -12673,7 +12671,7 @@ paths:
                 type: https://docs.dakota.xyz/api-reference/errors#invalid-request
                 title: Invalid Request
                 status: 400
-                detail: invalid agent type
+                detail: name is required
         "404":
           description: Agentic payments not enabled, or the resource was not found
           content:
@@ -12685,7 +12683,7 @@ paths:
                 title: Not Found
                 status: 404
                 detail: agentic payments are not enabled
-  /agents/{agent_id}/revoke:
+  /payment-agents/{payment_agent_id}/revoke:
     x-alpha: true
     post:
       tags:
@@ -12695,9 +12693,9 @@ paths:
         Revokes an agent: it can no longer be used, and its signing key is
         destroyed in the isolated signer service (best-effort — the revoked
         state is authoritative). Idempotent.
-      operationId: revokeAgent
+      operationId: revokePaymentAgent
       parameters:
-        - name: agent_id
+        - name: payment_agent_id
           in: path
           required: true
           schema:
@@ -12708,10 +12706,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AgentResponse"
+                $ref: "#/components/schemas/PaymentAgentResponse"
               example:
                 id: 2vWxAgent0000000000000000000
-                type: payment
                 name: My Bill Pay
                 customer_id: 2vWxCustomer0000000000000000
                 hosted: true
@@ -12730,7 +12727,7 @@ paths:
                 title: Not Found
                 status: 404
                 detail: agent not found
-  /agents/{agent_id}/proposals:
+  /payment-agents/{payment_agent_id}/proposals:
     x-alpha: true
     post:
       tags:
@@ -12748,9 +12745,9 @@ paths:
         addresses, and proposals still only take effect via the instructions +
         mandate-signature flow. Requires the freeform LLM layer to be
         configured server-side.
-      operationId: createProposals
+      operationId: createPaymentAgentProposals
       parameters:
-        - name: agent_id
+        - name: payment_agent_id
           in: path
           required: true
           schema:
@@ -12852,7 +12849,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateInstructionsRequest"
             example:
-              agent_id: 2vWxAgent0000000000000000000
+              payment_agent_id: 2vWxAgent0000000000000000000
               proposals:
                 - actions:
                     - type: create_recipient
@@ -13222,7 +13219,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateMandateRequest"
             example:
-              agent_id: 2vWxAgent0000000000000000000
+              payment_agent_id: 2vWxAgent0000000000000000000
               rule:
                 target_type: recipient
                 targets: [Alice]
@@ -13359,7 +13356,7 @@ paths:
                 $ref: "#/components/schemas/AgenticInstruction"
               example:
                 id: 2vWxInstruction0000000000000
-                agent_id: 2vWxAgent0000000000000000000
+                payment_agent_id: 2vWxAgent0000000000000000000
                 status: executed
                 actions:
                   - type: create_recipient
@@ -19249,14 +19246,11 @@ components:
           description: When risk labels were created
           example: '2024-01-15T10:30:00Z'
     # --- Agentic Payments (ported from platform spec, ENG-2484 Phase 0) ---
-    AgentResponse:
+    PaymentAgentResponse:
       type: object
       properties:
         id:
           type: string
-        type:
-          type: string
-          enum: [payment]
         name:
           type: string
         customer_id:
@@ -19286,9 +19280,9 @@ components:
             /signer-groups/{signer_group_id}/signers/{signer_id}) to finish
             de-provisioning. Absent when there is nothing to clean up.
           items:
-            $ref: "#/components/schemas/AgentSignerGroupRef"
+            $ref: "#/components/schemas/PaymentAgentSignerGroupRef"
 
-    AgentSignerGroupRef:
+    PaymentAgentSignerGroupRef:
       type: object
       description: A signer-group reference (id + display name).
       required: [signer_group_id, name]
@@ -19392,7 +19386,7 @@ components:
       properties:
         id:
           type: string
-        agent_id:
+        payment_agent_id:
           type: string
         status:
           type: string
@@ -19475,17 +19469,14 @@ components:
         signature:
           type: string
 
-    CreateAgentRequest:
+    CreatePaymentAgentRequest:
       type: object
-      required: [customer_id, name, type, hosted]
+      required: [customer_id, name, hosted]
       properties:
         customer_id:
           type: string
         name:
           type: string
-        type:
-          type: string
-          enum: [payment]
         hosted:
           type: boolean
           description: Must be true. Only hosted agents (signing keys custodied by the isolated agent-signer service) are supported today; bring-your-own-signer agents are not yet available, so the API rejects hosted=false.
@@ -19525,9 +19516,9 @@ components:
 
     CreateInstructionsRequest:
       type: object
-      required: [agent_id, proposals]
+      required: [payment_agent_id, proposals]
       properties:
-        agent_id:
+        payment_agent_id:
           type: string
         proposals:
           type: array
@@ -19549,9 +19540,9 @@ components:
 
     CreateMandateRequest:
       type: object
-      required: [agent_id, rule]
+      required: [payment_agent_id, rule]
       properties:
-        agent_id:
+        payment_agent_id:
           type: string
           description: The mandate binds this agent's signer.
         rule:

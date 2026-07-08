@@ -20,7 +20,7 @@ func TestAgentConversationMultiTurn(t *testing.T) {
 	var captured [][]ChatMessage // the messages array sent on each turn
 	turn := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/agents/agt_1/proposals", r.URL.Path)
+		require.Equal(t, "/payment-agents/agt_1/proposals", r.URL.Path)
 		var body struct {
 			Messages []ChatMessage `json:"messages"`
 			Prompt   *string       `json:"prompt"`

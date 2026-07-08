@@ -117,7 +117,7 @@ func (cv *AgentConversation) SendWithAttachments(ctx context.Context, userMessag
 		msgs = append(msgs, gm)
 	}
 
-	resp, err := CheckResponse(cv.client.Raw().CreateProposalsWithResponse(ctx, cv.agentID, gen.CreateProposalsRequest{
+	resp, err := CheckResponse(cv.client.Raw().CreatePaymentAgentProposalsWithResponse(ctx, cv.agentID, gen.CreateProposalsRequest{
 		Messages: &msgs,
 	}))
 	if err != nil {

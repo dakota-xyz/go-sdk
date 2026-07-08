@@ -37,7 +37,7 @@ import (
 // walletID, so a wrong group fails loudly instead of silently granting nothing.
 //
 // signerPublicKey is the principal's registered signer key (base64 PKIX) — e.g. the
-// key returned by CreateAgent for a hosted agent.
+// key returned by CreatePaymentAgent for a hosted agent.
 func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (alreadyMember bool, err error) {
 	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
 		return false, fmt.Errorf("walletID, signerPublicKey and spendingGroupID are all required")
@@ -92,7 +92,7 @@ func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicK
 // NOTE: this does not guard against removing a group's LAST member — emptying the
 // group that governs a wallet can leave it with no authorized signer. The caller
 // must avoid stranding the wallet. For a hosted agent, prefer the platform's
-// RevokeAgent (it destroys the agent's key, so the signer can authorize nothing
+// RevokePaymentAgent (it destroys the agent's key, so the signer can authorize nothing
 // even while still listed) and use this for membership hygiene.
 func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (wasMember bool, err error) {
 	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
