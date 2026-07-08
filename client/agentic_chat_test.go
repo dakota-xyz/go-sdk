@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -91,4 +93,48 @@ func TestAgentConversationRollsBackOnError(t *testing.T) {
 	_, err = conv.Send(context.Background(), "pay alice")
 	require.Error(t, err)
 	require.Empty(t, conv.Messages(), "a failed turn must roll back the optimistic user message")
+}
+
+// TestAgentConversationAttachmentsAreOneShot proves an attachment rides only on
+// the turn it is passed: it reaches that request, but is never persisted in the
+// transcript nor re-sent on later turns (guards against sensitive-document
+// retention / re-transmission).
+func TestAgentConversationAttachmentsAreOneShot(t *testing.T) {
+	t.Parallel()
+
+	var bodies []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		bodies = append(bodies, string(b))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"reply":"ok"}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+	require.NoError(t, err)
+	conv := c.NewAgentConversation("agt_1")
+
+	// base64 of the raw bytes is what actually crosses the wire.
+	want := base64.StdEncoding.EncodeToString([]byte("HelloInvoice"))
+
+	// Turn 1 carries a document attachment.
+	_, err = conv.SendWithAttachments(context.Background(), "here is the invoice", []Attachment{{
+		MediaType: "application/pdf",
+		Data:      []byte("HelloInvoice"),
+		Filename:  "invoice.pdf",
+	}})
+	require.NoError(t, err)
+	require.Contains(t, bodies[0], want, "the attachment must ride on its own turn's request")
+
+	// It must NOT be persisted in the transcript (Messages()/ResumeAgentConversation).
+	for _, m := range conv.Messages() {
+		require.Empty(t, m.Attachments, "attachments must not be persisted in the transcript")
+	}
+
+	// Turn 2 carries no attachment and must NOT re-send turn 1's document.
+	_, err = conv.Send(context.Background(), "any update?")
+	require.NoError(t, err)
+	require.NotContains(t, bodies[1], want, "attachments must not be re-sent on later turns")
 }

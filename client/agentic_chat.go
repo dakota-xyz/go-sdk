@@ -120,6 +120,13 @@ func (cv *AgentConversation) SendWithAttachments(ctx context.Context, userMessag
 		msgs = append(msgs, gm)
 	}
 
+	// Attachments ride only on THIS request: they are serialized into msgs above,
+	// then dropped from the stored transcript so they are neither persisted via
+	// Messages()/ResumeAgentConversation nor re-sent on later turns.
+	if len(attachments) > 0 {
+		cv.history[len(cv.history)-1].Attachments = nil
+	}
+
 	resp, err := CheckResponse(cv.client.Raw().CreatePaymentAgentProposalsWithResponse(ctx, cv.agentID, gen.CreateProposalsRequest{
 		Messages: &msgs,
 	}))

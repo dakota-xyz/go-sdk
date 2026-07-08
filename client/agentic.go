@@ -64,9 +64,17 @@ func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicK
 		}
 	}
 
-	// Add the signer to the group (unendorsed; the SDK auto-sets the POST
-	// idempotency key).
-	if _, err := CheckResponse(c.Raw().CreateSignerGroupSignerWithResponse(ctx, spendingGroupID, nil, gen.CreateSignerGroupSignerRequest{
+	// Add the signer to the group (unendorsed). Granting spend permission is
+	// security-relevant, so set an explicit x-idempotency-key rather than depend on
+	// the transport: WithAutomaticIdempotency(false) would otherwise send this POST
+	// without the required header and 400 (mirrors DetachUserFromWallet).
+	idemKey, err := uuid.NewRandom()
+	if err != nil {
+		return false, fmt.Errorf("generate idempotency key: %w", err)
+	}
+	if _, err := CheckResponse(c.Raw().CreateSignerGroupSignerWithResponse(ctx, spendingGroupID, &gen.CreateSignerGroupSignerParams{
+		XIdempotencyKey: idemKey,
+	}, gen.CreateSignerGroupSignerRequest{
 		MemberKey: signerPublicKey,
 	})); err != nil {
 		return false, fmt.Errorf("add signer to group: %w", err)
