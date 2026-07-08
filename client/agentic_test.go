@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -104,6 +105,39 @@ func TestAttachUserToWallet(t *testing.T) {
 		require.Error(t, err)
 		require.Empty(t, posted)
 	})
+}
+
+// TestAttachUserToWalletSuppliedIdempotencyKey: a caller-supplied idempotency key
+// is what reaches the wire, so retrying the whole call (e.g. after a crash) dedupes
+// server-side instead of sending a fresh key each attempt.
+func TestAttachUserToWalletSuppliedIdempotencyKey(t *testing.T) {
+	t.Parallel()
+	var gotKey string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/wallets/wlt_1/signer-groups":
+			_, _ = w.Write([]byte(`[{"id":"spend_grp"}]`))
+		case r.Method == http.MethodGet && r.URL.Path == "/signer-groups/spend_grp":
+			_, _ = w.Write([]byte(`{"id":"spend_grp","members":[]}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/signer-groups/spend_grp/signers":
+			gotKey = r.Header.Get("x-idempotency-key")
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{}`))
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+	require.NoError(t, err)
+
+	key := uuid.New()
+	_, err = c.AttachUserToWallet(context.Background(), "wlt_1", "some_signer_key", "spend_grp", key)
+	require.NoError(t, err)
+	require.Equal(t, key.String(), gotKey, "the caller-supplied idempotency key must reach the wire")
 }
 
 // TestDetachUserFromWallet: removes the signer from the named group (resolving its

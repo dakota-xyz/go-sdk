@@ -12,6 +12,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// firstOrNewUUID returns the caller-supplied idempotency key when one is given,
+// otherwise a fresh random UUID. Only the first supplied key is used.
+func firstOrNewUUID(keys []uuid.UUID) (uuid.UUID, error) {
+	if len(keys) > 0 {
+		return keys[0], nil
+	}
+	return uuid.NewRandom()
+}
+
 // AttachUserToWallet grants a principal — a user OR an agent, both are just
 // signers — permission to spend from a wallet by adding its signer to an EXISTING
 // signer group on that wallet: the group whose attached policies should govern it.
@@ -36,12 +45,18 @@ import (
 // returns alreadyMember=true. It errors if spendingGroupID is not attached to
 // walletID, so a wrong group fails loudly instead of silently granting nothing.
 //
-// signerPublicKey is the principal's registered signer key (base64 PKIX) — e.g. the
-// key returned by CreatePaymentAgent for a hosted agent.
+// signerPublicKey is the principal's registered signer key (base64 PKIX). It must
+// already exist as a signer: a hosted agent's key is minted by CreatePaymentAgent;
+// for a bare user, register it first (POST /signers) or the add fails with
+// SignerNotFoundError.
+//
+// idempotencyKey is optional: pass a stable key to make retrying the WHOLE call
+// (e.g. after a crash/partition) safe to dedupe server-side; omit it and a fresh
+// key is generated per call.
 //
 // Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
 // the platform) and may change without a major-version bump.
-func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (alreadyMember bool, err error) {
+func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string, idempotencyKey ...uuid.UUID) (alreadyMember bool, err error) {
 	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
 		return false, fmt.Errorf("walletID, signerPublicKey and spendingGroupID are all required")
 	}
@@ -68,7 +83,7 @@ func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicK
 	// security-relevant, so set an explicit x-idempotency-key rather than depend on
 	// the transport: WithAutomaticIdempotency(false) would otherwise send this POST
 	// without the required header and 400 (mirrors DetachUserFromWallet).
-	idemKey, err := uuid.NewRandom()
+	idemKey, err := firstOrNewUUID(idempotencyKey)
 	if err != nil {
 		return false, fmt.Errorf("generate idempotency key: %w", err)
 	}
@@ -105,7 +120,10 @@ func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicK
 // must avoid stranding the wallet. For a hosted agent, prefer the platform's
 // RevokePaymentAgent (it destroys the agent's key, so the signer can authorize nothing
 // even while still listed) and use this for membership hygiene.
-func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string) (wasMember bool, err error) {
+//
+// idempotencyKey is optional: pass a stable key to make retrying the WHOLE call
+// safe to dedupe server-side; omit it and a fresh key is generated per call.
+func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string, idempotencyKey ...uuid.UUID) (wasMember bool, err error) {
 	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
 		return false, fmt.Errorf("walletID, signerPublicKey and spendingGroupID are all required")
 	}
@@ -139,7 +157,7 @@ func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPubli
 	// revoking spend permission is security-relevant, so this path must not depend
 	// on transport configuration (e.g. WithAutomaticIdempotency(false) would
 	// otherwise let a detach silently 400 and leave the signer authorized).
-	idemKey, err := uuid.NewRandom()
+	idemKey, err := firstOrNewUUID(idempotencyKey)
 	if err != nil {
 		return false, fmt.Errorf("generate idempotency key: %w", err)
 	}
