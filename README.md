@@ -281,6 +281,72 @@ fmt.Printf("Transaction created: %s\n", tx.Id)
 fmt.Printf("Status: %s\n", tx.Status)
 ```
 
+## Agentic Payments (Alpha)
+
+> ⚠️ **Alpha.** The hosted payment-agent surface is `x-alpha` and flag-gated on the platform (endpoints return `404` unless enabled for your key). The SDK helpers below may change — or be removed — without a major-version bump. Not recommended for production.
+
+A **payment agent** is a named, customer-scoped signer Dakota can drive: you provision it, endorse it onto a wallet, then it drafts and — once a **mandate** is signed — fires payments, bounded by that customer-approved mandate. Runnable snippets live in [`client/example_test.go`](client/example_test.go).
+
+### 1. Provision an agent and endorse it onto a wallet
+
+```go
+// Create a hosted payment agent (Dakota custodies its signing key).
+agentResp, err := client.CheckResponse(
+    c.Raw().CreatePaymentAgentWithResponse(ctx, gen.CreatePaymentAgentRequest{
+        CustomerId: customerID,
+        Name:       "Bill Pay",
+        Hosted:     true,
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+agent := agentResp.JSON201
+
+// Grant it spend permission on a wallet by adding its signer to the wallet's
+// spending group (idempotent) — the customer-endorsed attach.
+if _, err := c.AttachUserToWallet(ctx, walletID, *agent.SignerPublicKey, spendingGroupID); err != nil {
+    log.Fatal(err)
+}
+```
+
+### 2. Draft payments from natural language
+
+```go
+conv := c.NewAgentConversation(*agent.Id)
+turn, err := conv.Send(ctx, "Pay Alice 100 USDC on base-mainnet every month until December")
+if err != nil {
+    log.Fatal(err)
+}
+if turn.HasProposals {
+    // Review turn.Proposals, then accept them through the instructions flow.
+    fmt.Printf("agent drafted %d proposal(s)\n", len(turn.Proposals))
+} else {
+    fmt.Println("agent needs more detail:", turn.Reply)
+}
+```
+
+### 3. Sign and approve a mandate (§8)
+
+The caller holds the keys; the SDK never does. `P256Signer` is a ready in-memory signer for sandbox/tests — implement the `Signer` interface over your HSM/KMS in production.
+
+```go
+signer, _ := client.NewP256Signer() // or client.P256SignerFromKey(yourECDSAKey)
+
+// `mandate` comes from c.Raw().GetMandateWithResponse / ListMandates.
+payload, err := client.MandateSignPayload(mandate, client.MandateActionApprove)
+if err != nil {
+    log.Fatal(err)
+}
+sig, err := signer.Sign(payload)
+if err != nil {
+    log.Fatal(err)
+}
+// Submit `sig` via the mandate-approve endpoint (c.Raw()) to activate the mandate.
+```
+
+The full agentic surface (`/payment-agents`, `/mandates`, `/instructions`, proposals) is always reachable via `c.Raw()`.
+
 ## Handling Webhooks
 
 Dakota sends webhooks for all status changes. Set up a handler:

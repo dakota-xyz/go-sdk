@@ -50,7 +50,7 @@ func DefaultRetryPolicy() RetryPolicy {
 	}
 }
 
-// IdempotencyKeyGenerator creates an idempotency key for POST requests.
+// IdempotencyKeyGenerator creates an idempotency key for mutating requests.
 type IdempotencyKeyGenerator func() (string, error)
 
 // Option configures an SDK API client.
@@ -275,7 +275,8 @@ func WithUserAgent(userAgent string) Option {
 	}
 }
 
-// WithAutomaticIdempotency enables/disables automatic POST idempotency keys.
+// WithAutomaticIdempotency enables/disables automatic idempotency keys on
+// mutating requests (POST/PUT/PATCH/DELETE).
 func WithAutomaticIdempotency(enabled bool) Option {
 	return func(c *config) error {
 		c.autoIdempotency = enabled

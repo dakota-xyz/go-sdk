@@ -63,7 +63,7 @@ func TestIdempotencyTransport_UsesContextKey(t *testing.T) {
 	}
 }
 
-func TestIdempotencyTransport_DoesNotAddForNonPost(t *testing.T) {
+func TestIdempotencyTransport_DoesNotAddForGet(t *testing.T) {
 	transport := &idempotencyTransport{
 		generator: func() (string, error) { return "generated-key", nil },
 		next: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
@@ -81,6 +81,34 @@ func TestIdempotencyTransport_DoesNotAddForNonPost(t *testing.T) {
 
 	if _, err := transport.RoundTrip(req); err != nil {
 		t.Fatalf("RoundTrip error: %v", err)
+	}
+}
+
+// The platform requires an x-idempotency-key on mutating PUT/PATCH/DELETE
+// operations too (their generated *Params carry the field), so the transport
+// injects one for every mutating method — not just POST.
+func TestIdempotencyTransport_AddsKeyForPutPatchDelete(t *testing.T) {
+	for _, method := range []string{http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		t.Run(method, func(t *testing.T) {
+			transport := &idempotencyTransport{
+				generator: func() (string, error) { return "idem-key-123", nil },
+				next: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+					if got := req.Header.Get("x-idempotency-key"); got != "idem-key-123" {
+						t.Fatalf("x-idempotency-key = %q, want %q", got, "idem-key-123")
+					}
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("ok")), Header: make(http.Header)}, nil
+				}),
+			}
+
+			req, err := http.NewRequest(method, "https://example.com/policies/pol_1", http.NoBody)
+			if err != nil {
+				t.Fatalf("new request: %v", err)
+			}
+
+			if _, err := transport.RoundTrip(req); err != nil {
+				t.Fatalf("RoundTrip error: %v", err)
+			}
+		})
 	}
 }
 

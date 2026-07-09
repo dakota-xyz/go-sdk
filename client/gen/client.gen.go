@@ -49,6 +49,43 @@ const (
 	AddPolicyRuleIntentTypeAddPolicyRule AddPolicyRuleIntentType = "add_policy_rule"
 )
 
+// Defines values for AgenticActionType.
+const (
+	AgenticActionTypeCreateAutoAccount       AgenticActionType = "create_auto_account"
+	AgenticActionTypeCreateBankDestination   AgenticActionType = "create_bank_destination"
+	AgenticActionTypeCreateCryptoDestination AgenticActionType = "create_crypto_destination"
+	AgenticActionTypeCreateMandate           AgenticActionType = "create_mandate"
+	AgenticActionTypeCreateRecipient         AgenticActionType = "create_recipient"
+	AgenticActionTypeCreateScheduledPayments AgenticActionType = "create_scheduled_payments"
+)
+
+// Defines values for AgenticAttachmentType.
+const (
+	AgenticAttachmentTypeDocument AgenticAttachmentType = "document"
+)
+
+// Defines values for AgenticChatMessageRole.
+const (
+	AgenticChatMessageRoleAssistant AgenticChatMessageRole = "assistant"
+	AgenticChatMessageRoleUser      AgenticChatMessageRole = "user"
+)
+
+// Defines values for AgenticDocumentAttachmentMediaType.
+const (
+	AgenticDocumentAttachmentMediaTypeApplicationpdf AgenticDocumentAttachmentMediaType = "application/pdf"
+	AgenticDocumentAttachmentMediaTypeImagegif       AgenticDocumentAttachmentMediaType = "image/gif"
+	AgenticDocumentAttachmentMediaTypeImagejpeg      AgenticDocumentAttachmentMediaType = "image/jpeg"
+	AgenticDocumentAttachmentMediaTypeImagepng       AgenticDocumentAttachmentMediaType = "image/png"
+	AgenticDocumentAttachmentMediaTypeImagewebp      AgenticDocumentAttachmentMediaType = "image/webp"
+)
+
+// Defines values for AgenticInstructionStatus.
+const (
+	AgenticInstructionStatusExecuted AgenticInstructionStatus = "executed"
+	AgenticInstructionStatusFailed   AgenticInstructionStatus = "failed"
+	AgenticInstructionStatusProposed AgenticInstructionStatus = "proposed"
+)
+
 // Defines values for ApplicationApplicationDecision.
 const (
 	ApplicationApplicationDecisionApproved  ApplicationApplicationDecision = "approved"
@@ -333,6 +370,18 @@ const (
 const (
 	ClientUserRoleAdmin  ClientUserRole = "admin"
 	ClientUserRoleViewer ClientUserRole = "viewer"
+)
+
+// Defines values for CreateAutoAccountActionRoutingPreference.
+const (
+	CreateAutoAccountActionRoutingPreferenceCheapest CreateAutoAccountActionRoutingPreference = "cheapest"
+	CreateAutoAccountActionRoutingPreferenceFastest  CreateAutoAccountActionRoutingPreference = "fastest"
+)
+
+// Defines values for CreateBankDestinationActionAccountType.
+const (
+	CreateBankDestinationActionAccountTypeChecking CreateBankDestinationActionAccountType = "checking"
+	CreateBankDestinationActionAccountTypeSavings  CreateBankDestinationActionAccountType = "savings"
 )
 
 // Defines values for CreatePolicyRuleRequestAction.
@@ -667,6 +716,39 @@ const (
 	KybStatusRejected      KybStatus = "rejected"
 )
 
+// Defines values for MandateStatus.
+const (
+	MandateStatusActive   MandateStatus = "active"
+	MandateStatusDone     MandateStatus = "done"
+	MandateStatusExpired  MandateStatus = "expired"
+	MandateStatusPending  MandateStatus = "pending"
+	MandateStatusRejected MandateStatus = "rejected"
+	MandateStatusRevoked  MandateStatus = "revoked"
+)
+
+// Defines values for MandateResponseStatus.
+const (
+	MandateResponseStatusActive   MandateResponseStatus = "active"
+	MandateResponseStatusDone     MandateResponseStatus = "done"
+	MandateResponseStatusPending  MandateResponseStatus = "pending"
+	MandateResponseStatusRejected MandateResponseStatus = "rejected"
+	MandateResponseStatusRevoked  MandateResponseStatus = "revoked"
+)
+
+// Defines values for MandateRuleTargetType.
+const (
+	MandateRuleTargetTypeAddress   MandateRuleTargetType = "address"
+	MandateRuleTargetTypeAny       MandateRuleTargetType = "any"
+	MandateRuleTargetTypeRecipient MandateRuleTargetType = "recipient"
+)
+
+// Defines values for MandateRuleWindow.
+const (
+	MandateRuleWindowMONTHLY MandateRuleWindow = "MONTHLY"
+	MandateRuleWindowNONE    MandateRuleWindow = "NONE"
+	MandateRuleWindowWEEKLY  MandateRuleWindow = "WEEKLY"
+)
+
 // Defines values for MissingDocumentAcceptedTypes.
 const (
 	MissingDocumentAcceptedTypesAmlAuditReport             MissingDocumentAcceptedTypes = "aml_audit_report"
@@ -760,6 +842,13 @@ const (
 	OneOffTransactionTypeOneOff OneOffTransactionType = "one_off"
 )
 
+// Defines values for PaymentAgentResponseState.
+const (
+	PaymentAgentResponseStateActive  PaymentAgentResponseState = "active"
+	PaymentAgentResponseStatePending PaymentAgentResponseState = "pending"
+	PaymentAgentResponseStateRevoked PaymentAgentResponseState = "revoked"
+)
+
 // Defines values for PaymentCapability.
 const (
 	PaymentCapabilityAch           PaymentCapability = "ach"
@@ -824,6 +913,20 @@ const (
 	RiskRatingLevelHigh   RiskRatingLevel = "high"
 	RiskRatingLevelLow    RiskRatingLevel = "low"
 	RiskRatingLevelMedium RiskRatingLevel = "medium"
+)
+
+// Defines values for ScheduledPaymentResponseDestinationType.
+const (
+	ScheduledPaymentResponseDestinationTypeBank   ScheduledPaymentResponseDestinationType = "bank"
+	ScheduledPaymentResponseDestinationTypeCrypto ScheduledPaymentResponseDestinationType = "crypto"
+)
+
+// Defines values for ScheduledPaymentResponseStatus.
+const (
+	ScheduledPaymentResponseStatusCancelled ScheduledPaymentResponseStatus = "cancelled"
+	ScheduledPaymentResponseStatusExecuted  ScheduledPaymentResponseStatus = "executed"
+	ScheduledPaymentResponseStatusFailed    ScheduledPaymentResponseStatus = "failed"
+	ScheduledPaymentResponseStatusScheduled ScheduledPaymentResponseStatus = "scheduled"
 )
 
 // Defines values for SelfServeCreditsLedgerEntryCategory.
@@ -1532,6 +1635,114 @@ type AdvanceSimulationResult struct {
 	SimulationId string `json:"simulation_id"`
 }
 
+// AgenticAction Tagged union - exactly one payload field matching `type` is set.
+type AgenticAction struct {
+	// CreateAutoAccount Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
+	CreateAutoAccount       *CreateAutoAccountAction       `json:"create_auto_account,omitempty"`
+	CreateBankDestination   *CreateBankDestinationAction   `json:"create_bank_destination,omitempty"`
+	CreateCryptoDestination *CreateCryptoDestinationAction `json:"create_crypto_destination,omitempty"`
+	CreateMandate           *CreateMandateAction           `json:"create_mandate,omitempty"`
+
+	// CreateRecipient Request for creating or updating a recipient entity.
+	//
+	// **Address Requirements:**
+	// - **Optional** for crypto-only recipients (can be omitted or null)
+	// - **Required** before adding fiat destinations (ACH, Wire, SWIFT)
+	//
+	// **Migration Path:** Recipients created without addresses can be updated later to add an address when fiat capabilities are needed.
+	CreateRecipient         *RecipientRequest              `json:"create_recipient,omitempty"`
+	CreateScheduledPayments *CreateScheduledPaymentsAction `json:"create_scheduled_payments,omitempty"`
+	Type                    AgenticActionType              `json:"type"`
+}
+
+// AgenticActionType defines model for AgenticAction.Type.
+type AgenticActionType string
+
+// AgenticActionDownstream defines model for AgenticActionDownstream.
+type AgenticActionDownstream struct {
+	// AutoAccountId The provisioned auto-account (set for a create_auto_account action).
+	AutoAccountId       *string   `json:"auto_account_id,omitempty"`
+	DestinationId       *string   `json:"destination_id,omitempty"`
+	MandateId           *string   `json:"mandate_id,omitempty"`
+	RecipientId         *string   `json:"recipient_id,omitempty"`
+	ScheduledPaymentIds *[]string `json:"scheduled_payment_ids,omitempty"`
+}
+
+// AgenticAttachment An input artifact attached to a conversation turn. Tagged union: exactly one payload field matching `type` is set. Extensible — further kinds (e.g. an email stream) are added as new `type` enum values + payload fields, additively, without breaking this shape.
+type AgenticAttachment struct {
+	Document *AgenticDocumentAttachment `json:"document,omitempty"`
+
+	// Type The attachment kind — `document` (a PDF or image) today; further sources are added additively.
+	Type AgenticAttachmentType `json:"type"`
+}
+
+// AgenticAttachmentType The attachment kind — `document` (a PDF or image) today; further sources are added additively.
+type AgenticAttachmentType string
+
+// AgenticChatMessage defines model for AgenticChatMessage.
+type AgenticChatMessage struct {
+	// Attachments Input artifacts attached to this turn for the agent to investigate — e.g. an invoice PDF to draft a payment from. Optional. Document processing ships in a follow-up (ENG-2535); until then a request that carries attachments is rejected with 400.
+	Attachments *[]AgenticAttachment   `json:"attachments,omitempty"`
+	Content     string                 `json:"content"`
+	Role        AgenticChatMessageRole `json:"role"`
+}
+
+// AgenticChatMessageRole defines model for AgenticChatMessage.Role.
+type AgenticChatMessageRole string
+
+// AgenticDocumentAttachment defines model for AgenticDocumentAttachment.
+type AgenticDocumentAttachment struct {
+	// Data The document bytes, base64-encoded.
+	Data []byte `json:"data"`
+
+	// Filename Optional original filename, for display and audit.
+	Filename *string `json:"filename,omitempty"`
+
+	// MediaType MIME type of the attached document.
+	MediaType AgenticDocumentAttachmentMediaType `json:"media_type"`
+}
+
+// AgenticDocumentAttachmentMediaType MIME type of the attached document.
+type AgenticDocumentAttachmentMediaType string
+
+// AgenticInstruction defines model for AgenticInstruction.
+type AgenticInstruction struct {
+	Actions        *[]AgenticAction           `json:"actions,omitempty"`
+	Downstream     *[]AgenticActionDownstream `json:"downstream,omitempty"`
+	Id             *string                    `json:"id,omitempty"`
+	PaymentAgentId *string                    `json:"payment_agent_id,omitempty"`
+	Status         *AgenticInstructionStatus  `json:"status,omitempty"`
+}
+
+// AgenticInstructionStatus defines model for AgenticInstruction.Status.
+type AgenticInstructionStatus string
+
+// AgenticInstructionsResult defines model for AgenticInstructionsResult.
+type AgenticInstructionsResult struct {
+	InstructionIds *[]string `json:"instruction_ids,omitempty"`
+
+	// Mandates Every mandate this batch DRAFTED, in full wire shape (identical to GET /alpha/mandates/{id}) — sign the §8 approval immediately, no follow-up fetch or polling. Pending until a signer other than the bound one approves.
+	Mandates *[]Mandate `json:"mandates,omitempty"`
+}
+
+// AgenticProposal A self-contained series of actions. Cross-action links are <entity>_id fields - empty binds to the artifact created in this proposal, a real id reuses an existing one. Every proposal must instruct a payment or draft a mandate - a mandate-only proposal is a standing authorization (sign now, schedule under it later by mandate_id with no new signature).
+type AgenticProposal struct {
+	Actions []AgenticAction `json:"actions"`
+	Summary *string         `json:"summary,omitempty"`
+}
+
+// AgenticProposalsResult The agent's next step. At least one of `proposals` or `reply` is always present in a successful response — `proposals` at high confidence (optionally with a short `reply` note), or `reply` alone when the agent needs more from the user.
+type AgenticProposalsResult struct {
+	// ConversationStatus How the boundary screen treated this turn: `ok` is a normal payments turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat.
+	ConversationStatus *string `json:"conversation_status,omitempty"`
+
+	// Proposals Validated action-series proposals, ready to accept via POST /instructions. Present only at high confidence.
+	Proposals *[]AgenticProposal `json:"proposals,omitempty"`
+
+	// Reply The agent's conversational reply — a clarifying question or confirmation. Present without proposals when the agent needs more from the user; may accompany proposals as a short note.
+	Reply *string `json:"reply,omitempty"`
+}
+
 // AmountDetails Detailed representation of an amount with its asset and optional metadata
 type AmountDetails struct {
 	// Amount Amount as a string representation of a decimal number
@@ -1865,6 +2076,12 @@ type ApplicationValidation struct {
 
 	// StatusMessage Human-readable status message explaining what's needed
 	StatusMessage string `json:"status_message"`
+}
+
+// ApproveMandateRequest defines model for ApproveMandateRequest.
+type ApproveMandateRequest struct {
+	ApproverPublicKey string `json:"approver_public_key"`
+	Signature         string `json:"signature"`
 }
 
 // Asset ISO 4217 symbol representing a fiat asset.
@@ -2482,6 +2699,12 @@ type CRI struct {
 	NetworkId NetworkId `json:"network_id"`
 }
 
+// CancelMandateRequest defines model for CancelMandateRequest.
+type CancelMandateRequest struct {
+	Signature       string `json:"signature"`
+	SignerPublicKey string `json:"signer_public_key"`
+}
+
 // Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
 type Capabilities = []PaymentCapability
 
@@ -2578,6 +2801,46 @@ type CreateApiKeyForClientRequest struct {
 	ClientId KSUID `json:"client_id"`
 }
 
+// CreateAutoAccountAction Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
+type CreateAutoAccountAction struct {
+	// DestinationId The REAL destination the auto-account forwards to: a crypto destination (⇒ swap) or a bank destination (⇒ offramp). Empty = the destination created in this proposal.
+	DestinationId *string `json:"destination_id,omitempty"`
+
+	// FeeBps Optional developer fee in basis points (0–10000).
+	FeeBps *int32 `json:"fee_bps,omitempty"`
+
+	// OutputAsset The asset the recipient receives (a currency such as USD for a bank offramp).
+	OutputAsset string `json:"output_asset"`
+
+	// Rail Outbound rail — REQUIRED for a bank offramp (e.g. ach, fedwire, swift, sepa); omit for a crypto swap.
+	Rail              *string                                   `json:"rail,omitempty"`
+	RoutingPreference *CreateAutoAccountActionRoutingPreference `json:"routing_preference,omitempty"`
+
+	// SourceAsset The asset the agent deposits and the scheduled payment sends (may be the ANY wildcard).
+	SourceAsset string `json:"source_asset"`
+
+	// SourceNetworkId Identifier for a blockchain network
+	SourceNetworkId NetworkId `json:"source_network_id"`
+}
+
+// CreateAutoAccountActionRoutingPreference defines model for CreateAutoAccountAction.RoutingPreference.
+type CreateAutoAccountActionRoutingPreference string
+
+// CreateBankDestinationAction defines model for CreateBankDestinationAction.
+type CreateBankDestinationAction struct {
+	AccountHolderName *string                                 `json:"account_holder_name,omitempty"`
+	AccountNumber     *string                                 `json:"account_number,omitempty"`
+	AccountType       *CreateBankDestinationActionAccountType `json:"account_type,omitempty"`
+	BankName          *string                                 `json:"bank_name,omitempty"`
+	Bic               *string                                 `json:"bic,omitempty"`
+	Iban              *string                                 `json:"iban,omitempty"`
+	RecipientId       *string                                 `json:"recipient_id,omitempty"`
+	RoutingNumber     *string                                 `json:"routing_number,omitempty"`
+}
+
+// CreateBankDestinationActionAccountType defines model for CreateBankDestinationAction.AccountType.
+type CreateBankDestinationActionAccountType string
+
 // CreateClientUserRequest Request body for creating a new client user
 type CreateClientUserRequest struct {
 	// Email Email address of the user
@@ -2591,6 +2854,48 @@ type CreateClientUserRequest struct {
 
 	// Role Role that can be assigned to a client user. Available roles: `admin` (full access except issuances) and `viewer` (read-only access).
 	Role ClientUserRole `json:"role"`
+}
+
+// CreateCryptoDestinationAction defines model for CreateCryptoDestinationAction.
+type CreateCryptoDestinationAction struct {
+	Address string `json:"address"`
+
+	// NetworkId Identifier for a blockchain network
+	NetworkId NetworkId `json:"network_id"`
+
+	// RecipientId recipient reference: empty = the recipient created in this proposal; a recipient id or name = an existing recipient
+	RecipientId *string `json:"recipient_id,omitempty"`
+}
+
+// CreateInstructionsRequest defines model for CreateInstructionsRequest.
+type CreateInstructionsRequest struct {
+	PaymentAgentId string            `json:"payment_agent_id"`
+	Proposals      []AgenticProposal `json:"proposals"`
+}
+
+// CreateMandateAction defines model for CreateMandateAction.
+type CreateMandateAction struct {
+	Rule       MandateRule `json:"rule"`
+	ValidFrom  *int64      `json:"valid_from,omitempty"`
+	ValidUntil *int64      `json:"valid_until,omitempty"`
+}
+
+// CreateMandateRequest defines model for CreateMandateRequest.
+type CreateMandateRequest struct {
+	// PaymentAgentId The mandate binds this agent's signer.
+	PaymentAgentId string      `json:"payment_agent_id"`
+	Rule           MandateRule `json:"rule"`
+	ValidFrom      *int64      `json:"valid_from,omitempty"`
+	ValidUntil     *int64      `json:"valid_until,omitempty"`
+}
+
+// CreatePaymentAgentRequest defines model for CreatePaymentAgentRequest.
+type CreatePaymentAgentRequest struct {
+	CustomerId string `json:"customer_id"`
+
+	// Hosted Must be true. Only hosted agents (signing keys custodied by the isolated agent-signer service) are supported today; bring-your-own-signer agents are not yet available, so the API rejects hosted=false.
+	Hosted bool   `json:"hosted"`
+	Name   string `json:"name"`
 }
 
 // CreatePolicyRequest defines model for CreatePolicyRequest.
@@ -2625,6 +2930,29 @@ type CreatePolicyRuleRequestAction string
 
 // CreatePolicyRuleRequestRuleType Type of rule
 type CreatePolicyRuleRequestRuleType string
+
+// CreateProposalsRequest A freeform proposals conversation. The server is stateless — send the whole history in `messages` on each call. `prompt` is a convenience for a single-shot turn (or the latest user message); it is appended after `messages`. At least one of `prompt` or `messages` must be non-empty. Supplying both is valid only when `messages` does not already end with a user turn; otherwise the request is rejected with 400 (two consecutive user turns are not allowed).
+type CreateProposalsRequest struct {
+	// Messages The conversation so far, oldest first.
+	Messages *[]AgenticChatMessage `json:"messages,omitempty"`
+
+	// Prompt Single-shot input, appended as the latest user turn.
+	Prompt *string `json:"prompt,omitempty"`
+}
+
+// CreateScheduledPaymentsAction defines model for CreateScheduledPaymentsAction.
+type CreateScheduledPaymentsAction struct {
+	Amount          string   `json:"amount"`
+	Asset           string   `json:"asset"`
+	Count           *int     `json:"count,omitempty"`
+	Dates           *[]int64 `json:"dates,omitempty"`
+	DestinationId   *string  `json:"destination_id,omitempty"`
+	IntervalSeconds *int64   `json:"interval_seconds,omitempty"`
+	StartAt         *int64   `json:"start_at,omitempty"`
+
+	// WalletId The funding wallet for these payments — one the agent recognizes. Optional only when the agent recognizes exactly one wallet (used by default); otherwise required, since a signer can recognize several and the choice cannot be deferred to fire time. Its chain family must match the payment network.
+	WalletId *string `json:"wallet_id,omitempty"`
+}
 
 // CreateSignerGroupSignerRequest defines model for CreateSignerGroupSignerRequest.
 type CreateSignerGroupSignerRequest struct {
@@ -3649,6 +3977,76 @@ type KybLinkType string
 // KybStatus Overall status of the KYB verification process (e.g., pending, active, restricted).
 type KybStatus string
 
+// Mandate defines model for Mandate.
+type Mandate struct {
+	// ApprovedAt Unix time of the §8 approval; absent until approved.
+	ApprovedAt         *int64  `json:"approved_at,omitempty"`
+	ApprovedBySignerId *string `json:"approved_by_signer_id,omitempty"`
+	BoundSignerId      *string `json:"bound_signer_id,omitempty"`
+	Id                 *string `json:"id,omitempty"`
+	InstructionId      *string `json:"instruction_id,omitempty"`
+
+	// RejectedBySignerId The signer that cancelled the mandate while it was still pending (§8); absent otherwise.
+	RejectedBySignerId *string `json:"rejected_by_signer_id,omitempty"`
+
+	// RevokedBySignerId The signer that cancelled the mandate after activation (§8); absent otherwise.
+	RevokedBySignerId *string      `json:"revoked_by_signer_id,omitempty"`
+	Rule              *MandateRule `json:"rule,omitempty"`
+
+	// Status expired is DERIVED, never stored - a pending or active mandate whose valid_until has passed. It cannot authorize payments and cannot be approved; it can still be cancelled.
+	Status *MandateStatus `json:"status,omitempty"`
+
+	// TargetNames DERIVED, display-only - the rule's recipient targets resolved to names, parallel to rule.targets (raw id on a miss). Absent for address/any target kinds. The ids in the rule remain the grant.
+	TargetNames *[]string `json:"target_names,omitempty"`
+	ValidFrom   *int64    `json:"valid_from,omitempty"`
+	ValidUntil  *int64    `json:"valid_until,omitempty"`
+}
+
+// MandateStatus expired is DERIVED, never stored - a pending or active mandate whose valid_until has passed. It cannot authorize payments and cannot be approved; it can still be cancelled.
+type MandateStatus string
+
+// MandateResponse defines model for MandateResponse.
+type MandateResponse struct {
+	ApprovedBySignerId *string `json:"approved_by_signer_id,omitempty"`
+	Id                 *string `json:"id,omitempty"`
+
+	// RejectedBySignerId The signer that cancelled the mandate while it was still pending (§8); absent otherwise.
+	RejectedBySignerId *string `json:"rejected_by_signer_id,omitempty"`
+
+	// RevokedBySignerId The signer that cancelled the mandate after activation (§8); absent otherwise.
+	RevokedBySignerId *string                `json:"revoked_by_signer_id,omitempty"`
+	Status            *MandateResponseStatus `json:"status,omitempty"`
+}
+
+// MandateResponseStatus defines model for MandateResponse.Status.
+type MandateResponseStatus string
+
+// MandateRule defines model for MandateRule.
+type MandateRule struct {
+	Asset string `json:"asset"`
+
+	// MaxAmountPerTargetInWindow Cumulative cap over the window, PER TARGET (never shared across targets).
+	MaxAmountPerTargetInWindow *string `json:"max_amount_per_target_in_window,omitempty"`
+
+	// MaxCountPerTargetInWindow Up to N times PER TARGET in the window (window NONE = lifetime).
+	MaxCountPerTargetInWindow *int                  `json:"max_count_per_target_in_window,omitempty"`
+	MaxPerTx                  *string               `json:"max_per_tx,omitempty"`
+	NetworkId                 *string               `json:"network_id,omitempty"`
+	TargetType                MandateRuleTargetType `json:"target_type"`
+
+	// Targets One or more targets of the declared kind (recipient ids or addresses; empty for any). Max 32.
+	Targets *[]string `json:"targets,omitempty"`
+
+	// Window Spend-cap window for the per-target limits (calendar, not rolling). NONE = lifetime; WEEKLY = calendar week from Monday 00:00 UTC; MONTHLY = calendar month from the 1st, 00:00 UTC.
+	Window *MandateRuleWindow `json:"window,omitempty"`
+}
+
+// MandateRuleTargetType defines model for MandateRule.TargetType.
+type MandateRuleTargetType string
+
+// MandateRuleWindow Spend-cap window for the per-target limits (calendar, not rolling). NONE = lifetime; WEEKLY = calendar week from Monday 00:00 UTC; MONTHLY = calendar month from the 1st, 00:00 UTC.
+type MandateRuleWindow string
+
 // Meta Meta information about the response
 type Meta struct {
 	// HasMoreAfter Indicates whether there are more items that follow this set.
@@ -3942,6 +4340,36 @@ type PaginatedWalletTransactionResponse struct {
 	Meta Meta `json:"meta"`
 }
 
+// PaymentAgentResponse defines model for PaymentAgentResponse.
+type PaymentAgentResponse struct {
+	CustomerId *string `json:"customer_id,omitempty"`
+	Hosted     *bool   `json:"hosted,omitempty"`
+	Id         *string `json:"id,omitempty"`
+	Name       *string `json:"name,omitempty"`
+
+	// SignerGroupCleanup Present on revoke: the signer groups the (now-revoked) agent's signer still belongs to. A revoked signer can't sign, but its group membership lingers — remove signer_id from each (DELETE /signer-groups/{signer_group_id}/signers/{signer_id}) to finish de-provisioning. Absent when there is nothing to clean up.
+	SignerGroupCleanup *[]PaymentAgentSignerGroupRef `json:"signer_group_cleanup,omitempty"`
+	SignerId           *string                       `json:"signer_id,omitempty"`
+
+	// SignerPublicKey base64 P-256 SPKI
+	SignerPublicKey *string `json:"signer_public_key,omitempty"`
+
+	// State pending is DERIVED - a non-revoked agent recognized on no wallet. It cannot accept instructions until a wallet attach is endorsed.
+	State *PaymentAgentResponseState `json:"state,omitempty"`
+
+	// WalletIds DERIVED - wallets whose attached signer groups contain the agent's signer. Empty until the customer's endorsed attaches land.
+	WalletIds *[]string `json:"wallet_ids,omitempty"`
+}
+
+// PaymentAgentResponseState pending is DERIVED - a non-revoked agent recognized on no wallet. It cannot accept instructions until a wallet attach is endorsed.
+type PaymentAgentResponseState string
+
+// PaymentAgentSignerGroupRef A signer-group reference (id + display name).
+type PaymentAgentSignerGroupRef struct {
+	Name          string `json:"name"`
+	SignerGroupId string `json:"signer_group_id"`
+}
+
 // PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
 type PaymentCapability string
 
@@ -4205,6 +4633,60 @@ type SandboxScenario struct {
 	// ValidFor Transaction types (`type` field) that support this scenario.
 	ValidFor []string `json:"valid_for"`
 }
+
+// ScheduledPaymentResponse defines model for ScheduledPaymentResponse.
+type ScheduledPaymentResponse struct {
+	Address *string `json:"address,omitempty"`
+	Amount  *string `json:"amount,omitempty"`
+	Asset   *string `json:"asset,omitempty"`
+
+	// DestinationId The REAL destination this settles to (a bank for an offramp, a crypto destination otherwise). For an auto-account payment the address is the crypto DEPOSIT while this names the bank/crypto target.
+	DestinationId *string `json:"destination_id,omitempty"`
+
+	// DestinationLabel A human label for the real destination — e.g. "Chase ••••5432" for a bank, or a shortened address for crypto — so a client shows which account the payment settles to without a second lookup.
+	DestinationLabel *string `json:"destination_label,omitempty"`
+
+	// DestinationRail For a bank destination, the payout rail (e.g. ach, fedwire, swift, sepa). Absent for crypto.
+	DestinationRail *string `json:"destination_rail,omitempty"`
+
+	// DestinationType The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+	DestinationType *ScheduledPaymentResponseDestinationType `json:"destination_type,omitempty"`
+	ExecutedAt      *int64                                   `json:"executed_at,omitempty"`
+
+	// FailureReason Why the payment failed (e.g. the mandate gate's denied dimensions); absent unless status is failed.
+	FailureReason *string `json:"failure_reason,omitempty"`
+	Id            *string `json:"id,omitempty"`
+
+	// MandateId AUDIT — the mandate that covered this payment at fire time. Absent until the payment executes (coverage is decided at fire time, not bound at rest).
+	MandateId *string `json:"mandate_id,omitempty"`
+	NetworkId *string `json:"network_id,omitempty"`
+
+	// OutputAsset The asset the recipient ULTIMATELY receives — the fiat currency (e.g. USD) for an offramp, else equal to `asset`. Stablecoin conversion is 1:1, so the output amount equals `amount`.
+	OutputAsset *string `json:"output_asset,omitempty"`
+
+	// OutputNetwork For a crypto destination, the network the recipient receives on — differs from `network_id` (the deposit network) for a cross-family swap (e.g. solana-devnet vs base-sepolia); equals `network_id` for a direct crypto payment; absent for a bank offramp.
+	OutputNetwork *string `json:"output_network,omitempty"`
+
+	// RecipientId The recipient this payment pays, when created from a destination. Absent for a direct-address payment. Use this — NOT the address — to resolve the payee (two payees can share a destination address).
+	RecipientId *string `json:"recipient_id,omitempty"`
+	ScheduledAt *int64  `json:"scheduled_at,omitempty"`
+
+	// SignerId The signer (hosted agent) this payment fires under. Updatable via PATCH while scheduled.
+	SignerId *string                         `json:"signer_id,omitempty"`
+	Status   *ScheduledPaymentResponseStatus `json:"status,omitempty"`
+
+	// WalletId The funding wallet this payment spends from (the customer's choice at acceptance; updatable via PATCH while scheduled).
+	WalletId *string `json:"wallet_id,omitempty"`
+
+	// WalletTransactionId AUDIT — the money-path transaction created when this payment fired. Absent until the payment executes.
+	WalletTransactionId *string `json:"wallet_transaction_id,omitempty"`
+}
+
+// ScheduledPaymentResponseDestinationType The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+type ScheduledPaymentResponseDestinationType string
+
+// ScheduledPaymentResponseStatus defines model for ScheduledPaymentResponse.Status.
+type ScheduledPaymentResponseStatus string
 
 // SelfServeCreditTier defines model for SelfServeCreditTier.
 type SelfServeCreditTier struct {
@@ -5574,6 +6056,18 @@ type ListEventsParams struct {
 	Limit *LimitParam `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// ListMandatesParams defines parameters for ListMandates.
+type ListMandatesParams struct {
+	// CustomerId Only mandates whose bound signer belongs to this customer's agent.
+	CustomerId *string `form:"customer_id,omitempty" json:"customer_id,omitempty"`
+
+	// SignerId Only mandates bound to this signer.
+	SignerId *string `form:"signer_id,omitempty" json:"signer_id,omitempty"`
+
+	// Status Comma-separated effective statuses to include, e.g. "active,expired". Allowed values: pending, active, expired, rejected, revoked, done. Omit for all.
+	Status *string `form:"status,omitempty" json:"status,omitempty"`
+}
+
 // ListPoliciesParams defines parameters for ListPolicies.
 type ListPoliciesParams struct {
 	// StartingAfter A cursor for use in pagination. `starting_after` is a KSUID for the object you are listing that defines your place in the list. For instance, if you make a list request and receive 100 objects, ending with ID `2B5J8KZ9N7M1K3P6Q8R4T7V9`, your subsequent call can include `starting_after=2B5J8KZ9N7M1K3P6Q8R4T7V9` in order to fetch the next page of the list.
@@ -5817,6 +6311,24 @@ type SimulateOnboardingParamsXSandboxErrorStep string
 
 // SimulateOnboardingJSONBodyType defines parameters for SimulateOnboarding.
 type SimulateOnboardingJSONBodyType string
+
+// ListScheduledPaymentsParams defines parameters for ListScheduledPayments.
+type ListScheduledPaymentsParams struct {
+	// CustomerId Only payments for this customer (the signer's owning agent's customer).
+	CustomerId *string `form:"customer_id,omitempty" json:"customer_id,omitempty"`
+
+	// SignerId Only payments bound to this signer.
+	SignerId *string `form:"signer_id,omitempty" json:"signer_id,omitempty"`
+
+	// WalletId Only payments funded from this wallet.
+	WalletId *string `form:"wallet_id,omitempty" json:"wallet_id,omitempty"`
+
+	// MandateId Only payments that executed under this mandate (mandate_id is stamped at fire time, so this matches executed rows only).
+	MandateId *string `form:"mandate_id,omitempty" json:"mandate_id,omitempty"`
+
+	// Status Comma-separated statuses to include, e.g. "scheduled,executed". Allowed values: scheduled, cancelled, executed, failed. Omit for all.
+	Status *string `form:"status,omitempty" json:"status,omitempty"`
+}
 
 // ListSelfServeCreditsLedgerParams defines parameters for ListSelfServeCreditsLedger.
 type ListSelfServeCreditsLedgerParams struct {
@@ -6174,6 +6686,24 @@ type CreateRecipientJSONRequestBody = RecipientRequest
 
 // UpdateCustomerSubClientJSONRequestBody defines body for UpdateCustomerSubClient for application/json ContentType.
 type UpdateCustomerSubClientJSONRequestBody = UpdateCustomerSubClientRequest
+
+// CreateInstructionsJSONRequestBody defines body for CreateInstructions for application/json ContentType.
+type CreateInstructionsJSONRequestBody = CreateInstructionsRequest
+
+// CreateMandateJSONRequestBody defines body for CreateMandate for application/json ContentType.
+type CreateMandateJSONRequestBody = CreateMandateRequest
+
+// ApproveMandateJSONRequestBody defines body for ApproveMandate for application/json ContentType.
+type ApproveMandateJSONRequestBody = ApproveMandateRequest
+
+// CancelMandateJSONRequestBody defines body for CancelMandate for application/json ContentType.
+type CancelMandateJSONRequestBody = CancelMandateRequest
+
+// CreatePaymentAgentJSONRequestBody defines body for CreatePaymentAgent for application/json ContentType.
+type CreatePaymentAgentJSONRequestBody = CreatePaymentAgentRequest
+
+// CreatePaymentAgentProposalsJSONRequestBody defines body for CreatePaymentAgentProposals for application/json ContentType.
+type CreatePaymentAgentProposalsJSONRequestBody = CreateProposalsRequest
 
 // CreatePolicyJSONRequestBody defines body for CreatePolicy for application/json ContentType.
 type CreatePolicyJSONRequestBody = CreatePolicyRequest
@@ -7172,6 +7702,48 @@ type ClientInterface interface {
 	// ListEvents request
 	ListEvents(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateInstructionsWithBody request with any body
+	CreateInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateInstructions(ctx context.Context, body CreateInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetInstruction request
+	GetInstruction(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListMandates request
+	ListMandates(ctx context.Context, params *ListMandatesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateMandateWithBody request with any body
+	CreateMandateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateMandate(ctx context.Context, body CreateMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMandate request
+	GetMandate(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApproveMandateWithBody request with any body
+	ApproveMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ApproveMandate(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CancelMandateWithBody request with any body
+	CancelMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CancelMandate(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePaymentAgentWithBody request with any body
+	CreatePaymentAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreatePaymentAgent(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePaymentAgentProposalsWithBody request with any body
+	CreatePaymentAgentProposalsWithBody(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreatePaymentAgentProposals(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RevokePaymentAgent request
+	RevokePaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListPolicies request
 	ListPolicies(ctx context.Context, params *ListPoliciesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -7258,6 +7830,12 @@ type ClientInterface interface {
 	AdvanceSimulationWithBody(ctx context.Context, simulationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	AdvanceSimulation(ctx context.Context, simulationId string, body AdvanceSimulationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListScheduledPayments request
+	ListScheduledPayments(ctx context.Context, params *ListScheduledPaymentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CancelScheduledPayment request
+	CancelScheduledPayment(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSelfServeCreditsBalance request
 	GetSelfServeCreditsBalance(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -8105,6 +8683,198 @@ func (c *APIClient) ListEvents(ctx context.Context, params *ListEventsParams, re
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) CreateInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateInstructionsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateInstructions(ctx context.Context, body CreateInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateInstructionsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetInstruction(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInstructionRequest(c.Server, instructionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListMandates(ctx context.Context, params *ListMandatesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMandatesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateMandateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMandateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateMandate(ctx context.Context, body CreateMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMandateRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetMandate(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMandateRequest(c.Server, mandateId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ApproveMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApproveMandateRequestWithBody(c.Server, mandateId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ApproveMandate(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApproveMandateRequest(c.Server, mandateId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CancelMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelMandateRequestWithBody(c.Server, mandateId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CancelMandate(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelMandateRequest(c.Server, mandateId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgent(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgentProposalsWithBody(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentProposalsRequestWithBody(c.Server, paymentAgentId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreatePaymentAgentProposals(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePaymentAgentProposalsRequest(c.Server, paymentAgentId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) RevokePaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokePaymentAgentRequest(c.Server, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) ListPolicies(ctx context.Context, params *ListPoliciesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListPoliciesRequest(c.Server, params)
 	if err != nil {
@@ -8491,6 +9261,30 @@ func (c *APIClient) AdvanceSimulationWithBody(ctx context.Context, simulationId 
 
 func (c *APIClient) AdvanceSimulation(ctx context.Context, simulationId string, body AdvanceSimulationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAdvanceSimulationRequest(c.Server, simulationId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListScheduledPayments(ctx context.Context, params *ListScheduledPaymentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListScheduledPaymentsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CancelScheduledPayment(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelScheduledPaymentRequest(c.Server, scheduledPaymentId)
 	if err != nil {
 		return nil, err
 	}
@@ -12242,6 +13036,450 @@ func NewListEventsRequest(server string, params *ListEventsParams) (*http.Reques
 	return req, nil
 }
 
+// NewCreateInstructionsRequest calls the generic CreateInstructions builder with application/json body
+func NewCreateInstructionsRequest(server string, body CreateInstructionsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateInstructionsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateInstructionsRequestWithBody generates requests for CreateInstructions with any type of body
+func NewCreateInstructionsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/instructions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetInstructionRequest generates requests for GetInstruction
+func NewGetInstructionRequest(server string, instructionId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instruction_id", runtime.ParamLocationPath, instructionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/instructions/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListMandatesRequest generates requests for ListMandates
+func NewListMandatesRequest(server string, params *ListMandatesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.CustomerId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "customer_id", runtime.ParamLocationQuery, *params.CustomerId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SignerId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "signer_id", runtime.ParamLocationQuery, *params.SignerId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "status", runtime.ParamLocationQuery, *params.Status); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateMandateRequest calls the generic CreateMandate builder with application/json body
+func NewCreateMandateRequest(server string, body CreateMandateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateMandateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateMandateRequestWithBody generates requests for CreateMandate with any type of body
+func NewCreateMandateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMandateRequest generates requests for GetMandate
+func NewGetMandateRequest(server string, mandateId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "mandate_id", runtime.ParamLocationPath, mandateId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewApproveMandateRequest calls the generic ApproveMandate builder with application/json body
+func NewApproveMandateRequest(server string, mandateId string, body ApproveMandateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewApproveMandateRequestWithBody(server, mandateId, "application/json", bodyReader)
+}
+
+// NewApproveMandateRequestWithBody generates requests for ApproveMandate with any type of body
+func NewApproveMandateRequestWithBody(server string, mandateId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "mandate_id", runtime.ParamLocationPath, mandateId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates/%s/approve", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCancelMandateRequest calls the generic CancelMandate builder with application/json body
+func NewCancelMandateRequest(server string, mandateId string, body CancelMandateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCancelMandateRequestWithBody(server, mandateId, "application/json", bodyReader)
+}
+
+// NewCancelMandateRequestWithBody generates requests for CancelMandate with any type of body
+func NewCancelMandateRequestWithBody(server string, mandateId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "mandate_id", runtime.ParamLocationPath, mandateId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates/%s/cancel", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreatePaymentAgentRequest calls the generic CreatePaymentAgent builder with application/json body
+func NewCreatePaymentAgentRequest(server string, body CreatePaymentAgentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePaymentAgentRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreatePaymentAgentRequestWithBody generates requests for CreatePaymentAgent with any type of body
+func NewCreatePaymentAgentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreatePaymentAgentProposalsRequest calls the generic CreatePaymentAgentProposals builder with application/json body
+func NewCreatePaymentAgentProposalsRequest(server string, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePaymentAgentProposalsRequestWithBody(server, paymentAgentId, "application/json", bodyReader)
+}
+
+// NewCreatePaymentAgentProposalsRequestWithBody generates requests for CreatePaymentAgentProposals with any type of body
+func NewCreatePaymentAgentProposalsRequestWithBody(server string, paymentAgentId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "payment_agent_id", runtime.ParamLocationPath, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents/%s/proposals", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRevokePaymentAgentRequest generates requests for RevokePaymentAgent
+func NewRevokePaymentAgentRequest(server string, paymentAgentId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "payment_agent_id", runtime.ParamLocationPath, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents/%s/revoke", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListPoliciesRequest generates requests for ListPolicies
 func NewListPoliciesRequest(server string, params *ListPoliciesParams) (*http.Request, error) {
 	var err error
@@ -13496,6 +14734,153 @@ func NewAdvanceSimulationRequestWithBody(server string, simulationId string, con
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListScheduledPaymentsRequest generates requests for ListScheduledPayments
+func NewListScheduledPaymentsRequest(server string, params *ListScheduledPaymentsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/scheduled-payments")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.CustomerId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "customer_id", runtime.ParamLocationQuery, *params.CustomerId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SignerId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "signer_id", runtime.ParamLocationQuery, *params.SignerId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.WalletId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "wallet_id", runtime.ParamLocationQuery, *params.WalletId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.MandateId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mandate_id", runtime.ParamLocationQuery, *params.MandateId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "status", runtime.ParamLocationQuery, *params.Status); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCancelScheduledPaymentRequest generates requests for CancelScheduledPayment
+func NewCancelScheduledPaymentRequest(server string, scheduledPaymentId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "scheduled_payment_id", runtime.ParamLocationPath, scheduledPaymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/scheduled-payments/%s/cancel", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -16076,6 +17461,48 @@ type ClientWithResponsesInterface interface {
 	// ListEventsWithResponse request
 	ListEventsWithResponse(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*ListEventsResponse, error)
 
+	// CreateInstructionsWithBodyWithResponse request with any body
+	CreateInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateInstructionsResponse, error)
+
+	CreateInstructionsWithResponse(ctx context.Context, body CreateInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateInstructionsResponse, error)
+
+	// GetInstructionWithResponse request
+	GetInstructionWithResponse(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*GetInstructionResponse, error)
+
+	// ListMandatesWithResponse request
+	ListMandatesWithResponse(ctx context.Context, params *ListMandatesParams, reqEditors ...RequestEditorFn) (*ListMandatesResponse, error)
+
+	// CreateMandateWithBodyWithResponse request with any body
+	CreateMandateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMandateResponse, error)
+
+	CreateMandateWithResponse(ctx context.Context, body CreateMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMandateResponse, error)
+
+	// GetMandateWithResponse request
+	GetMandateWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*GetMandateResponse, error)
+
+	// ApproveMandateWithBodyWithResponse request with any body
+	ApproveMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error)
+
+	ApproveMandateWithResponse(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error)
+
+	// CancelMandateWithBodyWithResponse request with any body
+	CancelMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error)
+
+	CancelMandateWithResponse(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error)
+
+	// CreatePaymentAgentWithBodyWithResponse request with any body
+	CreatePaymentAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error)
+
+	CreatePaymentAgentWithResponse(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error)
+
+	// CreatePaymentAgentProposalsWithBodyWithResponse request with any body
+	CreatePaymentAgentProposalsWithBodyWithResponse(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error)
+
+	CreatePaymentAgentProposalsWithResponse(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error)
+
+	// RevokePaymentAgentWithResponse request
+	RevokePaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*RevokePaymentAgentResponse, error)
+
 	// ListPoliciesWithResponse request
 	ListPoliciesWithResponse(ctx context.Context, params *ListPoliciesParams, reqEditors ...RequestEditorFn) (*ListPoliciesResponse, error)
 
@@ -16162,6 +17589,12 @@ type ClientWithResponsesInterface interface {
 	AdvanceSimulationWithBodyWithResponse(ctx context.Context, simulationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdvanceSimulationResponse, error)
 
 	AdvanceSimulationWithResponse(ctx context.Context, simulationId string, body AdvanceSimulationJSONRequestBody, reqEditors ...RequestEditorFn) (*AdvanceSimulationResponse, error)
+
+	// ListScheduledPaymentsWithResponse request
+	ListScheduledPaymentsWithResponse(ctx context.Context, params *ListScheduledPaymentsParams, reqEditors ...RequestEditorFn) (*ListScheduledPaymentsResponse, error)
+
+	// CancelScheduledPaymentWithResponse request
+	CancelScheduledPaymentWithResponse(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*CancelScheduledPaymentResponse, error)
 
 	// GetSelfServeCreditsBalanceWithResponse request
 	GetSelfServeCreditsBalanceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSelfServeCreditsBalanceResponse, error)
@@ -17435,6 +18868,246 @@ func (r ListEventsResponse) StatusCode() int {
 	return 0
 }
 
+type CreateInstructionsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *AgenticInstructionsResult
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateInstructionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateInstructionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetInstructionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AgenticInstruction
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInstructionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInstructionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListMandatesResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *[]Mandate
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMandatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMandatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateMandateResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *Mandate
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateMandateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetMandateResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *Mandate
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMandateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ApproveMandateResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *MandateResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ApproveMandateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ApproveMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CancelMandateResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *MandateResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CancelMandateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CancelMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreatePaymentAgentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *PaymentAgentResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePaymentAgentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePaymentAgentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreatePaymentAgentProposalsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AgenticProposalsResult
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON429 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePaymentAgentProposalsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePaymentAgentProposalsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RevokePaymentAgentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *PaymentAgentResponse
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r RevokePaymentAgentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RevokePaymentAgentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListPoliciesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -18017,6 +19690,54 @@ func (r AdvanceSimulationResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r AdvanceSimulationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListScheduledPaymentsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *[]ScheduledPaymentResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListScheduledPaymentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListScheduledPaymentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CancelScheduledPaymentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ScheduledPaymentResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CancelScheduledPaymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CancelScheduledPaymentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19526,6 +21247,144 @@ func (c *ClientWithResponses) ListEventsWithResponse(ctx context.Context, params
 	return ParseListEventsResponse(rsp)
 }
 
+// CreateInstructionsWithBodyWithResponse request with arbitrary body returning *CreateInstructionsResponse
+func (c *ClientWithResponses) CreateInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateInstructionsResponse, error) {
+	rsp, err := c.CreateInstructionsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateInstructionsResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateInstructionsWithResponse(ctx context.Context, body CreateInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateInstructionsResponse, error) {
+	rsp, err := c.CreateInstructions(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateInstructionsResponse(rsp)
+}
+
+// GetInstructionWithResponse request returning *GetInstructionResponse
+func (c *ClientWithResponses) GetInstructionWithResponse(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*GetInstructionResponse, error) {
+	rsp, err := c.GetInstruction(ctx, instructionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetInstructionResponse(rsp)
+}
+
+// ListMandatesWithResponse request returning *ListMandatesResponse
+func (c *ClientWithResponses) ListMandatesWithResponse(ctx context.Context, params *ListMandatesParams, reqEditors ...RequestEditorFn) (*ListMandatesResponse, error) {
+	rsp, err := c.ListMandates(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMandatesResponse(rsp)
+}
+
+// CreateMandateWithBodyWithResponse request with arbitrary body returning *CreateMandateResponse
+func (c *ClientWithResponses) CreateMandateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMandateResponse, error) {
+	rsp, err := c.CreateMandateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMandateResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateMandateWithResponse(ctx context.Context, body CreateMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMandateResponse, error) {
+	rsp, err := c.CreateMandate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMandateResponse(rsp)
+}
+
+// GetMandateWithResponse request returning *GetMandateResponse
+func (c *ClientWithResponses) GetMandateWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*GetMandateResponse, error) {
+	rsp, err := c.GetMandate(ctx, mandateId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMandateResponse(rsp)
+}
+
+// ApproveMandateWithBodyWithResponse request with arbitrary body returning *ApproveMandateResponse
+func (c *ClientWithResponses) ApproveMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error) {
+	rsp, err := c.ApproveMandateWithBody(ctx, mandateId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApproveMandateResponse(rsp)
+}
+
+func (c *ClientWithResponses) ApproveMandateWithResponse(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error) {
+	rsp, err := c.ApproveMandate(ctx, mandateId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApproveMandateResponse(rsp)
+}
+
+// CancelMandateWithBodyWithResponse request with arbitrary body returning *CancelMandateResponse
+func (c *ClientWithResponses) CancelMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error) {
+	rsp, err := c.CancelMandateWithBody(ctx, mandateId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelMandateResponse(rsp)
+}
+
+func (c *ClientWithResponses) CancelMandateWithResponse(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error) {
+	rsp, err := c.CancelMandate(ctx, mandateId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelMandateResponse(rsp)
+}
+
+// CreatePaymentAgentWithBodyWithResponse request with arbitrary body returning *CreatePaymentAgentResponse
+func (c *ClientWithResponses) CreatePaymentAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error) {
+	rsp, err := c.CreatePaymentAgentWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreatePaymentAgentWithResponse(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error) {
+	rsp, err := c.CreatePaymentAgent(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentResponse(rsp)
+}
+
+// CreatePaymentAgentProposalsWithBodyWithResponse request with arbitrary body returning *CreatePaymentAgentProposalsResponse
+func (c *ClientWithResponses) CreatePaymentAgentProposalsWithBodyWithResponse(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error) {
+	rsp, err := c.CreatePaymentAgentProposalsWithBody(ctx, paymentAgentId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentProposalsResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreatePaymentAgentProposalsWithResponse(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error) {
+	rsp, err := c.CreatePaymentAgentProposals(ctx, paymentAgentId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePaymentAgentProposalsResponse(rsp)
+}
+
+// RevokePaymentAgentWithResponse request returning *RevokePaymentAgentResponse
+func (c *ClientWithResponses) RevokePaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*RevokePaymentAgentResponse, error) {
+	rsp, err := c.RevokePaymentAgent(ctx, paymentAgentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRevokePaymentAgentResponse(rsp)
+}
+
 // ListPoliciesWithResponse request returning *ListPoliciesResponse
 func (c *ClientWithResponses) ListPoliciesWithResponse(ctx context.Context, params *ListPoliciesParams, reqEditors ...RequestEditorFn) (*ListPoliciesResponse, error) {
 	rsp, err := c.ListPolicies(ctx, params, reqEditors...)
@@ -19809,6 +21668,24 @@ func (c *ClientWithResponses) AdvanceSimulationWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseAdvanceSimulationResponse(rsp)
+}
+
+// ListScheduledPaymentsWithResponse request returning *ListScheduledPaymentsResponse
+func (c *ClientWithResponses) ListScheduledPaymentsWithResponse(ctx context.Context, params *ListScheduledPaymentsParams, reqEditors ...RequestEditorFn) (*ListScheduledPaymentsResponse, error) {
+	rsp, err := c.ListScheduledPayments(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListScheduledPaymentsResponse(rsp)
+}
+
+// CancelScheduledPaymentWithResponse request returning *CancelScheduledPaymentResponse
+func (c *ClientWithResponses) CancelScheduledPaymentWithResponse(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*CancelScheduledPaymentResponse, error) {
+	rsp, err := c.CancelScheduledPayment(ctx, scheduledPaymentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelScheduledPaymentResponse(rsp)
 }
 
 // GetSelfServeCreditsBalanceWithResponse request returning *GetSelfServeCreditsBalanceResponse
@@ -22564,6 +24441,406 @@ func ParseListEventsResponse(rsp *http.Response) (*ListEventsResponse, error) {
 	return response, nil
 }
 
+// ParseCreateInstructionsResponse parses an HTTP response from a CreateInstructionsWithResponse call
+func ParseCreateInstructionsResponse(rsp *http.Response) (*CreateInstructionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateInstructionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest AgenticInstructionsResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetInstructionResponse parses an HTTP response from a GetInstructionWithResponse call
+func ParseGetInstructionResponse(rsp *http.Response) (*GetInstructionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetInstructionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgenticInstruction
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListMandatesResponse parses an HTTP response from a ListMandatesWithResponse call
+func ParseListMandatesResponse(rsp *http.Response) (*ListMandatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMandatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Mandate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateMandateResponse parses an HTTP response from a CreateMandateWithResponse call
+func ParseCreateMandateResponse(rsp *http.Response) (*CreateMandateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateMandateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Mandate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMandateResponse parses an HTTP response from a GetMandateWithResponse call
+func ParseGetMandateResponse(rsp *http.Response) (*GetMandateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMandateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Mandate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseApproveMandateResponse parses an HTTP response from a ApproveMandateWithResponse call
+func ParseApproveMandateResponse(rsp *http.Response) (*ApproveMandateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ApproveMandateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MandateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCancelMandateResponse parses an HTTP response from a CancelMandateWithResponse call
+func ParseCancelMandateResponse(rsp *http.Response) (*CancelMandateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CancelMandateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MandateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePaymentAgentResponse parses an HTTP response from a CreatePaymentAgentWithResponse call
+func ParseCreatePaymentAgentResponse(rsp *http.Response) (*CreatePaymentAgentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePaymentAgentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PaymentAgentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePaymentAgentProposalsResponse parses an HTTP response from a CreatePaymentAgentProposalsWithResponse call
+func ParseCreatePaymentAgentProposalsResponse(rsp *http.Response) (*CreatePaymentAgentProposalsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePaymentAgentProposalsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgenticProposalsResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRevokePaymentAgentResponse parses an HTTP response from a RevokePaymentAgentWithResponse call
+func ParseRevokePaymentAgentResponse(rsp *http.Response) (*RevokePaymentAgentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RevokePaymentAgentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaymentAgentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListPoliciesResponse parses an HTTP response from a ListPoliciesWithResponse call
 func ParseListPoliciesResponse(rsp *http.Response) (*ListPoliciesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -23824,6 +26101,86 @@ func ParseAdvanceSimulationResponse(rsp *http.Response) (*AdvanceSimulationRespo
 			return nil, err
 		}
 		response.ApplicationproblemJSON502 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListScheduledPaymentsResponse parses an HTTP response from a ListScheduledPaymentsWithResponse call
+func ParseListScheduledPaymentsResponse(rsp *http.Response) (*ListScheduledPaymentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListScheduledPaymentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ScheduledPaymentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCancelScheduledPaymentResponse parses an HTTP response from a CancelScheduledPaymentWithResponse call
+func ParseCancelScheduledPaymentResponse(rsp *http.Response) (*CancelScheduledPaymentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CancelScheduledPaymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScheduledPaymentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
 
 	}
 

@@ -2,6 +2,24 @@
 
 All notable changes to the Dakota Go SDK are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Agentic payments (alpha).** Hosted payment-agent client surface: wallet
+  endorsement helpers (`AttachUserToWallet` / `DetachUserFromWallet`), multi-turn
+  proposal drafting (`AgentConversation`), and the §8 mandate-signing kit
+  (`Signer`, `P256Signer`, `MandateSignPayload`, `VerifyMandateSignature`). See
+  `client/example_test.go` and the README "Agentic Payments (Alpha)" section.
+  This surface is `x-alpha`/flag-gated and may change without a major bump.
+
+### Changed
+
+- Regenerated `client/gen` against the renamed platform spec (ENG-2701): the
+  payment-agent resource is `/payment-agents` (was `/agents`), the path/body id
+  is `payment_agent_id` (was `agent_id`), operations are `…PaymentAgent`, schemas
+  are `PaymentAgent…`, and the single-value `type` field is dropped.
+
 ## [0.4.0] - 2026-06-17
 
 ### Summary
