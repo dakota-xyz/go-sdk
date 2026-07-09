@@ -22,10 +22,10 @@ const (
 	EventCustomerCreated EventType = "customer.created"
 	EventCustomerUpdated EventType = "customer.updated"
 
-	EventCustomerKYBLinkCreated   EventType = "customer.kyb_link.created"
-	EventCustomerKYBLinkUpdated   EventType = "customer.kyb_link.updated"
-	EventCustomerKYBStatusCreated EventType = "customer.kyb_status.created"
-	EventCustomerKYBStatusUpdated          EventType = "customer.kyb_status.updated"
+	EventCustomerKYBLinkCreated          EventType = "customer.kyb_link.created"
+	EventCustomerKYBLinkUpdated          EventType = "customer.kyb_link.updated"
+	EventCustomerKYBStatusCreated        EventType = "customer.kyb_status.created"
+	EventCustomerKYBStatusUpdated        EventType = "customer.kyb_status.updated"
 	EventCustomerKYBApplicationSubmitted EventType = "customer.kyb_application.submitted"
 
 	EventAutoAccountCreated EventType = "auto_account.created"
@@ -63,6 +63,11 @@ const (
 	EventWalletTransactionCreated EventType = "wallet.transaction.created"
 	EventWalletTransactionUpdated EventType = "wallet.transaction.updated"
 	EventWalletDeposit            EventType = "wallet.deposit"
+
+	// EventScheduledPaymentFailed is emitted when a scheduled payment flips to
+	// the failed terminal state (the async agentic-payments actor's one silent
+	// state change). Its payload is [types.ScheduledPaymentFailedData].
+	EventScheduledPaymentFailed EventType = "scheduled_payment.failed"
 )
 
 // AllEventTypes contains all known Dakota Platform webhook event types.
@@ -107,6 +112,7 @@ var AllEventTypes = []EventType{
 	EventWalletTransactionCreated,
 	EventWalletTransactionUpdated,
 	EventWalletDeposit,
+	EventScheduledPaymentFailed,
 }
 
 // validEventTypes is the set of all known event types.
@@ -131,29 +137,49 @@ func (t EventType) IsValid() bool {
 	return ok
 }
 
-// Event represents a webhook event from Dakota Platform.
+// Event represents a webhook event from Dakota Platform. It mirrors the
+// platform's public event envelope: the resource the event is about lives under
+// Data.Object (decode it with [Event.DataAs] or [EventDataAs]), and Created is
+// the emission time in unix seconds.
 type Event struct {
-	ID        string          `json:"id"`
-	Type      EventType       `json:"type"`
-	Data      json.RawMessage `json:"data"`
-	Timestamp int64           `json:"timestamp"`
+	ID         string         `json:"id"`
+	Type       EventType      `json:"type"`
+	Created    int64          `json:"created"`
+	APIVersion string         `json:"api_version,omitempty"`
+	Data       EventData      `json:"data"`
+	Metadata   map[string]any `json:"metadata,omitempty"`
+	Request    *EventRequest  `json:"request,omitempty"`
 }
 
-// Time returns the event timestamp as a time.Time.
+// EventData is the event payload container. Object holds the resource the event
+// is about; PreviousAttributes, when present, holds the prior values of the
+// fields that changed on an update event.
+type EventData struct {
+	Object             json.RawMessage `json:"object"`
+	PreviousAttributes json.RawMessage `json:"previous_attributes,omitempty"`
+}
+
+// EventRequest captures the request context that produced the event, when known.
+type EventRequest struct {
+	ID             *string `json:"id,omitempty"`
+	IdempotencyKey *string `json:"idempotency_key,omitempty"`
+}
+
+// Time returns the event creation time.
 func (e Event) Time() time.Time {
-	return time.Unix(e.Timestamp, 0)
+	return time.Unix(e.Created, 0)
 }
 
-// DataAs unmarshals the event's Data field into the provided target.
+// DataAs unmarshals the event's payload (Data.Object) into target.
 func (e Event) DataAs(target any) error {
-	return json.Unmarshal(e.Data, target)
+	return unmarshalObject(e.Data.Object, target)
 }
 
-// EventDataAs is a generic helper that unmarshals an event's Data field into
-// the specified type. This avoids the need for a separate Unmarshal call.
+// EventDataAs is a generic helper that unmarshals an event's payload
+// (Data.Object) into the specified type, avoiding a separate Unmarshal call.
 func EventDataAs[T any](event Event) (T, error) {
 	var result T
-	if err := json.Unmarshal(event.Data, &result); err != nil {
+	if err := unmarshalObject(event.Data.Object, &result); err != nil {
 		return result, errors.Wrap(
 			errors.CodeMalformedPayload,
 			"failed to unmarshal event data",
@@ -161,4 +187,14 @@ func EventDataAs[T any](event Event) (T, error) {
 		)
 	}
 	return result, nil
+}
+
+// unmarshalObject decodes a Data.Object payload into target, treating an absent
+// object (null / empty) as an empty object so callers get a zero value instead
+// of an "unexpected end of JSON input" error.
+func unmarshalObject(object json.RawMessage, target any) error {
+	if len(object) == 0 {
+		object = json.RawMessage("{}")
+	}
+	return json.Unmarshal(object, target)
 }

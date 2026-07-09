@@ -29,7 +29,7 @@ func TestEventDataAs_UserData(t *testing.T) {
 				event := webhook.Event{
 					ID:   "evt_1",
 					Type: webhook.EventUserCreated,
-					Data: json.RawMessage(tt.payload),
+					Data: webhook.EventData{Object: json.RawMessage(tt.payload)},
 				}
 
 				data, err := webhook.EventDataAs[types.UserData](event)
@@ -51,7 +51,7 @@ func TestEventDataAs_UserDeletedData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventUserDeleted,
-		Data: json.RawMessage(`{"user_id":"usr_1"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"user_id":"usr_1"}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.UserDeletedData](event)
@@ -67,7 +67,7 @@ func TestEventDataAs_APIKeyData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventAPIKeyCreated,
-		Data: json.RawMessage(`{"id":"key_1","user_id":"usr_1","name":"My Key"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"id":"key_1","user_id":"usr_1","name":"My Key"}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.APIKeyData](event)
@@ -98,7 +98,7 @@ func TestEventDataAs_CustomerData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventCustomerCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.CustomerData](event)
@@ -124,7 +124,7 @@ func TestEventDataAs_KYBStatusData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventCustomerKYBStatusUpdated,
-		Data: json.RawMessage(`{"customer_id":"cust_1","status":"approved","reason":"documents verified"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"customer_id":"cust_1","status":"approved","reason":"documents verified"}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.KYBStatusData](event)
@@ -158,7 +158,7 @@ func TestEventDataAs_AutoAccountData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventAutoAccountCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.AutoAccountData](event)
@@ -215,7 +215,7 @@ func TestEventDataAs_AutoTransactionData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventTransactionAutoUpdated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.AutoTransactionData](event)
@@ -261,7 +261,7 @@ func TestEventDataAs_OneOffTransactionData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventTransactionOneOffCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.OneOffTransactionData](event)
@@ -294,7 +294,7 @@ func TestEventDataAs_RecipientData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventRecipientCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.RecipientData](event)
@@ -320,7 +320,7 @@ func TestEventDataAs_DestinationData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventDestinationCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.DestinationData](event)
@@ -347,7 +347,7 @@ func TestEventDataAs_TargetCreatedData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventTargetCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.TargetCreatedData](event)
@@ -374,7 +374,7 @@ func TestEventDataAs_ExceptionData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventExceptionCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.ExceptionData](event)
@@ -393,7 +393,7 @@ func TestEventDataAs_ExceptionClearedData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventExceptionCleared,
-		Data: json.RawMessage(`{"id":"exc_1","auto_account_id":"aa_1","cleared_at":1700002000}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"id":"exc_1","auto_account_id":"aa_1","cleared_at":1700002000}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.ExceptionClearedData](event)
@@ -409,7 +409,7 @@ func TestEventDataAs_BVNKOnboardingData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventBVNKOnboardingCreated,
-		Data: json.RawMessage(`{"id":"bvnk_1","customer_id":"cust_1","status":"pending"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"id":"bvnk_1","customer_id":"cust_1","status":"pending"}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.BVNKOnboardingData](event)
@@ -467,7 +467,7 @@ func TestEventDataAs_WalletEventData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventWalletCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.WalletEventData](event)
@@ -538,7 +538,7 @@ func TestEventDataAs_WalletDepositData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventWalletDeposit,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.WalletDepositData](event)
@@ -588,7 +588,7 @@ func TestEventDataAs_WalletTransactionData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventWalletTransactionCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.WalletTransactionData](event)
@@ -635,7 +635,7 @@ func TestEventDataAs_CryptoDetails(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventTransactionAutoUpdated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.AutoTransactionData](event)
@@ -676,7 +676,7 @@ func TestEventDataAs_SenderDetails(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventTransactionAutoCreated,
-		Data: json.RawMessage(payload),
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.AutoTransactionData](event)
@@ -699,7 +699,7 @@ func TestEventDataAs_OptionalFieldsOmitted(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventAutoAccountCreated,
-		Data: json.RawMessage(`{"id":"aa_1","customer_id":"cust_1","enabled":false,"account_type":"crypto"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"id":"aa_1","customer_id":"cust_1","enabled":false,"account_type":"crypto"}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.AutoAccountData](event)
@@ -758,5 +758,47 @@ func TestEventDataAs_JSONRoundTrip(t *testing.T) {
 				}
 			},
 		)
+	}
+}
+
+func TestEventDataAs_ScheduledPaymentFailedData(t *testing.T) {
+	// Full agent-bound payload.
+	payload := `{"scheduled_payment_id":"sp_1","signer_id":"sgn_1","wallet_id":"wal_1",` +
+		`"address":"0xabc","amount":"100","asset":"USDC","network_id":"base-sepolia",` +
+		`"scheduled_at":1705315500,"failure_code":"mandate_denied","failure_reason":"no active mandate",` +
+		`"payment_agent_id":"agt_1","recipient_id":"rcp_1","destination_id":"dst_1"}`
+	event := webhook.Event{
+		ID:   "evt_1",
+		Type: webhook.EventScheduledPaymentFailed,
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	}
+
+	data, err := webhook.EventDataAs[types.ScheduledPaymentFailedData](event)
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.ScheduledPaymentID != "sp_1" || data.FailureCode != "mandate_denied" ||
+		data.PaymentAgentID != "agt_1" || data.ScheduledAt != 1705315500 {
+		t.Fatalf("unexpected decode: %+v", data)
+	}
+
+	// Bare-address schedule: the optional linkage keys are omitted, and address
+	// is the only identifier.
+	bare := `{"scheduled_payment_id":"sp_2","signer_id":"sgn_1","wallet_id":"wal_1",` +
+		`"address":"0xdef","amount":"5","asset":"USDC","network_id":"base-sepolia",` +
+		`"scheduled_at":1705315600,"failure_code":"send_error","failure_reason":"rpc timeout"}`
+	bareData, err := webhook.EventDataAs[types.ScheduledPaymentFailedData](webhook.Event{
+		ID:   "evt_2",
+		Type: webhook.EventScheduledPaymentFailed,
+		Data: webhook.EventData{Object: json.RawMessage(bare)},
+	})
+	if err != nil {
+		t.Fatalf("EventDataAs (bare) error: %v", err)
+	}
+	if bareData.PaymentAgentID != "" || bareData.RecipientID != "" || bareData.DestinationID != "" {
+		t.Errorf("expected empty linkage keys, got %+v", bareData)
+	}
+	if bareData.Address != "0xdef" {
+		t.Errorf("Address = %q, want 0xdef", bareData.Address)
 	}
 }
