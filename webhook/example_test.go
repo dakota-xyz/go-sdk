@@ -40,8 +40,9 @@ func ExampleConstructEvent() {
 	pub, priv, _ := ed25519.GenerateKey(nil)
 	publicKeyHex := hex.EncodeToString(pub)
 
-	// Simulate a webhook payload.
-	payload := []byte(`{"id":"evt_123","type":"customer.created","data":{"name":"Acme"},"timestamp":1705315500}`)
+	// Simulate a webhook payload (the platform's public event envelope: the
+	// resource lives under data.object, and the timestamp field is "created").
+	payload := []byte(`{"id":"evt_123","type":"customer.created","created":1705315500,"data":{"object":{"name":"Acme"}}}`)
 	timestamp := fmt.Sprintf("%d", time.Now().Unix())
 	signature := webhook.ComputeSignature(timestamp, payload, priv)
 

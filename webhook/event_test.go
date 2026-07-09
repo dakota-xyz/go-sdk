@@ -47,7 +47,7 @@ func TestEvent_DataAs(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventTransactionAutoUpdated,
-		Data: json.RawMessage(`{"id":"txn_123","status":"completed"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"id":"txn_123","status":"completed"}`)},
 	}
 
 	var data txnData
@@ -64,7 +64,7 @@ func TestEvent_DataAs(t *testing.T) {
 }
 
 func TestEvent_JSONRoundTrip(t *testing.T) {
-	payload := `{"id":"evt_1","type":"customer.created","data":{"name":"Acme"},"timestamp":1705315500}`
+	payload := `{"id":"evt_1","type":"customer.created","created":1705315500,"data":{"object":{"name":"Acme"}}}`
 
 	var event webhook.Event
 	if err := json.Unmarshal([]byte(payload), &event); err != nil {
@@ -77,14 +77,23 @@ func TestEvent_JSONRoundTrip(t *testing.T) {
 	if event.Type != webhook.EventCustomerCreated {
 		t.Errorf("got Type %q, want %q", event.Type, webhook.EventCustomerCreated)
 	}
-	if event.Timestamp != 1705315500 {
-		t.Errorf("got Timestamp %d, want %d", event.Timestamp, 1705315500)
+	if event.Created != 1705315500 {
+		t.Errorf("got Created %d, want %d", event.Created, 1705315500)
+	}
+	var obj struct {
+		Name string `json:"name"`
+	}
+	if err := event.DataAs(&obj); err != nil {
+		t.Fatalf("DataAs error: %v", err)
+	}
+	if obj.Name != "Acme" {
+		t.Errorf("got Data.Object name %q, want %q", obj.Name, "Acme")
 	}
 }
 
 func TestEvent_Time(t *testing.T) {
 	event := webhook.Event{
-		Timestamp: 1705315500,
+		Created: 1705315500,
 	}
 
 	got := event.Time()
@@ -102,7 +111,7 @@ func TestEventDataAs(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventCustomerCreated,
-		Data: json.RawMessage(`{"name":"Acme"}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{"name":"Acme"}`)},
 	}
 
 	data, err := webhook.EventDataAs[customerData](event)
@@ -118,7 +127,7 @@ func TestEventDataAs_InvalidJSON(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventCustomerCreated,
-		Data: json.RawMessage(`{not json}`),
+		Data: webhook.EventData{Object: json.RawMessage(`{not json}`)},
 	}
 
 	type customerData struct {
@@ -134,8 +143,8 @@ func TestEventDataAs_InvalidJSON(t *testing.T) {
 func TestAllEventTypes(t *testing.T) {
 	allTypes := webhook.AllEventTypes
 
-	if len(allTypes) != 40 {
-		t.Errorf("expected 40 event types, got %d", len(allTypes))
+	if len(allTypes) != 41 {
+		t.Errorf("expected 41 event types, got %d", len(allTypes))
 	}
 
 	seen := make(map[webhook.EventType]struct{}, len(allTypes))
