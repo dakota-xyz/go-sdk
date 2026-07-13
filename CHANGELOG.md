@@ -12,6 +12,11 @@ All notable changes to the Dakota Go SDK are documented in this file.
   (`Signer`, `P256Signer`, `MandateSignPayload`, `VerifyMandateSignature`). See
   `client/example_test.go` and the README "Agentic Payments (Alpha)" section.
   This surface is `x-alpha`/flag-gated and may change without a major bump.
+- **Customer insight (alpha).** Read-only account-insight operations generated
+  into `client/gen`, reachable via `c.Raw()`: `GetCustomerInsightsWithResponse`
+  (the deterministic report — snapshot, `insights[]`, `suggestions[]`, each item
+  carrying typed `evidence`) and `ChatCustomerInsightsWithResponse` (the advisory
+  chat, `{messages[]} → {reply, conversation_status}`). Also `x-alpha`/flag-gated.
 
 ### Changed
 

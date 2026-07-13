@@ -685,6 +685,26 @@ const (
 	IndividualRequestTitleOtherOfficer IndividualRequestTitle = "other_officer"
 )
 
+// Defines values for InsightChatMessageRole.
+const (
+	InsightChatMessageRoleAssistant InsightChatMessageRole = "assistant"
+	InsightChatMessageRoleUser      InsightChatMessageRole = "user"
+)
+
+// Defines values for InsightChatResponseConversationStatus.
+const (
+	InsightChatResponseConversationStatusBlocked InsightChatResponseConversationStatus = "blocked"
+	InsightChatResponseConversationStatusOk      InsightChatResponseConversationStatus = "ok"
+	InsightChatResponseConversationStatusWarned  InsightChatResponseConversationStatus = "warned"
+)
+
+// Defines values for InsightItemSeverity.
+const (
+	InsightItemSeverityCritical InsightItemSeverity = "critical"
+	InsightItemSeverityInfo     InsightItemSeverity = "info"
+	InsightItemSeverityWarn     InsightItemSeverity = "warn"
+)
+
 // Defines values for InsufficientCreditsErrorError.
 const (
 	InsufficientCreditsErrorErrorInsufficientCredits InsufficientCreditsErrorError = "insufficient_credits"
@@ -3906,6 +3926,104 @@ type IndividualRequestSourceOfWealth string
 // IndividualRequestTitle Job title (required for UBO/control person, optional for applicant, invalid for individual)
 type IndividualRequestTitle string
 
+// InsightChatMessage defines model for InsightChatMessage.
+type InsightChatMessage struct {
+	Content string                 `json:"content"`
+	Role    InsightChatMessageRole `json:"role"`
+}
+
+// InsightChatMessageRole defines model for InsightChatMessage.Role.
+type InsightChatMessageRole string
+
+// InsightChatRequest defines model for InsightChatRequest.
+type InsightChatRequest struct {
+	// Messages The conversation so far, oldest first.
+	Messages []InsightChatMessage `json:"messages"`
+}
+
+// InsightChatResponse defines model for InsightChatResponse.
+type InsightChatResponse struct {
+	// ConversationStatus How the boundary screen treated this turn. `ok` is a normal turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat.
+	ConversationStatus *InsightChatResponseConversationStatus `json:"conversation_status,omitempty"`
+
+	// Reply The assistant's plain-text answer. Advisory only — the assistant cannot execute anything.
+	Reply string `json:"reply"`
+}
+
+// InsightChatResponseConversationStatus How the boundary screen treated this turn. `ok` is a normal turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat.
+type InsightChatResponseConversationStatus string
+
+// InsightEvidence One typed reference to the platform object an insight item was computed from.
+type InsightEvidence struct {
+	Id string `json:"id"`
+
+	// Type Platform resource name: wallet, scheduled_payment, mandate, recipient, transaction.
+	Type string `json:"type"`
+}
+
+// InsightItem One observation (in `insights`) or advisory recommendation (in `suggestions`) — the same schema in both arrays. `kind` is an OPEN set: new kinds appear without notice and clients must ignore kinds they do not recognize.
+type InsightItem struct {
+	// Detail Machine-readable facts behind the message (decimal strings, counts, unix timestamps). Keys vary by kind.
+	Detail *map[string]interface{} `json:"detail,omitempty"`
+
+	// Evidence The platform objects this item is computed from (capped; may be empty when the claim is an aggregate).
+	Evidence []InsightEvidence `json:"evidence"`
+
+	// Kind Machine-readable item type, e.g. upcoming_payments, funding_shortfall, mandate_headroom, mandate_expiring, payment_at_risk, payment_failures_clustered, new_counterparty, counterparty_concentration, account_activity.
+	Kind string `json:"kind"`
+
+	// Message Human-readable, self-contained statement of the finding, with exact amounts and dates.
+	Message  string              `json:"message"`
+	Severity InsightItemSeverity `json:"severity"`
+}
+
+// InsightItemSeverity defines model for InsightItem.Severity.
+type InsightItemSeverity string
+
+// InsightReport The deterministic, read-only insight report for a customer. Computed on demand; nothing is stored.
+type InsightReport struct {
+	CustomerId  string `json:"customer_id"`
+	GeneratedAt int64  `json:"generated_at"`
+
+	// Insights Observations about the account (always present, possibly empty).
+	Insights []InsightItem `json:"insights"`
+
+	// Snapshot Typed FACTS about the account — rendered directly by clients, not narrated. `balances`/`total_usd` cover the wallets the customer's open payments spend from and are present only when the balance index is configured; they degrade to absent, never to an error.
+	Snapshot InsightSnapshot `json:"snapshot"`
+
+	// Suggestions Advisory recommendations (always present, possibly empty). Non-binding — acting on one is a separate, human-gated step.
+	Suggestions []InsightItem `json:"suggestions"`
+}
+
+// InsightSnapshot Typed FACTS about the account — rendered directly by clients, not narrated. `balances`/`total_usd` cover the wallets the customer's open payments spend from and are present only when the balance index is configured; they degrade to absent, never to an error.
+type InsightSnapshot struct {
+	ActiveMandates        int                       `json:"active_mandates"`
+	Balances              *[]InsightSnapshotBalance `json:"balances,omitempty"`
+	OpenScheduledPayments int                       `json:"open_scheduled_payments"`
+	TotalUsd              *string                   `json:"total_usd,omitempty"`
+
+	// Upcoming Open scheduled payments due within the window.
+	Upcoming InsightSnapshotUpcoming `json:"upcoming"`
+}
+
+// InsightSnapshotBalance One funding wallet's indexed holding of one asset on one network. The balance index prices holdings in USD; values may lag the chain.
+type InsightSnapshotBalance struct {
+	AmountUsd string  `json:"amount_usd"`
+	Asset     string  `json:"asset"`
+	Name      *string `json:"name,omitempty"`
+	NetworkId string  `json:"network_id"`
+	WalletId  string  `json:"wallet_id"`
+}
+
+// InsightSnapshotUpcoming Open scheduled payments due within the window.
+type InsightSnapshotUpcoming struct {
+	Count int `json:"count"`
+	Days  int `json:"days"`
+
+	// Totals Asset → total amount due in the window (decimal strings).
+	Totals *map[string]string `json:"totals,omitempty"`
+}
+
 // InsufficientCreditsError Error response when a self-serve client lacks the credits required to perform an action.
 type InsufficientCreditsError struct {
 	// BalanceCents Caller's current credit balance, in USD cents.
@@ -6026,6 +6144,12 @@ type BulkImportFromSumsubTokensParams struct {
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
 
+// ChatCustomerInsightsParams defines parameters for ChatCustomerInsights.
+type ChatCustomerInsightsParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
 // ListRecipientsParams defines parameters for ListRecipients.
 type ListRecipientsParams struct {
 	// Limit A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 20.
@@ -6680,6 +6804,9 @@ type CreateCustomerJSONRequestBody = CustomerCreateRequest
 
 // BulkImportFromSumsubTokensJSONRequestBody defines body for BulkImportFromSumsubTokens for application/json ContentType.
 type BulkImportFromSumsubTokensJSONRequestBody BulkImportFromSumsubTokensJSONBody
+
+// ChatCustomerInsightsJSONRequestBody defines body for ChatCustomerInsights for application/json ContentType.
+type ChatCustomerInsightsJSONRequestBody = InsightChatRequest
 
 // CreateRecipientJSONRequestBody defines body for CreateRecipient for application/json ContentType.
 type CreateRecipientJSONRequestBody = RecipientRequest
@@ -7686,6 +7813,14 @@ type ClientInterface interface {
 	// GetCustomer request
 	GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetCustomerInsights request
+	GetCustomerInsights(ctx context.Context, customerId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ChatCustomerInsightsWithBody request with any body
+	ChatCustomerInsightsWithBody(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ChatCustomerInsights(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListRecipients request
 	ListRecipients(ctx context.Context, customerId KSUID, params *ListRecipientsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -8601,6 +8736,42 @@ func (c *APIClient) GetSubClientSummary(ctx context.Context, reqEditors ...Reque
 
 func (c *APIClient) GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCustomerRequest(c.Server, customerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetCustomerInsights(ctx context.Context, customerId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCustomerInsightsRequest(c.Server, customerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ChatCustomerInsightsWithBody(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChatCustomerInsightsRequestWithBody(c.Server, customerId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ChatCustomerInsights(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChatCustomerInsightsRequest(c.Server, customerId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -12755,6 +12926,100 @@ func NewGetCustomerRequest(server string, customerId KSUID) (*http.Request, erro
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCustomerInsightsRequest generates requests for GetCustomerInsights
+func NewGetCustomerInsightsRequest(server string, customerId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s/insights", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewChatCustomerInsightsRequest calls the generic ChatCustomerInsights builder with application/json body
+func NewChatCustomerInsightsRequest(server string, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChatCustomerInsightsRequestWithBody(server, customerId, params, "application/json", bodyReader)
+}
+
+// NewChatCustomerInsightsRequestWithBody generates requests for ChatCustomerInsights with any type of body
+func NewChatCustomerInsightsRequestWithBody(server string, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s/insights/chat", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
 	}
 
 	return req, nil
@@ -17445,6 +17710,14 @@ type ClientWithResponsesInterface interface {
 	// GetCustomerWithResponse request
 	GetCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerResponse, error)
 
+	// GetCustomerInsightsWithResponse request
+	GetCustomerInsightsWithResponse(ctx context.Context, customerId string, reqEditors ...RequestEditorFn) (*GetCustomerInsightsResponse, error)
+
+	// ChatCustomerInsightsWithBodyWithResponse request with any body
+	ChatCustomerInsightsWithBodyWithResponse(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChatCustomerInsightsResponse, error)
+
+	ChatCustomerInsightsWithResponse(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*ChatCustomerInsightsResponse, error)
+
 	// ListRecipientsWithResponse request
 	ListRecipientsWithResponse(ctx context.Context, customerId KSUID, params *ListRecipientsParams, reqEditors ...RequestEditorFn) (*ListRecipientsResponse, error)
 
@@ -18755,6 +19028,55 @@ func (r GetCustomerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetCustomerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetCustomerInsightsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *InsightReport
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCustomerInsightsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCustomerInsightsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ChatCustomerInsightsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *InsightChatResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON429 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ChatCustomerInsightsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChatCustomerInsightsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -21193,6 +21515,32 @@ func (c *ClientWithResponses) GetCustomerWithResponse(ctx context.Context, custo
 		return nil, err
 	}
 	return ParseGetCustomerResponse(rsp)
+}
+
+// GetCustomerInsightsWithResponse request returning *GetCustomerInsightsResponse
+func (c *ClientWithResponses) GetCustomerInsightsWithResponse(ctx context.Context, customerId string, reqEditors ...RequestEditorFn) (*GetCustomerInsightsResponse, error) {
+	rsp, err := c.GetCustomerInsights(ctx, customerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCustomerInsightsResponse(rsp)
+}
+
+// ChatCustomerInsightsWithBodyWithResponse request with arbitrary body returning *ChatCustomerInsightsResponse
+func (c *ClientWithResponses) ChatCustomerInsightsWithBodyWithResponse(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChatCustomerInsightsResponse, error) {
+	rsp, err := c.ChatCustomerInsightsWithBody(ctx, customerId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChatCustomerInsightsResponse(rsp)
+}
+
+func (c *ClientWithResponses) ChatCustomerInsightsWithResponse(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*ChatCustomerInsightsResponse, error) {
+	rsp, err := c.ChatCustomerInsights(ctx, customerId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChatCustomerInsightsResponse(rsp)
 }
 
 // ListRecipientsWithResponse request returning *ListRecipientsResponse
@@ -24228,6 +24576,93 @@ func ParseGetCustomerResponse(rsp *http.Response) (*GetCustomerResponse, error) 
 			return nil, err
 		}
 		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCustomerInsightsResponse parses an HTTP response from a GetCustomerInsightsWithResponse call
+func ParseGetCustomerInsightsResponse(rsp *http.Response) (*GetCustomerInsightsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCustomerInsightsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest InsightReport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseChatCustomerInsightsResponse parses an HTTP response from a ChatCustomerInsightsWithResponse call
+func ParseChatCustomerInsightsResponse(rsp *http.Response) (*ChatCustomerInsightsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChatCustomerInsightsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest InsightChatResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
 
 	}
 
