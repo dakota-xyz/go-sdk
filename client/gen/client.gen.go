@@ -3957,7 +3957,7 @@ type InsightChatResponseConversationStatus string
 type InsightEvidence struct {
 	Id string `json:"id"`
 
-	// Type Platform resource name: wallet, scheduled_payment, mandate, recipient, transaction.
+	// Type Platform resource name — the kind of object `id` refers to. OPEN set (like `InsightItem.kind`): new resource types may be referenced without a breaking change, so a client MUST handle an unrecognized type gracefully (e.g. show the item without a deep-link), never error. `transaction` is reserved (advertised and client-handled, but not emitted today).
 	Type string `json:"type"`
 }
 
@@ -3969,7 +3969,20 @@ type InsightItem struct {
 	// Evidence The platform objects this item is computed from (capped; may be empty when the claim is an aggregate).
 	Evidence []InsightEvidence `json:"evidence"`
 
-	// Kind Machine-readable item type, e.g. upcoming_payments, funding_shortfall, mandate_headroom, mandate_expiring, payment_at_risk, payment_failures_clustered, new_counterparty, counterparty_concentration, account_activity.
+	// Kind Machine-readable item type. This is an OPEN set — the values below are the kinds emitted TODAY, but new kinds may be added at any time without a breaking change, so it is documented as an extensible enum rather than a closed one. A client MUST render an unrecognized kind generically from `message` + `severity` (and `evidence`), never drop it. Kinds emitted today, by array:
+	// Observations (`insights[]`):
+	//   * `upcoming_payments` — open payments due within the horizon (count + per-asset totals).
+	//   * `payment_failures_clustered` — ≥2 recent failures to the same payee sharing one reason (root cause).
+	//   * `payments_failed` — remaining recent singleton failures, summarized.
+	//   * `account_activity` — executed volume over the window + mandates awaiting signature.
+	//   * `new_counterparty` — first open payments to a recently-added payee.
+	//   * `counterparty_concentration` — one payee dominates recent executed outflow.
+	//
+	// Suggestions (`suggestions[]`, advisory — acting is a separate human-gated step):
+	//   * `payment_at_risk` — an open payment is past its scheduled time.
+	//   * `funding_shortfall` — a funding wallet's indexed balance is below its near-term payment needs.
+	//   * `mandate_expiring` — an active mandate ends soon (warn when open payments depend on it).
+	//   * `mandate_headroom` — a mandate's window budget is nearly or already over-consumed.
 	Kind string `json:"kind"`
 
 	// Message Human-readable, self-contained statement of the finding, with exact amounts and dates.
