@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/dakota-xyz/go-sdk/client/gen"
 )
 
 // TestAgentConversationMultiTurn proves the conversation hides the stateless
@@ -138,3 +140,112 @@ func TestAgentConversationAttachmentsAreOneShot(t *testing.T) {
 	require.NoError(t, err)
 	require.NotContains(t, bodies[1], want, "attachments must not be re-sent on later turns")
 }
+
+// TestAgentConversationBlockersAccompanyProposals: blockers are NOT an
+// alternative to proposals. The common case is a payee who does not exist yet —
+// the turn proposes creating them AND reports that the limit will not reach
+// them, because the client has to do both, in that order.
+func TestAgentConversationBlockersAccompanyProposals(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"reply":"I can add Priya, but your limit will not reach her.",
+			"proposals":[{"summary":"Create payee Priya","actions":[]}],
+			"blockers":[{"code":"mandate_does_not_cover_payee","mandate_id":"mandate_1","payee_name":"Priya","detail":"the limit does not target this payee"}]
+		}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+	require.NoError(t, err)
+
+	turn, err := c.NewAgentConversation("agt_1").Send(context.Background(), "pay priya 10 usdc")
+	require.NoError(t, err)
+
+	require.True(t, turn.HasProposals, "a blocked turn can still carry work to accept first")
+	require.Len(t, turn.Proposals, 1)
+	require.True(t, turn.HasBlockers)
+	require.Len(t, turn.Blockers, 1)
+	require.Equal(t, "mandate_does_not_cover_payee", string(turn.Blockers[0].Code))
+	require.NotNil(t, turn.Blockers[0].PayeeName)
+	require.Equal(t, "Priya", *turn.Blockers[0].PayeeName)
+}
+
+// TestAgentConversationNoBlockers: a clean turn reports none, and must not
+// invent any.
+func TestAgentConversationNoBlockers(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"reply":"ok"}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+	require.NoError(t, err)
+
+	turn, err := c.NewAgentConversation("agt_1").Send(context.Background(), "hi")
+	require.NoError(t, err)
+	require.False(t, turn.HasBlockers)
+	require.Empty(t, turn.Blockers)
+}
+
+// TestAgentConversationResendsTimezoneAndPolicy: the endpoint is stateless, so
+// either value given once would be forgotten on the next turn. Both must ride
+// on EVERY request, and must be absent (not empty) when unset — an empty policy
+// object would read as an override meaning "platform defaults" rather than
+// falling through to the client's registration.
+func TestAgentConversationResendsTimezoneAndPolicy(t *testing.T) {
+	t.Parallel()
+
+	type capturedBody struct {
+		Timezone     *string         `json:"timezone"`
+		ClientPolicy json.RawMessage `json:"client_policy"`
+	}
+	var captured []capturedBody
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var b capturedBody
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
+		captured = append(captured, b)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"reply":"ok"}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+	require.NoError(t, err)
+
+	payee := "recipient"
+	policy := gen.AgenticClientPolicy{
+		PayeeModel: ptrTo(gen.AgenticClientPolicyPayeeModel("flat")),
+		Labels:     &map[string]string{"payee": payee},
+	}
+	conv := c.NewAgentConversation("agt_1", WithTimezone("America/Los_Angeles"), WithClientPolicy(policy))
+	_, err = conv.Send(context.Background(), "pay alice tomorrow")
+	require.NoError(t, err)
+	_, err = conv.Send(context.Background(), "make it friday")
+	require.NoError(t, err)
+
+	require.Len(t, captured, 2)
+	for i, b := range captured {
+		require.NotNil(t, b.Timezone, "turn %d lost the timezone", i)
+		require.Equal(t, "America/Los_Angeles", *b.Timezone)
+		require.Contains(t, string(b.ClientPolicy), `"flat"`, "turn %d lost the policy", i)
+	}
+
+	// Unset: both keys absent, so the server falls through to the client's
+	// registration rather than seeing an override.
+	plain := c.NewAgentConversation("agt_1")
+	_, err = plain.Send(context.Background(), "pay alice")
+	require.NoError(t, err)
+	require.Nil(t, captured[2].Timezone)
+	require.Empty(t, captured[2].ClientPolicy)
+}
+
+func ptrTo[T any](v T) *T { return &v }

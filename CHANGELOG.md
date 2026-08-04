@@ -4,6 +4,56 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — agentic payments catch-up (alpha)
+
+Regenerated `client/gen` against the current platform spec, bringing the Go
+SDK level with three weeks of platform work (17 operations, 22 schemas).
+Everything generated is reachable via `c.Raw()`; the items below also got a
+hand-written surface.
+
+- **Turn blockers.** `ConversationTurn.Blockers` / `HasBlockers` carry
+  machine-actionable reasons a drafting turn could not complete, for the
+  CLIENT APPLICATION rather than the customer — `Reply` says the same thing
+  in prose, which software cannot branch on. They **accompany proposals
+  rather than replacing them**, and routinely do: the common case is a payee
+  who does not exist yet, where the turn proposes creating them *and*
+  reports that the limit will not reach them. Codes today are
+  `mandate_does_not_cover_payee` and `no_mandate`; switch on `Code` and
+  ignore ones you do not recognize.
+- **Mandate versions.** `MandateAmendSignPayload(m, version, rule)` produces
+  the canonical bytes for an amend — the approve/cancel bytes plus a
+  `version` key, which is what stops a signature collected for v2 from being
+  replayed to append v3. `MandateSignPayload` now REFUSES the amend verb, so
+  a versionless amend payload cannot be constructed. Byte-exact against the
+  platform's own `MandateAmendPayload`. The endpoints
+  (`AmendMandateWithResponse`, `ListMandateVersionsWithResponse`,
+  `GetMandateBudgetWithResponse`) are on `c.Raw()`.
+- **Conversation options.** `WithTimezone` resolves "tomorrow" and "10 am" in
+  the customer's IANA zone instead of UTC. `WithClientPolicy` sets the
+  per-turn vocabulary override. Both are resent on every turn, since the
+  endpoint is stateless — and both must be passed again to
+  `ResumeAgentConversation`, which restores the transcript, not the options.
+- **Client policy registration.** `GET`/`PUT /agentic-policy` via
+  `c.Raw().GetClientAgenticPolicyWithResponse` /
+  `UpdateClientAgenticPolicyWithResponse`. Prefer registering once over the
+  per-turn override: forgetting the override fails SILENTLY, with the agent
+  narrating in platform nouns again and nothing erroring. Registration is a
+  full replace; `{}` clears it.
+- **Developer fee per payout type.** `CreateInstructionsRequest.DeveloperFee`
+  declares `swap_bps` and `offramp_bps` independently.
+- Also generated: proposals progress, per-payment network selection,
+  Persona share-token imports, customer capabilities / re-engagement /
+  delete, and the fee payout destination.
+
+### Changed
+
+- `NewAgentConversation` and `ResumeAgentConversation` are variadic
+  (`...ConversationOption`). Existing calls compile unchanged.
+- `ConversationTurn.ConversationStatus` is converted from the now-typed
+  generated enum; it remains a `string` on the SDK surface.
+- `GetSignerGroupWithResponse` gained a params argument upstream
+  (`include_removed`); internal call sites pass `nil`.
+
 ### Added
 
 - **Agentic payments (alpha).** Hosted payment-agent client surface: wallet

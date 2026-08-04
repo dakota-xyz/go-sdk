@@ -347,6 +347,65 @@ if err != nil {
 
 The full agentic surface (`/payment-agents`, `/mandates`, `/instructions`, proposals) is always reachable via `c.Raw()`. The read-only **customer insight** surface — `c.Raw().GetCustomerInsightsWithResponse(ctx, customerID)` for the deterministic account report and `c.Raw().ChatCustomerInsightsWithResponse(...)` for the advisory chat — is reachable the same way.
 
+### Blockers: for your application, not your customer
+
+A turn can report machine-actionable reasons it could not complete. `Reply` explains the same thing in prose, which software cannot branch on.
+
+**Blockers accompany proposals — they do not replace them.** The common case is a payee who does not exist yet: the turn proposes creating them *and* reports that the limit will not reach them, because you have to do both, in that order.
+
+```go
+for _, b := range turn.Blockers {
+    switch b.Code {
+    case "mandate_does_not_cover_payee":
+        // Actionable: amend the limit to ADD this payee as a target. That
+        // changes nothing else, so it can never raise the limit.
+        openLimitEditor(b.MandateId, b.PayeeName)
+    case "no_mandate":
+        // Nothing to amend — the customer must establish a limit first.
+        openLimitCreation()
+    default:
+        // Ignore codes you do not know; new ones are added over time.
+    }
+}
+```
+
+### Speaking your product's language
+
+Register your vocabulary once and every drafting turn uses it — the agent then says "recipient" and "spending limit" instead of "destination" and "mandate":
+
+```go
+_, err := c.Raw().UpdateClientAgenticPolicyWithResponse(ctx, nil, gen.AgenticClientPolicy{
+    PayeeModel: ptr(gen.AgenticClientPolicyPayeeModel("flat")),
+    Labels:     &map[string]string{"limit": "spending limit", "payee": "recipient", "limit_unit": "USD"},
+})
+```
+
+Registration is a **full replace**, not a merge — `{}` clears it. You can also pass `WithClientPolicy(...)` per conversation, but that is a development override: forgetting it fails *silently* and the agent quietly reverts to platform nouns.
+
+### Timezones
+
+The proposals endpoint is stateless, so the customer's zone must ride on every turn. `WithTimezone` does that for you:
+
+```go
+conv := c.NewAgentConversation(agentID, client.WithTimezone("America/Los_Angeles"))
+```
+
+Without it, "tomorrow" and "10 am" resolve as UTC. Pass it again to `ResumeAgentConversation` — the transcript carries the messages, not the options.
+
+### Amending a mandate
+
+An amend appends a new signed version WITHOUT resetting the spend already made in the current window: usage accrues to the mandate, so an agent that has spent 9,000 of a 10,000 monthly cap and is amended to 20,000 has 11,000 left — not 20,000.
+
+```go
+next := *m.Rule
+next.MaxAmountInWindow = ptr("20000")
+
+payload, err := client.MandateAmendSignPayload(m, *m.Version+1, next)
+// sign `payload`, then submit via c.Raw().AmendMandateWithResponse
+```
+
+The payload commits to the version it creates, so a signature collected for v2 can never be replayed to append v3. The amend endpoint takes the rule **verbatim** — it must already be canonical (`window` present, `targets` as recipient ids, `asset` uppercase), and `MandateSignPayload` refuses the amend verb outright.
+
 ## Handling Webhooks
 
 Dakota sends webhooks for all status changes. Set up a handler:

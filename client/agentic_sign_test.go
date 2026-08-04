@@ -1,6 +1,7 @@
 package client
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/dakota-xyz/go-sdk/client/gen"
@@ -154,5 +155,102 @@ func TestEndorsementPayloads_ByteExact(t *testing.T) {
 				t.Fatalf("%s payload:\n got:  %s\n want: %s", tc.name, got, tc.want)
 			}
 		})
+	}
+}
+
+// goldenMandateAmendPayload is the platform's authoritative JCS-canonical AMEND
+// payload for goldenMandate() at version 2, captured verbatim from the
+// platform's MandateAmendPayload. It is the approve bytes with the verb swapped
+// and ONE extra key, "version" — the version the amend creates, which is what
+// stops a v2 signature from being replayed as v3.
+const goldenMandateAmendPayload = `{"action":"amend","bound_signer":"signer_2eFgHiJkLmNoPqRsTuVwXyZabcd","id":"mandate_2cDeFgHiJkLmNoPqRsTuVwXyZab","rule":{"asset":"USDC","max_count_per_target_in_window":1,"max_per_tx":"10","network_id":"base-sepolia","target_type":"recipient","targets":["recipient_2aBcDeFgHiJkLmNoPqRsTuVwXyZ"],"window":"MONTHLY"},"valid_from":0,"valid_until":1798675200,"version":2}`
+
+// TestMandateAmendSignPayload_ByteExact proves the SDK reproduces the platform's
+// canonical amend bytes exactly.
+func TestMandateAmendSignPayload_ByteExact(t *testing.T) {
+	m := goldenMandate()
+	got, err := MandateAmendSignPayload(m, 2, *m.Rule)
+	if err != nil {
+		t.Fatalf("MandateAmendSignPayload: %v", err)
+	}
+	if string(got) != goldenMandateAmendPayload {
+		t.Fatalf("payload mismatch with platform golden:\n got:  %s\n want: %s", got, goldenMandateAmendPayload)
+	}
+}
+
+// TestMandateAmendSignPayload_SignsTheNewRule: the signer must see what it is
+// authorizing, so the payload carries the PROPOSED rule, not the mandate's
+// current one.
+func TestMandateAmendSignPayload_SignsTheNewRule(t *testing.T) {
+	m := goldenMandate()
+	next := *m.Rule
+	next.MaxPerTx = sptr("25")
+
+	got, err := MandateAmendSignPayload(m, 2, next)
+	if err != nil {
+		t.Fatalf("MandateAmendSignPayload: %v", err)
+	}
+	if !strings.Contains(string(got), `"max_per_tx":"25"`) {
+		t.Fatalf("payload must carry the NEW rule, got: %s", got)
+	}
+	if strings.Contains(string(got), `"max_per_tx":"10"`) {
+		t.Fatalf("payload must not carry the OUTGOING rule, got: %s", got)
+	}
+}
+
+// TestMandateAmendSignPayload_CommitsToVersion: this is the anti-replay
+// property. A signature collected for v2 must not be reusable to append v3,
+// which would let a customer's own signature roll back their own reduction.
+func TestMandateAmendSignPayload_CommitsToVersion(t *testing.T) {
+	m := goldenMandate()
+	v2, err := MandateAmendSignPayload(m, 2, *m.Rule)
+	if err != nil {
+		t.Fatalf("v2: %v", err)
+	}
+	v3, err := MandateAmendSignPayload(m, 3, *m.Rule)
+	if err != nil {
+		t.Fatalf("v3: %v", err)
+	}
+	if string(v2) == string(v3) {
+		t.Fatal("amend payloads for different versions must differ, or a signature replays across versions")
+	}
+}
+
+// TestMandateAmendSignPayload_NeverMatchesApproveOrCancel: the verb is part of
+// the signed bytes, so an amend can never be another action's replay.
+func TestMandateAmendSignPayload_NeverMatchesApproveOrCancel(t *testing.T) {
+	m := goldenMandate()
+	amend, err := MandateAmendSignPayload(m, 2, *m.Rule)
+	if err != nil {
+		t.Fatalf("amend: %v", err)
+	}
+	for _, action := range []MandateAction{MandateActionApprove, MandateActionCancel} {
+		other, err := MandateSignPayload(m, action)
+		if err != nil {
+			t.Fatalf("%s: %v", action, err)
+		}
+		if string(amend) == string(other) {
+			t.Fatalf("amend payload must differ from %s", action)
+		}
+	}
+}
+
+// TestMandateSignPayload_RefusesAmend: the approve/cancel bytes are frozen, so
+// the amend verb must be impossible to sign through them — otherwise a
+// versionless amend payload could be produced.
+func TestMandateSignPayload_RefusesAmend(t *testing.T) {
+	if _, err := MandateSignPayload(goldenMandate(), MandateActionAmend); err == nil {
+		t.Fatal("MandateSignPayload must refuse the amend verb")
+	}
+}
+
+// TestMandateAmendSignPayload_RejectsVersionBelow2: v1 is created and approved,
+// never amended.
+func TestMandateAmendSignPayload_RejectsVersionBelow2(t *testing.T) {
+	m := goldenMandate()
+	for _, v := range []int{0, 1} {
+		if _, err := MandateAmendSignPayload(m, v, *m.Rule); err == nil {
+			t.Fatalf("version %d must be rejected", v)
+		}
 	}
 }

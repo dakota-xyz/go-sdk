@@ -64,10 +64,36 @@ const (
 	AgenticAttachmentTypeDocument AgenticAttachmentType = "document"
 )
 
+// Defines values for AgenticBlockerCode.
+const (
+	AgenticBlockerCodeMandateDoesNotCoverPayee AgenticBlockerCode = "mandate_does_not_cover_payee"
+	AgenticBlockerCodeNoMandate                AgenticBlockerCode = "no_mandate"
+)
+
 // Defines values for AgenticChatMessageRole.
 const (
 	AgenticChatMessageRoleAssistant AgenticChatMessageRole = "assistant"
 	AgenticChatMessageRoleUser      AgenticChatMessageRole = "user"
+)
+
+// Defines values for AgenticClientPolicyMandateStrategy.
+const (
+	AgenticClientPolicyMandateStrategyEmpty        AgenticClientPolicyMandateStrategy = ""
+	AgenticClientPolicyMandateStrategyExternalOnly AgenticClientPolicyMandateStrategy = "external_only"
+)
+
+// Defines values for AgenticClientPolicyPayeeModel.
+const (
+	AgenticClientPolicyPayeeModelEmpty  AgenticClientPolicyPayeeModel = ""
+	AgenticClientPolicyPayeeModelFlat   AgenticClientPolicyPayeeModel = "flat"
+	AgenticClientPolicyPayeeModelNested AgenticClientPolicyPayeeModel = "nested"
+)
+
+// Defines values for AgenticClientPolicyPayoutRoute.
+const (
+	AgenticClientPolicyPayoutRouteBankOnly              AgenticClientPolicyPayoutRoute = "bank_only"
+	AgenticClientPolicyPayoutRouteConversionAccountOnly AgenticClientPolicyPayoutRoute = "conversion_account_only"
+	AgenticClientPolicyPayoutRouteEmpty                 AgenticClientPolicyPayoutRoute = ""
 )
 
 // Defines values for AgenticDocumentAttachmentMediaType.
@@ -84,6 +110,23 @@ const (
 	AgenticInstructionStatusExecuted AgenticInstructionStatus = "executed"
 	AgenticInstructionStatusFailed   AgenticInstructionStatus = "failed"
 	AgenticInstructionStatusProposed AgenticInstructionStatus = "proposed"
+)
+
+// Defines values for AgenticProposalsProgressPhase.
+const (
+	AgenticProposalsProgressPhaseDrafting   AgenticProposalsProgressPhase = "drafting"
+	AgenticProposalsProgressPhaseFinalizing AgenticProposalsProgressPhase = "finalizing"
+	AgenticProposalsProgressPhaseReading    AgenticProposalsProgressPhase = "reading"
+	AgenticProposalsProgressPhaseRevising   AgenticProposalsProgressPhase = "revising"
+	AgenticProposalsProgressPhaseWorking    AgenticProposalsProgressPhase = "working"
+)
+
+// Defines values for AgenticProposalsResultConversationStatus.
+const (
+	AgenticProposalsResultConversationStatusBlocked       AgenticProposalsResultConversationStatus = "blocked"
+	AgenticProposalsResultConversationStatusOk            AgenticProposalsResultConversationStatus = "ok"
+	AgenticProposalsResultConversationStatusRejectedInput AgenticProposalsResultConversationStatus = "rejected_input"
+	AgenticProposalsResultConversationStatusWarned        AgenticProposalsResultConversationStatus = "warned"
 )
 
 // Defines values for ApplicationApplicationDecision.
@@ -118,6 +161,7 @@ const (
 const (
 	ApplicationDocumentTypeArticlesOfAssociation      ApplicationDocumentType = "articles_of_association"
 	ApplicationDocumentTypeArticlesOfIncorporation    ApplicationDocumentType = "articles_of_incorporation"
+	ApplicationDocumentTypeAuthorizationDocument      ApplicationDocumentType = "authorization_document"
 	ApplicationDocumentTypeBankReferenceLetter        ApplicationDocumentType = "bank_reference_letter"
 	ApplicationDocumentTypeBankStatement              ApplicationDocumentType = "bank_statement"
 	ApplicationDocumentTypeBusinessPlan               ApplicationDocumentType = "business_plan"
@@ -126,6 +170,7 @@ const (
 	ApplicationDocumentTypeConvertibleNote            ApplicationDocumentType = "convertible_note"
 	ApplicationDocumentTypeCorporateRegistryExtract   ApplicationDocumentType = "corporate_registry_extract"
 	ApplicationDocumentTypeCryptoStatement            ApplicationDocumentType = "crypto_statement"
+	ApplicationDocumentTypeEinConfirmationLetter      ApplicationDocumentType = "ein_confirmation_letter"
 	ApplicationDocumentTypeEmploymentContract         ApplicationDocumentType = "employment_contract"
 	ApplicationDocumentTypeIncomeVerificationLetter   ApplicationDocumentType = "income_verification_letter"
 	ApplicationDocumentTypeInvestmentStatement        ApplicationDocumentType = "investment_statement"
@@ -208,6 +253,7 @@ const (
 
 // Defines values for AssociatedIndividualEntityRoles.
 const (
+	AssociatedIndividualEntityRolesApplicant                AssociatedIndividualEntityRoles = "applicant"
 	AssociatedIndividualEntityRolesAuthorizedRepresentative AssociatedIndividualEntityRoles = "authorized_representative"
 	AssociatedIndividualEntityRolesControlPerson            AssociatedIndividualEntityRoles = "control_person"
 	AssociatedIndividualEntityRolesUbo                      AssociatedIndividualEntityRoles = "ubo"
@@ -366,6 +412,26 @@ const (
 	BusinessEntityLegalStructureTrust               BusinessEntityLegalStructure = "trust"
 )
 
+// Defines values for CapabilityStatus.
+const (
+	CapabilityStatusActionRequired CapabilityStatus = "action_required"
+	CapabilityStatusAvailable      CapabilityStatus = "available"
+	CapabilityStatusEnabling       CapabilityStatus = "enabling"
+	CapabilityStatusUnavailable    CapabilityStatus = "unavailable"
+)
+
+// Defines values for CapabilityRequirementSeverity.
+const (
+	CapabilityRequirementSeverityRequested CapabilityRequirementSeverity = "requested"
+	CapabilityRequirementSeverityRequired  CapabilityRequirementSeverity = "required"
+)
+
+// Defines values for CapabilityRequirementType.
+const (
+	CapabilityRequirementTypeDocument        CapabilityRequirementType = "document"
+	CapabilityRequirementTypeTermsAcceptance CapabilityRequirementType = "terms_acceptance"
+)
+
 // Defines values for ClientUserRole.
 const (
 	ClientUserRoleAdmin  ClientUserRole = "admin"
@@ -472,6 +538,7 @@ const (
 	EventTypeAutoAccountUpdated              EventType = "auto_account.updated"
 	EventTypeBvnkOnboardingCreated           EventType = "bvnk.onboarding.created"
 	EventTypeBvnkOnboardingUpdated           EventType = "bvnk.onboarding.updated"
+	EventTypeCustomerCapabilityStatusUpdated EventType = "customer.capability_status.updated"
 	EventTypeCustomerCreated                 EventType = "customer.created"
 	EventTypeCustomerKybApplicationSubmitted EventType = "customer.kyb_application.submitted"
 	EventTypeCustomerKybLinkCreated          EventType = "customer.kyb_link.created"
@@ -483,9 +550,12 @@ const (
 	EventTypeDestinationDeleted              EventType = "destination.deleted"
 	EventTypeExceptionCleared                EventType = "exception.cleared"
 	EventTypeExceptionCreated                EventType = "exception.created"
+	EventTypeFeePayoutDestinationDeleted     EventType = "fee_payout_destination.deleted"
+	EventTypeFeePayoutDestinationUpdated     EventType = "fee_payout_destination.updated"
 	EventTypeRecipientCreated                EventType = "recipient.created"
 	EventTypeRecipientDeleted                EventType = "recipient.deleted"
 	EventTypeRecipientUpdated                EventType = "recipient.updated"
+	EventTypeScheduledPaymentFailed          EventType = "scheduled_payment.failed"
 	EventTypeTargetCreated                   EventType = "target.created"
 	EventTypeTargetDeleted                   EventType = "target.deleted"
 	EventTypeTargetUpdated                   EventType = "target.updated"
@@ -511,6 +581,11 @@ const (
 const (
 	FamilyEvm    Family = "evm"
 	FamilySolana Family = "solana"
+)
+
+// Defines values for FeePayoutDestinationType.
+const (
+	FeePayoutDestinationTypeUsdcWallet FeePayoutDestinationType = "usdc_wallet"
 )
 
 // Defines values for FiatIBANDestinationRequestAssets.
@@ -764,6 +839,7 @@ const (
 
 // Defines values for MandateRuleWindow.
 const (
+	MandateRuleWindowDAILY   MandateRuleWindow = "DAILY"
 	MandateRuleWindowMONTHLY MandateRuleWindow = "MONTHLY"
 	MandateRuleWindowNONE    MandateRuleWindow = "NONE"
 	MandateRuleWindowWEEKLY  MandateRuleWindow = "WEEKLY"
@@ -872,6 +948,7 @@ const (
 // Defines values for PaymentCapability.
 const (
 	PaymentCapabilityAch           PaymentCapability = "ach"
+	PaymentCapabilityFednow        PaymentCapability = "fednow"
 	PaymentCapabilityFedwire       PaymentCapability = "fedwire"
 	PaymentCapabilitySepa          PaymentCapability = "sepa"
 	PaymentCapabilitySwift         PaymentCapability = "swift"
@@ -1316,6 +1393,7 @@ const (
 	SimulateInboundJSONBodyTypeAchOutboundSettled      SimulateInboundJSONBodyType = "ach_outbound_settled"
 	SimulateInboundJSONBodyTypeAchReversal             SimulateInboundJSONBodyType = "ach_reversal"
 	SimulateInboundJSONBodyTypeCryptoInbound           SimulateInboundJSONBodyType = "crypto_inbound"
+	SimulateInboundJSONBodyTypeFednowInbound           SimulateInboundJSONBodyType = "fednow_inbound"
 	SimulateInboundJSONBodyTypeFedwireInbound          SimulateInboundJSONBodyType = "fedwire_inbound"
 	SimulateInboundJSONBodyTypeFedwireOutboundFailed   SimulateInboundJSONBodyType = "fedwire_outbound_failed"
 	SimulateInboundJSONBodyTypeFedwireOutboundRejected SimulateInboundJSONBodyType = "fedwire_outbound_rejected"
@@ -1503,7 +1581,78 @@ type AccountCreateRequest struct {
 	// FiatDestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	FiatDestinationId *KSUID `json:"fiat_destination_id,omitempty"`
 
-	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
+	// MaxTransactions Hard cap on how many transactions this account may ever create. A
+	// transaction is one convert-and-forward of funds received at the
+	// account through to its destination, so `1` makes the account a
+	// one-off and `N` lets one account serve N payments.
+	//
+	// Omit for the default, which is unchanged: the account is uncapped
+	// and keeps sweeping every deposit indefinitely (a durable, standing
+	// account).
+	//
+	// **Reaching the cap refuses further deposits; it does not turn the
+	// deposit details off.** Once the cap is used up:
+	//
+	// - Deposits sent to the account are **refused**. They are *not*
+	//   returned to the sender — the funds still arrive and are then held
+	//   pending manual intervention. Nothing is converted, nothing is
+	//   forwarded, and no transaction appears on the account for them. Stop
+	//   sending to the deposit details once the cap is reached.
+	// - The account is closed and stops serving new payments.
+	// - This is **not recoverable through this API**. `max_transactions` is
+	//   immutable — it cannot be raised, and a closed account cannot be
+	//   reopened — so a capped-out account is finished. Create a new
+	//   account (with new deposit details) to keep receiving.
+	//
+	// **A slot is consumed by any transaction in flight or delivered, not
+	// only a successful one.** A slot is released only when a transaction
+	// ends with the value *not* staying with the recipient: canceled,
+	// rejected, reversed, or refunded. A failed or returned transaction
+	// keeps its slot, because its funds are still held and it can still be
+	// retried, until it is refunded. Size the cap against the number of
+	// deposits you expect, not the number of successes you need. Releasing
+	// a slot does not reopen a closed account.
+	//
+	// The cap is checked as each deposit arrives, so deposits that race
+	// each other can briefly overshoot `N`; the account closes on the next
+	// one.
+	MaxTransactions *int32 `json:"max_transactions,omitempty"`
+
+	// PaymentReference Reference carried on the outbound fiat transfers this account
+	// makes. It is passed through to the bank as the payment's
+	// reference — the wire message to the creditor, or the ACH addenda —
+	// so it is what the payee sees against the credit. Some payees and
+	// rails require one to reconcile an incoming payment at all.
+	//
+	// This is ACCOUNT-LEVEL, unlike the `payment_reference` on a one-off
+	// transaction, which is per payment: EVERY sweep out of this account
+	// carries the SAME reference. If each payment needs its own
+	// reference, use a one-off transaction, or one account per reference.
+	//
+	// Only an outbound FIAT leg carries it, so this applies to `offramp`
+	// accounts. Setting it on an `onramp` or `swap` account is REJECTED
+	// with a 400: those sweep to a crypto address, where no reference is
+	// delivered, so accepting it would store a value the payee can never
+	// see. SWIFT is validated but NOT delivered: a SWIFT transfer carries
+	// no payment reference at all, and a one-off is no different — both
+	// reach the same send path, which has nowhere to put one. Do not plan
+	// on a reference reaching a SWIFT payee by any route today. ACH and
+	// wire (`fedwire`, `us_bank_account`) do deliver it.
+	//
+	// Validated against the account's `rail` with the same per-rail rules
+	// as a one-off's `payment_reference` — ACH at most 18 characters and
+	// letters/numbers/spaces only, wire (`fedwire`, `us_bank_account`) at
+	// most 140 characters, SEPA 6-140, SWIFT 5-140. A `swift` account
+	// validates the value but, per above, never delivers it.
+	//
+	// Omit for the default, which is unchanged: no reference is attached.
+	// An empty string means the same thing and is accepted — a client that
+	// always sends the field should not have to omit it to say "none", and
+	// an empty value must never be the thing that rejects an otherwise
+	// valid crypto account.
+	PaymentReference *string `json:"payment_reference,omitempty"`
+
+	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
 	Rail *PaymentCapability `json:"rail,omitempty"`
 
 	// ReturnAddress A unique identifier for a specific account on a specific blockchain. When rendered as a string, it has the syntax: <network-id>://<canonical-address> (e.g., ethereum-mainnet://0x165cd37b4c644c2921454429e7f9358d18a45e14)
@@ -1533,13 +1682,13 @@ type AccountResponse struct {
 	// DestinationAsset Asset received at the destination.
 	DestinationAsset *string `json:"destination_asset,omitempty"`
 
-	// DestinationRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
+	// DestinationRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
 	DestinationRail *PaymentCapability `json:"destination_rail,omitempty"`
 
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
-	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
+	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
 	Rail *PaymentCapability `json:"rail,omitempty"`
 
 	// SourceAsset Asset sent into the account.
@@ -1559,6 +1708,14 @@ type AccountResponse struct {
 type AccountType string
 
 // AccountUpdateRequest Unified account update request for onramp/offramp/swap.
+//
+// Only destination routing fields are updatable: `crypto_destination_id`,
+// `destination_network_id`, and `destination_asset` for onramp accounts,
+// and `fiat_destination_id` for offramp accounts. `capabilities` and
+// `rail` are immutable after account creation and cannot be updated
+// through this request; create a new account to change them.
+// `developer_fee_bps` is also updatable and applies to future
+// transactions only; existing transactions are unaffected.
 type AccountUpdateRequest struct {
 	// AccountType Unified account family for account resources.
 	AccountType AccountType `json:"account_type"`
@@ -1571,6 +1728,11 @@ type AccountUpdateRequest struct {
 
 	// DestinationNetworkId Identifier for a blockchain network
 	DestinationNetworkId *NetworkId `json:"destination_network_id,omitempty"`
+
+	// DeveloperFeeBps Developer fee (client revenue share) in basis points. When set,
+	// updates the fee applied to FUTURE transactions on this account;
+	// existing transactions are unaffected. Routing fields remain immutable.
+	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
 	// FiatDestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	FiatDestinationId *KSUID `json:"fiat_destination_id,omitempty"`
@@ -1699,9 +1861,27 @@ type AgenticAttachment struct {
 // AgenticAttachmentType The attachment kind — `document` (a PDF or image) today; further sources are added additively.
 type AgenticAttachmentType string
 
+// AgenticBlocker One machine-actionable reason a drafting turn produced no proposals. Verified server-side before it is returned.
+type AgenticBlocker struct {
+	// Code `mandate_does_not_cover_payee` — a spending limit is in force but its rule does not reach the named payee. This is the ACTIONABLE one: the limit can be amended to ADD the payee as a target, which changes nothing else and so can never raise the limit; collect the customer's signature for that amendment and run the turn again. `no_mandate` — no active limit exists at all, so there is nothing to amend and the customer must establish one first. The two are kept distinct so a client never opens an amend flow against a limit that does not exist.
+	Code AgenticBlockerCode `json:"code"`
+
+	// Detail Short human-readable note. Advisory only — branch on `code`.
+	Detail *string `json:"detail,omitempty"`
+
+	// MandateId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	MandateId *KSUID `json:"mandate_id,omitempty"`
+
+	// PayeeName The payee the customer named, verbatim. A NAME and not an id, because in the case this exists for the payee does not exist yet — which is why nothing covers them.
+	PayeeName *string `json:"payee_name,omitempty"`
+}
+
+// AgenticBlockerCode `mandate_does_not_cover_payee` — a spending limit is in force but its rule does not reach the named payee. This is the ACTIONABLE one: the limit can be amended to ADD the payee as a target, which changes nothing else and so can never raise the limit; collect the customer's signature for that amendment and run the turn again. `no_mandate` — no active limit exists at all, so there is nothing to amend and the customer must establish one first. The two are kept distinct so a client never opens an amend flow against a limit that does not exist.
+type AgenticBlockerCode string
+
 // AgenticChatMessage defines model for AgenticChatMessage.
 type AgenticChatMessage struct {
-	// Attachments Input artifacts attached to this turn for the agent to investigate — e.g. an invoice PDF to draft a payment from. Optional. Document processing ships in a follow-up (ENG-2535); until then a request that carries attachments is rejected with 400.
+	// Attachments Input artifacts attached to this turn for the agent to investigate — e.g. an invoice PDF to draft a payment from. Optional. Document attachments (PDF or image) are accepted up to 8 MiB per document and 16 MiB per request, measured on the decoded payload.
 	Attachments *[]AgenticAttachment   `json:"attachments,omitempty"`
 	Content     string                 `json:"content"`
 	Role        AgenticChatMessageRole `json:"role"`
@@ -1709,6 +1889,54 @@ type AgenticChatMessage struct {
 
 // AgenticChatMessageRole defines model for AgenticChatMessage.Role.
 type AgenticChatMessageRole string
+
+// AgenticClientPolicy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+//
+// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
+//
+// DELIVERY: registration only. A request body never carries this object — a conversation is two calls (draft, then accept) judged independently, and a per-request policy let them disagree, so a draft that was legal under one could be refused at the customer's approval click.
+//
+// STRICT: an unknown key, an unknown value, or a label for a concept the server does not implement is a 400 — "accepted" always means "enforced". Absent (or every field empty) ⇒ platform defaults, byte-for-byte the behaviour of a request that never mentioned it.
+type AgenticClientPolicy struct {
+	// Labels Platform concept → the noun THIS client's customers use for it. The noun replaces the platform word in the tool results the agent reads AND in what it writes to the customer. Implemented concepts: `limit` (the spending limit; platform calls it a mandate), `payee` (the person being paid), and `limit_unit` (the UNIT the limit's amounts are quoted in, e.g. `USD`). Any other key is a 400 — a label for a concept the server does not implement would be accepted and then ignored.
+	//
+	// `limit` and `payee` are nouns and must match `^[a-z][a-z0-9 _-]{0,30}$`. `limit_unit` is a unit code and must match `^[A-Za-z][A-Za-z0-9]{0,9}$`, so it may be uppercase. Never a phrase, never a sentence.
+	//
+	// `limit_unit` matters most under a `payout_route` that forces a conversion account: the limit governs the DEPOSIT leg, so its own asset is the funding asset the customer has never heard of. With the unit set the agent quotes the caps and remaining budget in it ("your spending limit is 10 USD per month, 0.98 left") instead of reaching for the funding asset.
+	//
+	// Labelling `payee` also renames the flat view's keys: the container becomes the label plus `s` and each entry's ref becomes the label plus `_ref` — so `{"payee": "recipient"}` yields `recipients[]` with `recipient_ref`. `entity_ref` is NOT renamed; it is an opaque handle to the person behind the entry, not the labelled concept. The plural is a literal `+s` (the charset restricts labels to simple lowercase nouns), so an irregular noun gets an odd but harmless plural.
+	Labels *map[string]string `json:"labels,omitempty"`
+
+	// MandateStrategy `external_only`: spending limits live entirely OUTSIDE this conversation — the client creates and amends them in its own limit editor through the customer-signed amend API. The agent never drafts one; a drafted payment must fit an existing active limit's remaining budget, and when nothing covers it the agent says so and points the customer at the app instead of proposing a limit. Absent ⇒ the agent drafts limits as usual.
+	MandateStrategy *AgenticClientPolicyMandateStrategy `json:"mandate_strategy,omitempty"`
+
+	// PayeeModel How payees are shaped in tool results. `nested` (the default, and what an absent policy means) returns ONE payee carrying N payout methods. `flat` returns one entry PER payout method — a payee is a name plus one way of being paid — each with `payee_ref` (the id to pass straight through wherever a payout method is referenced), `entity_ref` (the person behind the entry; several entries can share one, and it is what binds a new payout method to an existing person instead of duplicating them), `name`, and `paid_by` (a rendered human phrase such as `bank account at Chase ****4321` or `base-sepolia 0x1234…cdef`). A payout method never pins an asset, so `paid_by` never names one.
+	PayeeModel *AgenticClientPolicyPayeeModel `json:"payee_model,omitempty"`
+
+	// PayoutAssets The assets a PAYEE may receive — what a conversion may output, and what a direct payment may send. Absent or empty means unrestricted, which is the platform default.
+	//
+	// State it when your product's FUNDING asset is not something a payee is ever paid in. Platform's asset registry only knows which assets settle on which chain, so it cannot tell that your funding stablecoin is a category error as a payout — it will happily draft one if a customer names it, and because that route needs no conversion account it also creates a duplicate payee for someone already saved. Declaring the allowlist turns both into a refusal the model sees before the customer does.
+	//
+	// Case-insensitive and de-duplicated; the order you send is the order quoted back to the customer.
+	PayoutAssets *[]string `json:"payout_assets,omitempty"`
+
+	// PayoutRoute Restricts how the money may leave. `conversion_account_only`: every scheduled payment must fund a conversion account — no direct wallet-to-address send. `bank_only`: on top of that the payout must land in a bank account — an outbound bank rail is required and no crypto payout method may be created. Absent ⇒ any supported route.
+	//
+	// Either value also makes the FUNDING leg system-chosen, which changes two things. The payment has two legs and the customer only names one: what they ask for is what ARRIVES (the conversion's output), while what LEAVES the wallet is the conversion deposit. The spending limit governs the DEPOSIT leg, so (a) the asset or chain the customer names can never put a payment outside the limit — coverage is judged on the per-payment cap and the remaining budget alone — and (b) the deposit's asset and network move out of the limit's `rule` into a `funding_leg_internal` block in the `active_mandates` result, which the agent copies into the conversion account and never says out loud. Pair this with `labels.limit_unit` so the agent has a unit to quote the limit in.
+	PayoutRoute          *AgenticClientPolicyPayoutRoute `json:"payout_route,omitempty"`
+	AdditionalProperties map[string]interface{}          `json:"-"`
+}
+
+// AgenticClientPolicyMandateStrategy `external_only`: spending limits live entirely OUTSIDE this conversation — the client creates and amends them in its own limit editor through the customer-signed amend API. The agent never drafts one; a drafted payment must fit an existing active limit's remaining budget, and when nothing covers it the agent says so and points the customer at the app instead of proposing a limit. Absent ⇒ the agent drafts limits as usual.
+type AgenticClientPolicyMandateStrategy string
+
+// AgenticClientPolicyPayeeModel How payees are shaped in tool results. `nested` (the default, and what an absent policy means) returns ONE payee carrying N payout methods. `flat` returns one entry PER payout method — a payee is a name plus one way of being paid — each with `payee_ref` (the id to pass straight through wherever a payout method is referenced), `entity_ref` (the person behind the entry; several entries can share one, and it is what binds a new payout method to an existing person instead of duplicating them), `name`, and `paid_by` (a rendered human phrase such as `bank account at Chase ****4321` or `base-sepolia 0x1234…cdef`). A payout method never pins an asset, so `paid_by` never names one.
+type AgenticClientPolicyPayeeModel string
+
+// AgenticClientPolicyPayoutRoute Restricts how the money may leave. `conversion_account_only`: every scheduled payment must fund a conversion account — no direct wallet-to-address send. `bank_only`: on top of that the payout must land in a bank account — an outbound bank rail is required and no crypto payout method may be created. Absent ⇒ any supported route.
+//
+// Either value also makes the FUNDING leg system-chosen, which changes two things. The payment has two legs and the customer only names one: what they ask for is what ARRIVES (the conversion's output), while what LEAVES the wallet is the conversion deposit. The spending limit governs the DEPOSIT leg, so (a) the asset or chain the customer names can never put a payment outside the limit — coverage is judged on the per-payment cap and the remaining budget alone — and (b) the deposit's asset and network move out of the limit's `rule` into a `funding_leg_internal` block in the `active_mandates` result, which the agent copies into the conversion account and never says out loud. Pair this with `labels.limit_unit` so the agent has a unit to quote the limit in.
+type AgenticClientPolicyPayoutRoute string
 
 // AgenticDocumentAttachment defines model for AgenticDocumentAttachment.
 type AgenticDocumentAttachment struct {
@@ -1741,7 +1969,7 @@ type AgenticInstructionStatus string
 type AgenticInstructionsResult struct {
 	InstructionIds *[]string `json:"instruction_ids,omitempty"`
 
-	// Mandates Every mandate this batch DRAFTED, in full wire shape (identical to GET /alpha/mandates/{id}) — sign the §8 approval immediately, no follow-up fetch or polling. Pending until a signer other than the bound one approves.
+	// Mandates Every mandate this batch DRAFTED, in full wire shape (identical to GET /mandates/{mandate_id}) — sign the §8 approval immediately, no follow-up fetch or polling. Pending until a signer other than the bound one approves.
 	Mandates *[]Mandate `json:"mandates,omitempty"`
 }
 
@@ -1751,16 +1979,59 @@ type AgenticProposal struct {
 	Summary *string         `json:"summary,omitempty"`
 }
 
+// AgenticProposalsProgress Live snapshot of an in-flight proposal-drafting turn. Coarse and customer-safe: a phase enum, one human sentence, and the model round. Tool counts only — never payee names, amounts, or addresses.
+type AgenticProposalsProgress struct {
+	// Active True while a drafting turn is publishing progress for this agent. False when idle or just finished — show a generic spinner instead.
+	Active bool `json:"active"`
+
+	// Detail Human line to show under the spinner.
+	Detail *string `json:"detail,omitempty"`
+
+	// Iteration Model round (1-based) the turn is on.
+	Iteration *int `json:"iteration,omitempty"`
+
+	// Phase Coarse machine phase: reading | working | drafting | revising | finalizing.
+	Phase *AgenticProposalsProgressPhase `json:"phase,omitempty"`
+
+	// UpdatedAt Unix seconds when this snapshot was published.
+	UpdatedAt *int64 `json:"updated_at,omitempty"`
+}
+
+// AgenticProposalsProgressPhase Coarse machine phase: reading | working | drafting | revising | finalizing.
+type AgenticProposalsProgressPhase string
+
 // AgenticProposalsResult The agent's next step. At least one of `proposals` or `reply` is always present in a successful response — `proposals` at high confidence (optionally with a short `reply` note), or `reply` alone when the agent needs more from the user.
 type AgenticProposalsResult struct {
-	// ConversationStatus How the boundary screen treated this turn: `ok` is a normal payments turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat.
-	ConversationStatus *string `json:"conversation_status,omitempty"`
+	// Blockers ALPHA — machine-actionable reasons the agent could not complete the request, for the CLIENT APPLICATION rather than the customer. `reply` explains it in prose, which software cannot branch on: "extend the limit to cover Priya", "I need her bank details" and "that rail is not supported" all arrive as some text. A blocker names the reason as a stable code so the client can act on it — opening its own limit editor with the payee filled in, say — and only then decide what the customer sees.
+	// MAY ACCOMPANY PROPOSALS, and routinely does. The common case is a payee who does not exist yet: the turn proposes creating them AND reports that the limit will not reach them, because the client has to do both, in that order — accept the proposal so the payee has an id, then amend the limit to include it. Treat proposals and blockers as independent, never as alternatives.
+	// Absent when nothing blocked the turn. ALWAYS switch on `code` and ignore codes you do not know, as new ones are added over time. Every blocker returned has been re-checked against the server's own data, so a code never reflects only the model's opinion.
+	Blockers *[]AgenticBlocker `json:"blockers,omitempty"`
+
+	// ConversationStatus How the boundary screen treated this turn. `ok` is a normal payments turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat. `rejected_input` means this message was refused wholesale (e.g. more payees than one conversation supports) and should NOT be added to the conversation history — the reply explains what to resend; the conversation itself continues unaffected.
+	ConversationStatus *AgenticProposalsResultConversationStatus `json:"conversation_status,omitempty"`
 
 	// Proposals Validated action-series proposals, ready to accept via POST /instructions. Present only at high confidence.
 	Proposals *[]AgenticProposal `json:"proposals,omitempty"`
 
 	// Reply The agent's conversational reply — a clarifying question or confirmation. Present without proposals when the agent needs more from the user; may accompany proposals as a short note.
 	Reply *string `json:"reply,omitempty"`
+}
+
+// AgenticProposalsResultConversationStatus How the boundary screen treated this turn. `ok` is a normal payments turn; `warned` means the request was off-topic and the customer was warned but may continue; `blocked` means the conversation has been terminated (repeated off-topic turns or a manipulation attempt) — the client should stop serving it and offer a fresh chat. `rejected_input` means this message was refused wholesale (e.g. more payees than one conversation supports) and should NOT be added to the conversation history — the reply explains what to resend; the conversation itself continues unaffected.
+type AgenticProposalsResultConversationStatus string
+
+// AmendMandateRequest A new version of an active mandate's rule, signed by a recognized signer of the mandate's customer other than the bound one (§8).
+//
+// The `rule` below is taken VERBATIM — it is stored, and the signature is verified, exactly as sent. Unlike mandate creation, this endpoint does NOT normalize it: a rule that is not already canonical is refused with 400 naming the offending field, rather than being rewritten into something you cannot reproduce. So `window` must be present and non-empty (send "NONE" for a lifetime window), `targets` must be recipient ids and never payee names, and `asset` must already be uppercase. This is what lets you compute the signed bytes from the body you are about to send.
+type AmendMandateRequest struct {
+	// Rule The complete NEW rule, not a patch, in canonical form — it is stored and signed verbatim, never normalized. `window` is REQUIRED here (use "NONE" for a lifetime window) even though it is optional when creating; `targets` must be recipient ids, not payee names; `asset` must be uppercase. Anything else is refused with 400 naming the field, not silently rewritten. `target_type`, `window`, `asset` and `network_id` must additionally match the current version exactly; only the amount fields and `targets` may differ.
+	Rule MandateRule `json:"rule"`
+
+	// Signature Signature over the JCS-canonical amend payload — the same shape as the approve/cancel payload with `action` set to "amend", `rule` set to the NEW rule below EXACTLY as you send it, and one extra key, `version`, set to the version being created (the mandate's current `version` + 1). Including the version is what stops a signature for v2 from being replayed to create v3. Because the rule is never normalized on this path, the bytes you sign are the bytes the server verifies.
+	Signature string `json:"signature"`
+
+	// SignerPublicKey The amending signer's public key. Must differ from the mandate's bound signer.
+	SignerPublicKey string `json:"signer_public_key"`
 }
 
 // AmountDetails Detailed representation of an amount with its asset and optional metadata
@@ -1837,6 +2108,12 @@ type Application struct {
 	// ApplicationUpdatedAt When the application was last updated
 	ApplicationUpdatedAt time.Time `json:"application_updated_at"`
 
+	// AssignedAt Epoch seconds when the application was assigned to its current owner. Absent/null when unassigned.
+	AssignedAt *int64 `json:"assigned_at"`
+
+	// Assignee A compliance reviewer who can own (be assigned) applications.
+	Assignee *ComplianceReviewer `json:"assignee,omitempty"`
+
 	// Attestations Attestation records showing what has been attested to
 	Attestations *AttestationData `json:"attestations,omitempty"`
 
@@ -1850,8 +2127,41 @@ type Application struct {
 	// Entities The entities (people/businesses) being onboarded in this application
 	Entities *ApplicationEntities `json:"entities,omitempty"`
 
+	// FrozenAt When the customer entered the current frozen state, from the KYB
+	// status-change log. Drives the days-frozen counter accurately (unlike
+	// application_updated_at, which unrelated edits bump). Absent when the customer
+	// is not currently frozen, when the freeze predates the status-change log, or
+	// for callers without compliance review access.
+	FrozenAt *time.Time `json:"frozen_at,omitempty"`
+
+	// IsFrozen Whether the customer's KYB is currently frozen (transactions held pending
+	// proof-of-address review). The authoritative source for the reviewer freeze
+	// badge. Present (true/false) only for individual applications; absent for
+	// business applications.
+	IsFrozen *bool `json:"is_frozen,omitempty"`
+
+	// OutstandingPartnerAttestations Outstanding partner disclosure attestations the customer must accept
+	// to unlock a partner-gated capability (e.g. international wires), surfaced
+	// so the hosted onboarding flow can present them in the same attestations
+	// UI used for first-party attestations. Partner-agnostic: each item is keyed
+	// by an opaque terms key + version, never a partner identifier. Only present
+	// (and only computed) for an already-decided (approved) application that has
+	// outstanding partner onboarding — this is the re-engagement surface for an
+	// existing customer who lands on the hosted flow via their application_url.
+	// Empty/absent when nothing is outstanding or the partner declaration is
+	// unavailable. Accept each by POSTing to /applications/{id}/attestations with
+	// disclosure_id = key and disclosure_version = version.
+	OutstandingPartnerAttestations *[]PartnerAttestationRequirement `json:"outstanding_partner_attestations,omitempty"`
+
+	// PoaOnFile Whether the customer has an approved Proof of Address on file (and is
+	// therefore exempt from the transaction-volume limit). Present only for
+	// individual applications; absent for business applications.
+	PoaOnFile *bool `json:"poa_on_file,omitempty"`
+
 	// PoaStatus Tracks the review state of the Proof of Address for individual applications.
-	// Null for business applications and for non-primary-individual rows.
+	// Only present for compliance reviewers; absent for business applications,
+	// for non-primary-individual rows, and on the token-authenticated hosted
+	// onboarding flow.
 	//
 	// - `missing` — No Proof of Address has been submitted. The individual is subject
 	//   to the $3,000 USD-equivalent rolling 7-day transaction limit.
@@ -1863,7 +2173,7 @@ type Application struct {
 	//   is exempt from the $3,000 / 7-day rolling transaction threshold.
 	// - `rejected` — The submitted Proof of Address was rejected. The individual
 	//   remains subject to the transaction limit and may re-upload a new document.
-	PoaStatus *ApplicationPoaStatus `json:"poa_status"`
+	PoaStatus *ApplicationPoaStatus `json:"poa_status,omitempty"`
 
 	// RiskRating Risk rating assessment for an application
 	RiskRating *RiskRating `json:"risk_rating,omitempty"`
@@ -1882,7 +2192,9 @@ type ApplicationApplicationType string
 type ApplicationDecisionMethod string
 
 // ApplicationPoaStatus Tracks the review state of the Proof of Address for individual applications.
-// Null for business applications and for non-primary-individual rows.
+// Only present for compliance reviewers; absent for business applications,
+// for non-primary-individual rows, and on the token-authenticated hosted
+// onboarding flow.
 //
 //   - `missing` — No Proof of Address has been submitted. The individual is subject
 //     to the $3,000 USD-equivalent rolling 7-day transaction limit.
@@ -2155,8 +2467,8 @@ type AssociatedIndividualEntity struct {
 	// DecisionReason Reason for the decision
 	DecisionReason *string `json:"decision_reason"`
 
-	// EmailAddress Email address
-	EmailAddress openapi_types.Email `json:"email_address"`
+	// EmailAddress Email address. May be empty if the applicant has not provided one yet.
+	EmailAddress string `json:"email_address"`
 
 	// EmploymentStatus Employment status (for individual person type only)
 	EmploymentStatus *AssociatedIndividualEntityEmploymentStatus `json:"employment_status,omitempty"`
@@ -2354,13 +2666,35 @@ type AttestationData struct {
 	} `json:"terms_of_service,omitempty"`
 }
 
-// AttestationSubmitRequest Request to submit an attestation for a KYB application
+// AttestationSubmitRequest Request to submit an attestation for a KYB application.
+//
+// To accept a banking partner's disclosure online (the customer-facing
+// half of the partner-onboarding disclosure gate), additionally supply
+// `disclosure_id` (the terms key the provider declared, e.g.
+// `partner_disclosures`) and `disclosure_version`. When those fields are
+// present the attestation is recorded as a partner disclosure
+// acknowledgment with `acceptance_channel = customer_online` (acceptor
+// name + client IP captured server-side), advancing the partner-onboarding
+// substatus and — for an already-approved application — triggering the
+// programmatic reprovision. The API is partner-agnostic: callers supply a
+// terms key + version, never a partner name. When `disclosure_id` is
+// absent the behavior is a standard onboarding attestation.
 type AttestationSubmitRequest struct {
 	// ApplicantId ID of the individual applicant making the attestation
 	ApplicantId string `json:"applicant_id"`
 
 	// AttestationType Type of attestation being submitted
 	AttestationType AttestationType `json:"attestation_type"`
+
+	// DisclosureId Optional. The partner disclosure terms key the customer is
+	// accepting, as declared by the provider (e.g. `partner_disclosures`).
+	// When present, this attestation is recorded as a partner disclosure
+	// acknowledgment. Partner-agnostic — a terms key, never a partner name.
+	DisclosureId *string `json:"disclosure_id,omitempty"`
+
+	// DisclosureVersion Optional. The version of the partner disclosure being accepted
+	// (e.g. `2026-06`). Required when `disclosure_id` is present.
+	DisclosureVersion *string `json:"disclosure_version,omitempty"`
 
 	// Timestamp Unix epoch timestamp (in seconds) when the attestation was made
 	Timestamp int64 `json:"timestamp"`
@@ -2728,6 +3062,48 @@ type CancelMandateRequest struct {
 // Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
 type Capabilities = []PaymentCapability
 
+// Capability A rail/capability and what the customer must do to unlock it. Never exposes partner identities.
+type Capability struct {
+	// Capability The rail identifier, e.g. "international_wire". Never a partner name.
+	Capability string `json:"capability"`
+
+	// Requirements Only the OUTSTANDING (unsatisfied) requirements. Empty when nothing is outstanding.
+	Requirements []CapabilityRequirement `json:"requirements"`
+
+	// Status available = usable now · enabling = "we're reviewing your data" ·
+	// action_required = satisfy required requirements · unavailable = not in rollout / not offered.
+	Status CapabilityStatus `json:"status"`
+}
+
+// CapabilityStatus available = usable now · enabling = "we're reviewing your data" ·
+// action_required = satisfy required requirements · unavailable = not in rollout / not offered.
+type CapabilityStatus string
+
+// CapabilityRequirement A single outstanding requirement, keyed by an opaque join key (terms id or document type) — never a partner.
+type CapabilityRequirement struct {
+	// Key Opaque join key — a terms id (for terms_acceptance) or a document type (for document). Never a partner identifier.
+	Key string `json:"key"`
+
+	// Severity required blocks unlock; requested pre-empts a partner RFI (non-blocking).
+	Severity CapabilityRequirementSeverity `json:"severity"`
+
+	// Title Human-readable label.
+	Title string                    `json:"title"`
+	Type  CapabilityRequirementType `json:"type"`
+
+	// Url Where to accept / upload.
+	Url *string `json:"url,omitempty"`
+
+	// Version Terms version (for terms_acceptance); omitted for documents.
+	Version *string `json:"version,omitempty"`
+}
+
+// CapabilityRequirementSeverity required blocks unlock; requested pre-empts a partner RFI (non-blocking).
+type CapabilityRequirementSeverity string
+
+// CapabilityRequirementType defines model for CapabilityRequirement.Type.
+type CapabilityRequirementType string
+
 // ClientPricingConfig defines model for ClientPricingConfig.
 type ClientPricingConfig struct {
 	// AchFeeCents Per-ACH transaction fee in cents
@@ -2738,6 +3114,10 @@ type ClientPricingConfig struct {
 
 	// EffectiveFrom When this pricing takes effect
 	EffectiveFrom time.Time `json:"effectiveFrom"`
+
+	// FednowFeeCents Per-FedNow transaction fee in USD cents. Null when unset, in which
+	// case the client's ACH fee applies.
+	FednowFeeCents *int `json:"fednowFeeCents"`
 
 	// KybFeeCents Per-business-application-submission compliance fee in USD cents.
 	KybFeeCents int `json:"kybFeeCents"`
@@ -2809,6 +3189,16 @@ type CompletedAttestation struct {
 	Type AttestationType `json:"type"`
 }
 
+// ComplianceReviewer A compliance reviewer who can own (be assigned) applications.
+type ComplianceReviewer struct {
+	Email     openapi_types.Email `json:"email"`
+	FirstName string              `json:"first_name"`
+	LastName  string              `json:"last_name"`
+
+	// UserId client_user ID of the reviewer
+	UserId string `json:"user_id"`
+}
+
 // Country defines model for Country.
 type Country struct {
 	Code string `json:"code"`
@@ -2832,7 +3222,10 @@ type CreateAutoAccountAction struct {
 	// OutputAsset The asset the recipient receives (a currency such as USD for a bank offramp).
 	OutputAsset string `json:"output_asset"`
 
-	// Rail Outbound rail — REQUIRED for a bank offramp (e.g. ach, fedwire, swift, sepa); omit for a crypto swap.
+	// OutputNetworkId The chain the PAYEE is paid on — the payout leg, and a different chain from `source_network_id` (the deposit the funding wallet pays). Crypto payouts only; a bank offramp has no chain. Optional: the destination's own network is used when omitted. When set it decides, because the network belongs to the payment and not to the payee — an address receives on every chain in its family, so a destination's saved network records what a previous payment did rather than restricting this one. Across chain FAMILIES the address does not carry at all, and that is refused.
+	OutputNetworkId *string `json:"output_network_id,omitempty"`
+
+	// Rail Outbound rail — REQUIRED for a bank offramp (e.g. ach, fedwire, swift); omit for a crypto swap.
 	Rail              *string                                   `json:"rail,omitempty"`
 	RoutingPreference *CreateAutoAccountActionRoutingPreference `json:"routing_preference,omitempty"`
 
@@ -2889,6 +3282,19 @@ type CreateCryptoDestinationAction struct {
 
 // CreateInstructionsRequest defines model for CreateInstructionsRequest.
 type CreateInstructionsRequest struct {
+	// ClientPolicy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+	//
+	// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
+	//
+	// DELIVERY: registration only. A request body never carries this object — a conversation is two calls (draft, then accept) judged independently, and a per-request policy let them disagree, so a draft that was legal under one could be refused at the customer's approval click.
+	//
+	// STRICT: an unknown key, an unknown value, or a label for a concept the server does not implement is a 400 — "accepted" always means "enforced". Absent (or every field empty) ⇒ platform defaults, byte-for-byte the behaviour of a request that never mentioned it.
+	ClientPolicy *AgenticClientPolicy `json:"client_policy,omitempty"`
+
+	// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	//
+	// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
+	DeveloperFee   *DeveloperFee     `json:"developer_fee,omitempty"`
 	PaymentAgentId string            `json:"payment_agent_id"`
 	Proposals      []AgenticProposal `json:"proposals"`
 }
@@ -2900,13 +3306,19 @@ type CreateMandateAction struct {
 	ValidUntil *int64      `json:"valid_until,omitempty"`
 }
 
-// CreateMandateRequest defines model for CreateMandateRequest.
+// CreateMandateRequest Exactly one binding form is required - payment_agent_id alone, or signer_id together with customer_id. Any other combination is rejected with 400.
 type CreateMandateRequest struct {
-	// PaymentAgentId The mandate binds this agent's signer.
-	PaymentAgentId string      `json:"payment_agent_id"`
+	// CustomerId Binding form B - the customer the mandate is anchored to; must belong to the calling client. Defines the recipient-target scope and the §8 approver set (approval requires a recognized signer of THIS customer other than the bound one). Requires signer_id.
+	CustomerId *string `json:"customer_id,omitempty"`
+
+	// PaymentAgentId Binding form A (hosted convenience) - the mandate binds this agent's signer and anchors to the agent's customer. Mutually exclusive with signer_id/customer_id.
+	PaymentAgentId *string     `json:"payment_agent_id,omitempty"`
 	Rule           MandateRule `json:"rule"`
-	ValidFrom      *int64      `json:"valid_from,omitempty"`
-	ValidUntil     *int64      `json:"valid_until,omitempty"`
+
+	// SignerId Binding form B - the mandate binds this signer directly (any of the client's signers, not only an agent's). Requires customer_id.
+	SignerId   *string `json:"signer_id,omitempty"`
+	ValidFrom  *int64  `json:"valid_from,omitempty"`
+	ValidUntil *int64  `json:"valid_until,omitempty"`
 }
 
 // CreatePaymentAgentRequest defines model for CreatePaymentAgentRequest.
@@ -2953,11 +3365,57 @@ type CreatePolicyRuleRequestRuleType string
 
 // CreateProposalsRequest A freeform proposals conversation. The server is stateless — send the whole history in `messages` on each call. `prompt` is a convenience for a single-shot turn (or the latest user message); it is appended after `messages`. At least one of `prompt` or `messages` must be non-empty. Supplying both is valid only when `messages` does not already end with a user turn; otherwise the request is rejected with 400 (two consecutive user turns are not allowed).
 type CreateProposalsRequest struct {
+	// ClientPolicy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+	//
+	// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
+	//
+	// DELIVERY: registration only. A request body never carries this object — a conversation is two calls (draft, then accept) judged independently, and a per-request policy let them disagree, so a draft that was legal under one could be refused at the customer's approval click.
+	//
+	// STRICT: an unknown key, an unknown value, or a label for a concept the server does not implement is a 400 — "accepted" always means "enforced". Absent (or every field empty) ⇒ platform defaults, byte-for-byte the behaviour of a request that never mentioned it.
+	ClientPolicy *AgenticClientPolicy `json:"client_policy,omitempty"`
+
 	// Messages The conversation so far, oldest first.
 	Messages *[]AgenticChatMessage `json:"messages,omitempty"`
 
 	// Prompt Single-shot input, appended as the latest user turn.
 	Prompt *string `json:"prompt,omitempty"`
+
+	// Timezone The customer's IANA timezone (e.g. "America/Los_Angeles"). When present, the agent resolves every relative date ("tomorrow", "Friday") and clock time ("10 am") in THIS timezone; a date without a time is drafted for the first working hours of the local day (10:00) and the draft summary states the resolved local time; a time without a date means its next local occurrence. Absent or unrecognized ⇒ times resolve as UTC and the agent says so when a specific clock time matters. Send it on EVERY turn — the server is stateless. Note: the zone's UTC offset is captured at drafting time, so a DST transition before a far-future fire date shifts the fire time by the DST delta.
+	Timezone *string `json:"timezone,omitempty"`
+}
+
+// CreateScheduledPaymentRequest Direct (signer-first) schedule create. The signer + funding wallet are the caller's choice; the schedule is explicit `dates`, or `count` × `interval_seconds` from `start_at`. Name the payee EITHER with `destination_id` (an existing crypto destination of the wallet's customer) OR with a direct `address` + `network_id` (a raw crypto address, no recipient — matched on the address at fire time, like a mandate address target) — exactly one of the two.
+type CreateScheduledPaymentRequest struct {
+	// Address A direct crypto address to pay — an alternative to destination_id (no recipient). Requires network_id; the wallet's chain family must match.
+	Address *string `json:"address,omitempty"`
+
+	// Amount Decimal string, at the destination asset.
+	Amount string `json:"amount"`
+	Asset  string `json:"asset"`
+
+	// Count Number of payments when using count × interval_seconds (default 1).
+	Count *int `json:"count,omitempty"`
+
+	// Dates Explicit per-payment unix times (one payment each). Win over count × interval_seconds.
+	Dates *[]int64 `json:"dates,omitempty"`
+
+	// DestinationId An existing crypto destination of the wallet's customer to pay. Omit to pay a direct address (address + network_id).
+	DestinationId *string `json:"destination_id,omitempty"`
+
+	// IntervalSeconds Cadence in seconds between payments when using count.
+	IntervalSeconds *int64 `json:"interval_seconds,omitempty"`
+
+	// NetworkId The network for a direct-address payment (required together with address).
+	NetworkId *string `json:"network_id,omitempty"`
+
+	// SignerId The signer the payments bind to; its hosted agent signs at fire time.
+	SignerId string `json:"signer_id"`
+
+	// StartAt First due time (0 ⇒ now).
+	StartAt *int64 `json:"start_at,omitempty"`
+
+	// WalletId The funding wallet these payments spend from. Required — the signer must be permitted to spend on it, and its chain family must match the payment network.
+	WalletId string `json:"wallet_id"`
 }
 
 // CreateScheduledPaymentsAction defines model for CreateScheduledPaymentsAction.
@@ -2968,7 +3426,16 @@ type CreateScheduledPaymentsAction struct {
 	Dates           *[]int64 `json:"dates,omitempty"`
 	DestinationId   *string  `json:"destination_id,omitempty"`
 	IntervalSeconds *int64   `json:"interval_seconds,omitempty"`
-	StartAt         *int64   `json:"start_at,omitempty"`
+
+	// LocalTime The FIRST entry of `dates` as the customer-local wall clock it is meant to fire at, "2006-01-02 15:04". When present together with `local_zone`, the server recomputes the epoch from the pair and rejects the action if it disagrees with `dates[0]` — a deterministic check under timezone arithmetic. Optional.
+	LocalTime *string `json:"local_time,omitempty"`
+
+	// LocalZone The IANA timezone `local_time` is expressed in.
+	LocalZone *string `json:"local_zone,omitempty"`
+
+	// NetworkId The chain THIS payment settles on. The network belongs to the payment, not to the payee: an address belongs to a whole family, so which chain a given payment uses is chosen when the payment is made. Optional — the destination's own network is used when omitted. When the destination pins a DIFFERENT one in the same family, this payment's network wins (the pin records what an earlier payment did, not a restriction on the address). Across chain FAMILIES the address does not carry at all, and that is refused.
+	NetworkId *string `json:"network_id,omitempty"`
+	StartAt   *int64  `json:"start_at,omitempty"`
 
 	// WalletId The funding wallet for these payments — one the agent recognizes. Optional only when the agent recognizes exactly one wallet (used by default); otherwise required, since a signer can recognize several and the choice cannot be deferred to fire time. Its chain family must match the payment network.
 	WalletId *string `json:"wallet_id,omitempty"`
@@ -3051,6 +3518,9 @@ type Customer struct {
 	// Email Email address of the customer
 	Email *string `json:"email,omitempty"`
 
+	// ExternalId Unique identifier for the customer in the client's system, as supplied when the customer was created. Omitted when no external ID was set.
+	ExternalId *string `json:"external_id,omitempty"`
+
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
@@ -3093,6 +3563,20 @@ type Customer struct {
 	// ProviderStatuses Detailed status information from different verification providers used in the KYB process.
 	ProviderStatuses *[]ProviderKybStatus `json:"provider_statuses,omitempty"`
 
+	// RdAllowed Whether this customer is currently permitted to hold RD, derived
+	// server-side from the same US-state geofence that guards RD account
+	// creation. `true` when RD is allowed; `false` only when one of the
+	// customer's governing US states is on the restricted list while the
+	// geofence is active. Customers with no resolvable US governing state
+	// — non-US customers, or those whose jurisdiction is unconfirmed — are
+	// allowed. When the geofence is disabled (empty blocklist) this is
+	// `true` for everyone.
+	//
+	// This is the canonical read path for the RD-eligibility verdict:
+	// consumers read a boolean and never see or copy the underlying
+	// blocklist.
+	RdAllowed *bool `json:"rd_allowed,omitempty"`
+
 	// SubClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	SubClientId *KSUID `json:"sub_client_id,omitempty"`
 
@@ -3108,6 +3592,11 @@ type CustomerCustomerType string
 
 // CustomerDecision Application decision status
 type CustomerDecision string
+
+// CustomerCapabilities A customer's capabilities and the outstanding requirements to unlock each. Partner-agnostic.
+type CustomerCapabilities struct {
+	Capabilities []Capability `json:"capabilities"`
+}
 
 // CustomerCreateRequest Request to create a customer and subsequently initiate a Know Your Business (KYB) verification process.
 type CustomerCreateRequest struct {
@@ -3146,6 +3635,20 @@ type CustomerCreateResponse struct {
 
 	// KybLinks KYB Links for different providers used in the KYB process.
 	KybLinks []KybLink `json:"kyb_links"`
+}
+
+// CustomerReEngagementResponse Response returned when re-engaging an approved customer: a fresh
+// application link (with a freshly minted onboarding token) for the
+// customer's existing approved application.
+type CustomerReEngagementResponse struct {
+	// ApplicationExpiresAt Unix timestamp (nanoseconds) when the freshly minted token expires
+	ApplicationExpiresAt int64 `json:"application_expires_at"`
+
+	// ApplicationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
+	ApplicationId KSUID `json:"application_id"`
+
+	// ApplicationUrl Public URL for re-engaging the customer via the web form (includes the freshly minted embedded token)
+	ApplicationUrl string `json:"application_url"`
 }
 
 // DeletePolicyIntent defines model for DeletePolicyIntent.
@@ -3231,6 +3734,17 @@ type DetailsValidation struct {
 
 	// Ready Whether all required form fields are filled and valid
 	Ready bool `json:"ready"`
+}
+
+// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+//
+// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
+type DeveloperFee struct {
+	// OfframpBps Rate for a bank payout — a `create_auto_account` naming a `rail`. An offramp converts too (it just settles on a rail instead of a chain), so charging it is a pricing decision that belongs to you. Zero or omitted means the payout is free of a conversion fee.
+	OfframpBps *int32 `json:"offramp_bps,omitempty"`
+
+	// SwapBps Rate for a crypto payout — a `create_auto_account` naming no `rail`.
+	SwapBps *int32 `json:"swap_bps,omitempty"`
 }
 
 // DocumentInfo Document status information for an applicant entity
@@ -3525,6 +4039,20 @@ type EventType string
 // Family Blockchain family for the crypto account.
 type Family string
 
+// FeePayoutDestination A client's registered destination for developer-fee payouts.
+type FeePayoutDestination struct {
+	// Chain CAIP-2 chain id. Present when `type` is `usdc_wallet`.
+	Chain     *string                  `json:"chain,omitempty"`
+	Type      FeePayoutDestinationType `json:"type"`
+	UpdatedAt time.Time                `json:"updated_at"`
+
+	// WalletAddress Present when `type` is `usdc_wallet`.
+	WalletAddress *string `json:"wallet_address,omitempty"`
+}
+
+// FeePayoutDestinationType defines model for FeePayoutDestination.Type.
+type FeePayoutDestinationType string
+
 // FiatIBANDestinationRequest defines model for FiatIBANDestinationRequest.
 type FiatIBANDestinationRequest struct {
 	// AccountHolderAddress Standardized physical address format used throughout the Dakota platform for user and entity addresses.
@@ -3798,8 +4326,8 @@ type IndividualEntity struct {
 	// DecisionReason Reason for the decision
 	DecisionReason *string `json:"decision_reason"`
 
-	// EmailAddress Email address
-	EmailAddress openapi_types.Email `json:"email_address"`
+	// EmailAddress Email address. May be empty if the applicant has not provided one yet.
+	EmailAddress string `json:"email_address"`
 
 	// EmploymentStatus Employment status (for individual person type only)
 	EmploymentStatus *IndividualEntityEmploymentStatus `json:"employment_status,omitempty"`
@@ -4114,8 +4642,11 @@ type Mandate struct {
 	ApprovedAt         *int64  `json:"approved_at,omitempty"`
 	ApprovedBySignerId *string `json:"approved_by_signer_id,omitempty"`
 	BoundSignerId      *string `json:"bound_signer_id,omitempty"`
-	Id                 *string `json:"id,omitempty"`
-	InstructionId      *string `json:"instruction_id,omitempty"`
+
+	// CustomerId The customer this mandate is anchored to - approval requires a recognized signer of this customer other than the bound one (§8), and recipient targets belong to it. Absent only on rows created before the anchor existed.
+	CustomerId    *string `json:"customer_id,omitempty"`
+	Id            *string `json:"id,omitempty"`
+	InstructionId *string `json:"instruction_id,omitempty"`
 
 	// RejectedBySignerId The signer that cancelled the mandate while it was still pending (§8); absent otherwise.
 	RejectedBySignerId *string `json:"rejected_by_signer_id,omitempty"`
@@ -4131,10 +4662,65 @@ type Mandate struct {
 	TargetNames *[]string `json:"target_names,omitempty"`
 	ValidFrom   *int64    `json:"valid_from,omitempty"`
 	ValidUntil  *int64    `json:"valid_until,omitempty"`
+
+	// Version The CURRENT version number (1 for a mandate that has never been amended). `rule` below is this version's rule — the one the gate governs on. Each version is immutable and independently signed; the full history is at GET /mandates/{mandate_id}/versions.
+	Version *int `json:"version,omitempty"`
 }
 
 // MandateStatus expired is DERIVED, never stored - a pending or active mandate whose valid_until has passed. It cannot authorize payments and cannot be approved; it can still be cancelled.
 type MandateStatus string
+
+// MandateBudget A mandate's remaining spend budget at a point in time. Advisory: nothing here reserves budget, and the mandate gate remains the authority at fire time.
+type MandateBudget struct {
+	// Aggregate One line per window bucket summing EVERY payee, metered against the agent-wide `max_amount_in_window` and `max_count_in_window`. This is the ceiling on the agent as a whole; honour it alongside `per_target`, never instead of it.
+	Aggregate []MandateBudgetLine `json:"aggregate"`
+
+	// AsOf Unix time the windows were derived and the sums taken. Budget is a function of time — a MONTHLY bucket empties at the rollover — so the figures below are only interpretable against this instant.
+	AsOf      int64  `json:"as_of"`
+	MandateId string `json:"mandate_id"`
+
+	// PerTarget Per-payee lines, metered against `max_amount_per_target_in_window` and `max_count_per_target_in_window`. Every configured payee appears for the current window even if it has never been paid, so an empty budget is reported as zeros rather than as a missing line.
+	PerTarget []MandateBudgetLine `json:"per_target"`
+
+	// Version The version whose caps these figures are metered against. Amending a mandate changes the caps but NOT the spend — usage accrues to the mandate, so a raised limit leaves the window's consumption intact and a lowered one can leave zero remaining rather than a negative balance.
+	Version int `json:"version"`
+
+	// Window The rule's `window` verbatim (`NONE`, `DAILY`, `WEEKLY`, `MONTHLY`) — the period each `bucket` spans and the cadence at which budget resets. `NONE` is a lifetime cap: one bucket, labelled `lifetime`, that never resets.
+	Window string `json:"window"`
+}
+
+// MandateBudgetLine One budget line: a window bucket, what has been spent in it, what is earmarked against it, and what is left.
+//
+// Amounts are decimal strings in the mandate rule's `asset`, matching the `rule` fields they are metered against. Counts and amounts are reported independently because the rule can cap either, both, or neither.
+type MandateBudgetLine struct {
+	// Bucket The window period this line covers, identified as a date: `"2026-07"` for MONTHLY, `"2026-07-13..2026-07-19"` (the full inclusive range) for WEEKLY, `"2026-07-13"` for DAILY, and `"lifetime"` for window `NONE`, whose single bucket never resets.
+	//
+	// Lines are chronological within a payee (`aggregate`, having no payee, is chronological outright), so a payee's CURRENT bucket comes first — later buckets exist only where payments are already scheduled into future windows, and no bucket earlier than the current one is ever reported.
+	Bucket string `json:"bucket"`
+
+	// CommittedAmount Sum of those spends, as a decimal string.
+	CommittedAmount string `json:"committed_amount"`
+
+	// CommittedCount Payments that have already fired and spent from this bucket.
+	CommittedCount int `json:"committed_count"`
+
+	// OpenAmount Sum of those earmarks, as a decimal string.
+	OpenAmount string `json:"open_amount"`
+
+	// OpenCount Scheduled payments that have NOT fired yet but will consume this bucket at their due date.
+	OpenCount int `json:"open_count"`
+
+	// RemainingAmount Amount still permitted in this bucket after committed spend and open earmarks, floored at 0 and returned as a decimal string. ABSENT when the rule sets no amount cap for this line's scope — absence means "not capped", never "nothing left".
+	//
+	// **`"?"` means the figure could not be summed and MUST be treated as no headroom.** A stored amount or cap in this bucket did not parse as a decimal; the mandate gate fails closed on the same data, so a payment sent against this bucket will be denied. Do not coerce `"?"` to 0 and do not fall back to the rule's cap — both read as headroom that is not there.
+	RemainingAmount *string `json:"remaining_amount,omitempty"`
+
+	// RemainingCount Payments still permitted in this bucket after committed and open ones, floored at 0. ABSENT when the rule sets no count cap for this line's scope — absence means "not capped", never "none left".
+	RemainingCount *int `json:"remaining_count,omitempty"`
+
+	// Target Which payee this line is about — a recipient id under `target_type: recipient`, an address under `address`. Empty for `target_type: any` (there is one bucket for everything) and always empty on `aggregate` lines, which are the roll-up across every payee.
+	Target string `json:"target"`
+}
 
 // MandateResponse defines model for MandateResponse.
 type MandateResponse struct {
@@ -4154,29 +4740,54 @@ type MandateResponseStatus string
 
 // MandateRule defines model for MandateRule.
 type MandateRule struct {
+	// Asset The asset the funding wallet SENDS — deposit-denominated, e.g. USDC — compared case-insensitively against the firing payment. Write the crypto deposit asset even when the recipient ultimately receives fiat via a bank offramp (stablecoin conversion is 1:1): a fiat symbol such as USD can never match a send, so the mandate would deny every payment.
 	Asset string `json:"asset"`
+
+	// MaxAmountInWindow Cumulative cap over the window ACROSS ALL TARGETS — the ceiling on total spend under this mandate, whoever it pays. Use this for "the agent may spend up to X per month": a per-target cap alone MULTIPLIES by the number of targets (a 3-payee allowlist capped at 10000 per target permits 30000). Set both and both are enforced — the tighter one binds. Empty means no aggregate amount ceiling.
+	MaxAmountInWindow *string `json:"max_amount_in_window,omitempty"`
 
 	// MaxAmountPerTargetInWindow Cumulative cap over the window, PER TARGET (never shared across targets).
 	MaxAmountPerTargetInWindow *string `json:"max_amount_per_target_in_window,omitempty"`
 
+	// MaxCountInWindow Up to N payments in the window ACROSS ALL TARGETS, whoever they go to (window NONE = lifetime). The aggregate twin of max_count_per_target_in_window, which caps each target separately and so permits targets x N payments. Omit or 0 for no aggregate count ceiling.
+	MaxCountInWindow *int `json:"max_count_in_window,omitempty"`
+
 	// MaxCountPerTargetInWindow Up to N times PER TARGET in the window (window NONE = lifetime).
-	MaxCountPerTargetInWindow *int                  `json:"max_count_per_target_in_window,omitempty"`
-	MaxPerTx                  *string               `json:"max_per_tx,omitempty"`
-	NetworkId                 *string               `json:"network_id,omitempty"`
-	TargetType                MandateRuleTargetType `json:"target_type"`
+	MaxCountPerTargetInWindow *int `json:"max_count_per_target_in_window,omitempty"`
+
+	// MaxPerTx Per-payment cap — a decimal string in the rule's (deposit) asset. Empty means no per-payment cap; the window caps may still bound total spend.
+	MaxPerTx *string `json:"max_per_tx,omitempty"`
+
+	// NetworkId The network the funding wallet pays on (e.g. base-sepolia). Empty authorizes any network — the other dimensions still apply.
+	NetworkId  *string               `json:"network_id,omitempty"`
+	TargetType MandateRuleTargetType `json:"target_type"`
 
 	// Targets One or more targets of the declared kind (recipient ids or addresses; empty for any). Max 32.
 	Targets *[]string `json:"targets,omitempty"`
 
-	// Window Spend-cap window for the per-target limits (calendar, not rolling). NONE = lifetime; WEEKLY = calendar week from Monday 00:00 UTC; MONTHLY = calendar month from the 1st, 00:00 UTC.
+	// Window Spend-cap window shared by every window limit below (calendar, not rolling; all boundaries in UTC). NONE = lifetime; DAILY = calendar day from 00:00 UTC; WEEKLY = calendar week from Monday 00:00 UTC; MONTHLY = calendar month from the 1st, 00:00 UTC.
 	Window *MandateRuleWindow `json:"window,omitempty"`
 }
 
 // MandateRuleTargetType defines model for MandateRule.TargetType.
 type MandateRuleTargetType string
 
-// MandateRuleWindow Spend-cap window for the per-target limits (calendar, not rolling). NONE = lifetime; WEEKLY = calendar week from Monday 00:00 UTC; MONTHLY = calendar month from the 1st, 00:00 UTC.
+// MandateRuleWindow Spend-cap window shared by every window limit below (calendar, not rolling; all boundaries in UTC). NONE = lifetime; DAILY = calendar day from 00:00 UTC; WEEKLY = calendar week from Monday 00:00 UTC; MONTHLY = calendar month from the 1st, 00:00 UTC.
 type MandateRuleWindow string
+
+// MandateVersion One immutable, independently signed version of a mandate's rule. Append-only — a version's rule is never rewritten.
+type MandateVersion struct {
+	// ApprovedAt Unix time this version was signed into force; absent until then.
+	ApprovedAt *int64 `json:"approved_at,omitempty"`
+
+	// ApprovedBySignerId The §8 signer that signed this version into force — for v1 the approver, for later versions the amender. Absent while a v1 is still pending approval.
+	ApprovedBySignerId *string      `json:"approved_by_signer_id,omitempty"`
+	CreatedAt          *int64       `json:"created_at,omitempty"`
+	Rule               *MandateRule `json:"rule,omitempty"`
+
+	// Version 1-based. Version 1 is the rule the mandate was created and approved with.
+	Version *int `json:"version,omitempty"`
+}
 
 // Meta Meta information about the response
 type Meta struct {
@@ -4295,7 +4906,7 @@ type OneOffTransaction struct {
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	DestinationId KSUID `json:"destination_id"`
 
-	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
+	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
 
 	// DestinationRoutingNumber ABA routing number for US bank accounts
@@ -4375,7 +4986,7 @@ type OneOffTransactionRequest struct {
 	// CustomerId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	CustomerId KSUID `json:"customer_id"`
 
-	// DestinationAsset Destination asset symbol. For offramps this is a fiat currency (e.g. `USD`, `EUR`). For swaps this is the destination stablecoin (e.g. `USDC`, `DKUSD`).
+	// DestinationAsset Destination asset symbol. For offramps this is a fiat currency (e.g. `USD`, `EUR`). For swaps this is the destination stablecoin (e.g. `USDC`, `RD`).
 	DestinationAsset string `json:"destination_asset"`
 
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -4384,13 +4995,13 @@ type OneOffTransactionRequest struct {
 	// DestinationNetworkId Identifier for a blockchain network
 	DestinationNetworkId *NetworkId `json:"destination_network_id,omitempty"`
 
-	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
+	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
 
 	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%). Overrides the default client fee for this transaction.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
-	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-10 chars), Wire (1-140 chars), SEPA (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
+	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-18 chars), Wire (1-140 chars), SEPA (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
 	PaymentReference *string `json:"payment_reference,omitempty"`
 
 	// SourceAsset Source crypto asset symbol
@@ -4471,6 +5082,26 @@ type PaginatedWalletTransactionResponse struct {
 	Meta Meta `json:"meta"`
 }
 
+// PartnerAttestationRequirement A single outstanding partner disclosure the customer must accept online,
+// keyed by an opaque terms key + version — never a partner identifier. Rendered
+// in the hosted attestations UI; accepted via POST /applications/{id}/attestations
+// with disclosure_id = key and disclosure_version = version.
+type PartnerAttestationRequirement struct {
+	// DisclosureId The partner disclosure terms key to accept (the opaque join key the provider declared, e.g. partner_disclosures). Never a partner name.
+	DisclosureId string `json:"disclosure_id"`
+
+	// DisclosureVersion The version of the disclosure being accepted. Pass back verbatim as disclosure_version.
+	DisclosureVersion string `json:"disclosure_version"`
+
+	// Title Human-readable label for the disclosure to show the customer.
+	Title string `json:"title"`
+
+	// Url Optional. Where the disclosure content / acceptance lives — the token-gated
+	// hosted onboarding URL for this application (a real redirect target). Absent
+	// when no usable link is resolvable.
+	Url *string `json:"url,omitempty"`
+}
+
 // PaymentAgentResponse defines model for PaymentAgentResponse.
 type PaymentAgentResponse struct {
 	CustomerId *string `json:"customer_id,omitempty"`
@@ -4501,7 +5132,7 @@ type PaymentAgentSignerGroupRef struct {
 	SignerGroupId string `json:"signer_group_id"`
 }
 
-// PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts both ACH and Wire (Fedwire) deposits interchangeably.
+// PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
 type PaymentCapability string
 
 // PersonName Full name of a person
@@ -4514,6 +5145,38 @@ type PersonName struct {
 
 	// Middle Middle name (optional)
 	Middle *string `json:"middle,omitempty"`
+}
+
+// PersonaImportJobSummary defines model for PersonaImportJobSummary.
+type PersonaImportJobSummary struct {
+	CreatedAt  *int64  `json:"created_at,omitempty"`
+	FinishedAt *int64  `json:"finished_at,omitempty"`
+	JobId      *string `json:"job_id,omitempty"`
+	StartedAt  *int64  `json:"started_at,omitempty"`
+
+	// Status running, paused, cancelled, or completed
+	Status *string `json:"status,omitempty"`
+	Total  *int    `json:"total,omitempty"`
+}
+
+// PersonaImportRowResult defines model for PersonaImportRowResult.
+type PersonaImportRowResult struct {
+	ApplicationId *string `json:"application_id,omitempty"`
+	CustomerId    *string `json:"customer_id,omitempty"`
+
+	// Error Human-readable, actionable failure reason
+	Error *string `json:"error,omitempty"`
+
+	// ErrorCode Stable machine-readable failure code
+	ErrorCode *string `json:"error_code,omitempty"`
+	Index     *int    `json:"index,omitempty"`
+
+	// State queued, inquiry_created, redeem_requested, redeemed, finalizing (in flight); succeeded, failed, expired, stuck, cancelled (terminal)
+	State *string `json:"state,omitempty"`
+
+	// Token Redacted share token (suffix only)
+	Token          *string `json:"token,omitempty"`
+	TokenExpiresAt *int64  `json:"token_expires_at,omitempty"`
 }
 
 // Policy defines model for Policy.
@@ -4614,6 +5277,15 @@ type ProviderKybStatus struct {
 // ProviderKybStatusStatus Current verification status with this specific provider.
 type ProviderKybStatusStatus string
 
+// PutFeePayoutDestinationRequest A `usdc_wallet` destination (developer-fee payouts are crypto-only).
+type PutFeePayoutDestinationRequest struct {
+	UsdcWallet *UsdcWalletPayoutDestination `json:"usdc_wallet,omitempty"`
+	union      json.RawMessage
+}
+
+// PutFeePayoutDestinationRequest0 defines model for .
+type PutFeePayoutDestinationRequest0 = interface{}
+
 // RecipientRequest Request for creating or updating a recipient entity.
 //
 // **Address Requirements:**
@@ -4649,6 +5321,26 @@ type RecipientResponse struct {
 
 // RecipientResponseStatus Current status of the recipient
 type RecipientResponseStatus string
+
+// RegisteredAgenticClientPolicy A client's registered `client_policy` (ALPHA) with its registration timestamps.
+//
+// `policy` is the NORMALIZED form — what the server will actually apply, not an echo of what was sent. Values that mean "the default" are normalized away (`payee_model: nested` becomes absent, because an explicit nested and an absent policy have to be the same value rather than two values that merely behave alike today).
+type RegisteredAgenticClientPolicy struct {
+	// CreatedAt Unix time this client first registered a policy.
+	CreatedAt *int64 `json:"created_at,omitempty"`
+
+	// Policy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+	//
+	// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
+	//
+	// DELIVERY: registration only. A request body never carries this object — a conversation is two calls (draft, then accept) judged independently, and a per-request policy let them disagree, so a draft that was legal under one could be refused at the customer's approval click.
+	//
+	// STRICT: an unknown key, an unknown value, or a label for a concept the server does not implement is a 400 — "accepted" always means "enforced". Absent (or every field empty) ⇒ platform defaults, byte-for-byte the behaviour of a request that never mentioned it.
+	Policy AgenticClientPolicy `json:"policy"`
+
+	// UpdatedAt Unix time the registration was last replaced.
+	UpdatedAt *int64 `json:"updated_at,omitempty"`
+}
 
 // RemovePolicyRuleIntent defines model for RemovePolicyRuleIntent.
 type RemovePolicyRuleIntent struct {
@@ -4765,22 +5457,30 @@ type SandboxScenario struct {
 	ValidFor []string `json:"valid_for"`
 }
 
+// ScheduledPaymentList defines model for ScheduledPaymentList.
+type ScheduledPaymentList struct {
+	Data []ScheduledPaymentResponse `json:"data"`
+
+	// Meta Meta information about the response
+	Meta Meta `json:"meta"`
+}
+
 // ScheduledPaymentResponse defines model for ScheduledPaymentResponse.
 type ScheduledPaymentResponse struct {
 	Address *string `json:"address,omitempty"`
 	Amount  *string `json:"amount,omitempty"`
 	Asset   *string `json:"asset,omitempty"`
 
-	// DestinationId The REAL destination this settles to (a bank for an offramp, a crypto destination otherwise). For an auto-account payment the address is the crypto DEPOSIT while this names the bank/crypto target.
+	// DestinationId The REAL destination this payment settles to — a bank (for an offramp) or a crypto destination. For an auto-account (convert-and-forward) payment, `address` is the crypto DEPOSIT actually paid while this names the bank/crypto target, so a client can show which account the scheduled payment is for. Absent for a direct-address payment.
 	DestinationId *string `json:"destination_id,omitempty"`
 
-	// DestinationLabel A human label for the real destination — e.g. "Chase ••••5432" for a bank, or a shortened address for crypto — so a client shows which account the payment settles to without a second lookup.
+	// DestinationLabel A human label for the real destination — e.g. "Chase ••••5432" for a bank, or a shortened address for crypto — so a client can show which account the payment settles to without a second lookup. Absent when unresolved.
 	DestinationLabel *string `json:"destination_label,omitempty"`
 
-	// DestinationRail For a bank destination, the payout rail (e.g. ach, fedwire, swift, sepa). Absent for crypto.
+	// DestinationRail For a `bank` destination, the payout rail (e.g. ach, fedwire, swift). Absent for crypto.
 	DestinationRail *string `json:"destination_rail,omitempty"`
 
-	// DestinationType The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+	// DestinationType The kind of the REAL destination (see destination_id). `bank` marks an offramp (the payment converts crypto to fiat and forwards via a bank rail); `crypto` a direct or cross-family crypto payout. Absent for a direct-address payment with no destination.
 	DestinationType *ScheduledPaymentResponseDestinationType `json:"destination_type,omitempty"`
 	ExecutedAt      *int64                                   `json:"executed_at,omitempty"`
 
@@ -4790,30 +5490,33 @@ type ScheduledPaymentResponse struct {
 
 	// MandateId AUDIT — the mandate that covered this payment at fire time. Absent until the payment executes (coverage is decided at fire time, not bound at rest).
 	MandateId *string `json:"mandate_id,omitempty"`
-	NetworkId *string `json:"network_id,omitempty"`
 
-	// OutputAsset The asset the recipient ULTIMATELY receives — the fiat currency (e.g. USD) for an offramp, else equal to `asset`. Stablecoin conversion is 1:1, so the output amount equals `amount`.
+	// MandateVersion AUDIT — WHICH version of that mandate authorized this payment. A mandate's rule can be amended (new versions are appended), so `mandate_id` alone no longer identifies the caps the payment was judged against; this does, and it stays true after later amendments. Look the rule up at GET /mandates/{mandate_id}/versions. Always accompanies `mandate_id` — when the covering mandate could not be determined, both are absent rather than one being guessed.
+	MandateVersion *int    `json:"mandate_version,omitempty"`
+	NetworkId      *string `json:"network_id,omitempty"`
+
+	// OutputAsset The asset the recipient ULTIMATELY receives. For an offramp this is the fiat currency (e.g. USD) the deposit converts to; for a direct crypto payment it equals `asset`. Stablecoin conversion is 1:1, so the output AMOUNT equals `amount`.
 	OutputAsset *string `json:"output_asset,omitempty"`
 
-	// OutputNetwork For a crypto destination, the network the recipient receives on — differs from `network_id` (the deposit network) for a cross-family swap (e.g. solana-devnet vs base-sepolia); equals `network_id` for a direct crypto payment; absent for a bank offramp.
+	// OutputNetwork For a crypto destination, the network the recipient ULTIMATELY receives on — for a cross-family swap this differs from `network_id` (the DEPOSIT network the wallet pays), e.g. output_network solana-devnet while network_id is base-sepolia. Equals `network_id` for a direct crypto payment; absent for a bank offramp (fiat has no network).
 	OutputNetwork *string `json:"output_network,omitempty"`
 
-	// RecipientId The recipient this payment pays, when created from a destination. Absent for a direct-address payment. Use this — NOT the address — to resolve the payee (two payees can share a destination address).
+	// RecipientId The recipient this payment pays, when it was created from a destination. Absent for a direct-address payment (which carries no recipient).
 	RecipientId *string `json:"recipient_id,omitempty"`
 	ScheduledAt *int64  `json:"scheduled_at,omitempty"`
 
-	// SignerId The signer (hosted agent) this payment fires under. Updatable via PATCH while scheduled.
+	// SignerId The signer (hosted agent) this payment fires under.
 	SignerId *string                         `json:"signer_id,omitempty"`
 	Status   *ScheduledPaymentResponseStatus `json:"status,omitempty"`
 
-	// WalletId The funding wallet this payment spends from (the customer's choice at acceptance; updatable via PATCH while scheduled).
+	// WalletId The funding wallet this payment spends from (the customer's choice at acceptance).
 	WalletId *string `json:"wallet_id,omitempty"`
 
 	// WalletTransactionId AUDIT — the money-path transaction created when this payment fired. Absent until the payment executes.
 	WalletTransactionId *string `json:"wallet_transaction_id,omitempty"`
 }
 
-// ScheduledPaymentResponseDestinationType The kind of the REAL destination. `bank` marks an offramp (crypto converts to fiat, forwarded via a bank rail); `crypto` a direct or cross-family crypto payout.
+// ScheduledPaymentResponseDestinationType The kind of the REAL destination (see destination_id). `bank` marks an offramp (the payment converts crypto to fiat and forwards via a bank rail); `crypto` a direct or cross-family crypto payout. Absent for a direct-address payment with no destination.
 type ScheduledPaymentResponseDestinationType string
 
 // ScheduledPaymentResponseStatus defines model for ScheduledPaymentResponse.Status.
@@ -4959,9 +5662,19 @@ type Signer struct {
 	// PublicKey The signer public key. For KEY_TYPE_ES256 this must be a
 	// base64-encoded X.509 SubjectPublicKeyInfo (PKIX) for an ECDSA
 	// P-256 key. Both PEM-wrapped (with BEGIN/END PUBLIC KEY headers)
-	// and raw DER encodings are accepted. For KEY_TYPE_WEBAUTHN this
-	// must be a base64-encoded COSE public key.
+	// and raw DER encodings are accepted.
+	//
+	// For KEY_TYPE_WEBAUTHN this must be a base64-encoded COSE public
+	// key. Only ES256 (EC2 / P-256, COSE alg -7) and RS256 (RSA,
+	// 2048-bit minimum, COSE alg -257) keys are supported; other
+	// algorithms and curves are rejected. See the WebAuthn & Passkey
+	// Signing guide for how each signatures[] entry is then built.
 	PublicKey string `json:"public_key"`
+
+	// RemovedAt Epoch seconds at which this signer was removed from the containing
+	// signer group. Present only for entries in a group's `removed_members`
+	// (i.e. when `include_removed=true`); absent for active members.
+	RemovedAt *int64 `json:"removed_at,omitempty"`
 }
 
 // SignerKeyType Type of the key
@@ -4978,8 +5691,13 @@ type SignerCreateRequest struct {
 	// PublicKey The signer public key. For KEY_TYPE_ES256 this must be a
 	// base64-encoded X.509 SubjectPublicKeyInfo (PKIX) for an ECDSA
 	// P-256 key. Both PEM-wrapped (with BEGIN/END PUBLIC KEY headers)
-	// and raw DER encodings are accepted. For KEY_TYPE_WEBAUTHN this
-	// must be a base64-encoded COSE public key.
+	// and raw DER encodings are accepted.
+	//
+	// For KEY_TYPE_WEBAUTHN this must be a base64-encoded COSE public
+	// key. Only ES256 (EC2 / P-256, COSE alg -7) and RS256 (RSA,
+	// 2048-bit minimum, COSE alg -257) keys are supported; other
+	// algorithms and curves are rejected. See the WebAuthn & Passkey
+	// Signing guide for how each signatures[] entry is then built.
 	PublicKey string `json:"public_key"`
 }
 
@@ -4999,6 +5717,11 @@ type SignerGroup struct {
 
 	// Name The wallet name
 	Name string `json:"name"`
+
+	// RemovedMembers Signers previously in this group that have since been removed.
+	// Populated only when the request sets `include_removed=true`; each
+	// entry carries its `removed_at` timestamp. Omitted otherwise.
+	RemovedMembers *[]Signer `json:"removed_members,omitempty"`
 }
 
 // SignerGroupCreateRequest Request to create a new signer group
@@ -5490,6 +6213,15 @@ type UploadedDocumentMetadataCategory string
 // UploadedDocumentMetadataStatus Upload status of the document
 type UploadedDocumentMetadataStatus string
 
+// UsdcWalletPayoutDestination defines model for UsdcWalletPayoutDestination.
+type UsdcWalletPayoutDestination struct {
+	Address string `json:"address"`
+
+	// Chain CAIP-2 chain id from the supported-networks list (e.g. `eip155:8453`).
+	// See `getSupportedNetworks` (`GET /capabilities/networks`) for the supported list.
+	Chain string `json:"chain"`
+}
+
 // ValidationError defines model for ValidationError.
 type ValidationError struct {
 	// Code Machine-readable error code for this field.
@@ -5806,6 +6538,12 @@ type CreateAccountParamsXSandboxErrorStep string
 
 // UpdateAccountParams defines parameters for UpdateAccount.
 type UpdateAccountParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// UpdateClientAgenticPolicyParams defines parameters for UpdateClientAgenticPolicy.
+type UpdateClientAgenticPolicyParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
@@ -6157,6 +6895,34 @@ type BulkImportFromSumsubTokensParams struct {
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
 
+// ImportPersonaTokensJSONBody defines parameters for ImportPersonaTokens.
+type ImportPersonaTokensJSONBody struct {
+	// Tokens Persona Connect share tokens (cnst_...) to import. Up to 5,000 per request — split larger migrations into multiple batches (each returns its own job).
+	Tokens []string `json:"tokens"`
+}
+
+// ImportPersonaTokensParams defines parameters for ImportPersonaTokens.
+type ImportPersonaTokensParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// ListPersonaImportJobsParams defines parameters for ListPersonaImportJobs.
+type ListPersonaImportJobsParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// StartingAfter Job ID cursor; returns jobs created before it
+	StartingAfter *string `form:"starting_after,omitempty" json:"starting_after,omitempty"`
+}
+
+// GetPersonaImportJobParams defines parameters for GetPersonaImportJob.
+type GetPersonaImportJobParams struct {
+	ResultsLimit *int `form:"results_limit,omitempty" json:"results_limit,omitempty"`
+
+	// ResultsAfterIndex Row-index cursor; returns rows with a greater index
+	ResultsAfterIndex *int `form:"results_after_index,omitempty" json:"results_after_index,omitempty"`
+}
+
 // ChatCustomerInsightsParams defines parameters for ChatCustomerInsights.
 type ChatCustomerInsightsParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
@@ -6191,6 +6957,12 @@ type ListEventsParams struct {
 
 	// Limit A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 20.
 	Limit *LimitParam `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// PutFeePayoutDestinationParams defines parameters for PutFeePayoutDestination.
+type PutFeePayoutDestinationParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
 
 // ListMandatesParams defines parameters for ListMandates.
@@ -6292,7 +7064,7 @@ type CreateDestinationParams struct {
 // SimulateInboundJSONBody defines parameters for SimulateInbound.
 type SimulateInboundJSONBody struct {
 	// AccountId Platform account ID of the target onramp/offramp auto account.
-	// **Required for `ach_inbound` and `fedwire_inbound`.**
+	// **Required for `ach_inbound`, `fedwire_inbound`, and `fednow_inbound`.**
 	// Ignored for other `type` values.
 	AccountId *string `json:"account_id,omitempty"`
 
@@ -6463,8 +7235,25 @@ type ListScheduledPaymentsParams struct {
 	// MandateId Only payments that executed under this mandate (mandate_id is stamped at fire time, so this matches executed rows only).
 	MandateId *string `form:"mandate_id,omitempty" json:"mandate_id,omitempty"`
 
+	// MandateVersion Only payments that executed under this VERSION of the mandate — "which payments were judged against v2's caps". Use together with mandate_id; like it, this matches executed rows only.
+	MandateVersion *int `form:"mandate_version,omitempty" json:"mandate_version,omitempty"`
+
 	// Status Comma-separated statuses to include, e.g. "scheduled,executed". Allowed values: scheduled, cancelled, executed, failed. Omit for all.
 	Status *string `form:"status,omitempty" json:"status,omitempty"`
+
+	// Limit Page size. OMIT FOR EVERY MATCHING PAYMENT, which is what this endpoint has always returned and remains the default — a client that does not ask to paginate must not be silently truncated. When you do page, `meta.total_count` and `meta.has_more_after` tell you where you are in the collection, so a full page is never mistaken for the end.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Page 1-based page number, used only alongside `limit`; on its own it has nothing to page through and is ignored. A page past the end is an empty list, not an error.
+	//
+	// Rows are ordered by due date DESCENDING and then by id descending — newest due first, so page 1 carries the most recent and upcoming activity rather than the oldest settled history. The id tiebreak makes that order total, so a payment cannot be skipped or repeated across pages by sharing a due date with another.
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+}
+
+// CreateScheduledPaymentParams defines parameters for CreateScheduledPayment.
+type CreateScheduledPaymentParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
 
 // ListSelfServeCreditsLedgerParams defines parameters for ListSelfServeCreditsLedger.
@@ -6498,6 +7287,14 @@ type ListSignerGroupsParams struct {
 type CreateSignerGroupParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// GetSignerGroupParams defines parameters for GetSignerGroup.
+type GetSignerGroupParams struct {
+	// IncludeRemoved When true, the response includes a `removed_members` array of signers
+	// that were removed from this group (each carrying its `removed_at`).
+	// Defaults to false (active members only).
+	IncludeRemoved *bool `form:"include_removed,omitempty" json:"include_removed,omitempty"`
 }
 
 // CreateSignerGroupSignerParams defines parameters for CreateSignerGroupSigner.
@@ -6538,7 +7335,7 @@ type ListTransactionsParams struct {
 	// WalletId Filter wallet transactions by wallet ID. Only valid with `transaction_type=wallet`.
 	WalletId *KSUID `form:"wallet_id,omitempty" json:"wallet_id,omitempty"`
 
-	// Direction Filter wallet transactions by direction relative to the wallet: `out` matches transactions sent from the wallet; `in` matches transactions recorded with the wallet as the recipient. Only valid with `transaction_type=wallet`.
+	// Direction Filter wallet transactions by direction relative to the wallet: `out` matches transactions sent from the wallet; `in` matches transactions recorded with the wallet as the recipient. The platform records outbound wallet sends today, so `in` returns rows once inbound ingestion records deposits. Only valid with `transaction_type=wallet`.
 	Direction *ListTransactionsParamsDirection `form:"direction,omitempty" json:"direction,omitempty"`
 
 	// DestinationId Filter transactions by destination ID.
@@ -6779,6 +7576,9 @@ type CreateAccountJSONRequestBody = AccountCreateRequest
 // UpdateAccountJSONRequestBody defines body for UpdateAccount for application/json ContentType.
 type UpdateAccountJSONRequestBody = AccountUpdateRequest
 
+// UpdateClientAgenticPolicyJSONRequestBody defines body for UpdateClientAgenticPolicy for application/json ContentType.
+type UpdateClientAgenticPolicyJSONRequestBody = AgenticClientPolicy
+
 // CreateApiKeyForClientJSONRequestBody defines body for CreateApiKeyForClient for application/json ContentType.
 type CreateApiKeyForClientJSONRequestBody = CreateApiKeyForClientRequest
 
@@ -6818,6 +7618,9 @@ type CreateCustomerJSONRequestBody = CustomerCreateRequest
 // BulkImportFromSumsubTokensJSONRequestBody defines body for BulkImportFromSumsubTokens for application/json ContentType.
 type BulkImportFromSumsubTokensJSONRequestBody BulkImportFromSumsubTokensJSONBody
 
+// ImportPersonaTokensJSONRequestBody defines body for ImportPersonaTokens for application/json ContentType.
+type ImportPersonaTokensJSONRequestBody ImportPersonaTokensJSONBody
+
 // ChatCustomerInsightsJSONRequestBody defines body for ChatCustomerInsights for application/json ContentType.
 type ChatCustomerInsightsJSONRequestBody = InsightChatRequest
 
@@ -6827,11 +7630,17 @@ type CreateRecipientJSONRequestBody = RecipientRequest
 // UpdateCustomerSubClientJSONRequestBody defines body for UpdateCustomerSubClient for application/json ContentType.
 type UpdateCustomerSubClientJSONRequestBody = UpdateCustomerSubClientRequest
 
+// PutFeePayoutDestinationJSONRequestBody defines body for PutFeePayoutDestination for application/json ContentType.
+type PutFeePayoutDestinationJSONRequestBody = PutFeePayoutDestinationRequest
+
 // CreateInstructionsJSONRequestBody defines body for CreateInstructions for application/json ContentType.
 type CreateInstructionsJSONRequestBody = CreateInstructionsRequest
 
 // CreateMandateJSONRequestBody defines body for CreateMandate for application/json ContentType.
 type CreateMandateJSONRequestBody = CreateMandateRequest
+
+// AmendMandateJSONRequestBody defines body for AmendMandate for application/json ContentType.
+type AmendMandateJSONRequestBody = AmendMandateRequest
 
 // ApproveMandateJSONRequestBody defines body for ApproveMandate for application/json ContentType.
 type ApproveMandateJSONRequestBody = ApproveMandateRequest
@@ -6881,6 +7690,9 @@ type SimulateOnboardingJSONRequestBody SimulateOnboardingJSONBody
 // AdvanceSimulationJSONRequestBody defines body for AdvanceSimulation for application/json ContentType.
 type AdvanceSimulationJSONRequestBody = AdvanceSimulationRequest
 
+// CreateScheduledPaymentJSONRequestBody defines body for CreateScheduledPayment for application/json ContentType.
+type CreateScheduledPaymentJSONRequestBody = CreateScheduledPaymentRequest
+
 // CreateSelfServeCreditsPurchaseJSONRequestBody defines body for CreateSelfServeCreditsPurchase for application/json ContentType.
 type CreateSelfServeCreditsPurchaseJSONRequestBody = SelfServeCreditsPurchaseRequest
 
@@ -6919,6 +7731,134 @@ type CreateWebhookTargetJSONRequestBody = WebhookTargetCreateRequest
 
 // UpdateWebhookTargetJSONRequestBody defines body for UpdateWebhookTarget for application/json ContentType.
 type UpdateWebhookTargetJSONRequestBody = WebhookTargetUpdateRequest
+
+// Getter for additional properties for AgenticClientPolicy. Returns the specified
+// element and whether it was found
+func (a AgenticClientPolicy) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for AgenticClientPolicy
+func (a *AgenticClientPolicy) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for AgenticClientPolicy to handle AdditionalProperties
+func (a *AgenticClientPolicy) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["labels"]; found {
+		err = json.Unmarshal(raw, &a.Labels)
+		if err != nil {
+			return fmt.Errorf("error reading 'labels': %w", err)
+		}
+		delete(object, "labels")
+	}
+
+	if raw, found := object["mandate_strategy"]; found {
+		err = json.Unmarshal(raw, &a.MandateStrategy)
+		if err != nil {
+			return fmt.Errorf("error reading 'mandate_strategy': %w", err)
+		}
+		delete(object, "mandate_strategy")
+	}
+
+	if raw, found := object["payee_model"]; found {
+		err = json.Unmarshal(raw, &a.PayeeModel)
+		if err != nil {
+			return fmt.Errorf("error reading 'payee_model': %w", err)
+		}
+		delete(object, "payee_model")
+	}
+
+	if raw, found := object["payout_assets"]; found {
+		err = json.Unmarshal(raw, &a.PayoutAssets)
+		if err != nil {
+			return fmt.Errorf("error reading 'payout_assets': %w", err)
+		}
+		delete(object, "payout_assets")
+	}
+
+	if raw, found := object["payout_route"]; found {
+		err = json.Unmarshal(raw, &a.PayoutRoute)
+		if err != nil {
+			return fmt.Errorf("error reading 'payout_route': %w", err)
+		}
+		delete(object, "payout_route")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for AgenticClientPolicy to handle AdditionalProperties
+func (a AgenticClientPolicy) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Labels != nil {
+		object["labels"], err = json.Marshal(a.Labels)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'labels': %w", err)
+		}
+	}
+
+	if a.MandateStrategy != nil {
+		object["mandate_strategy"], err = json.Marshal(a.MandateStrategy)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'mandate_strategy': %w", err)
+		}
+	}
+
+	if a.PayeeModel != nil {
+		object["payee_model"], err = json.Marshal(a.PayeeModel)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'payee_model': %w", err)
+		}
+	}
+
+	if a.PayoutAssets != nil {
+		object["payout_assets"], err = json.Marshal(a.PayoutAssets)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'payout_assets': %w", err)
+		}
+	}
+
+	if a.PayoutRoute != nil {
+		object["payout_route"], err = json.Marshal(a.PayoutRoute)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'payout_route': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
 
 // AsCryptoDestinationRequest returns the union data inside the DestinationRequestUnion as a CryptoDestinationRequest
 func (t DestinationRequestUnion) AsCryptoDestinationRequest() (CryptoDestinationRequest, error) {
@@ -7490,6 +8430,76 @@ func (t *PaginatedTransactionResourceResponse) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+// AsPutFeePayoutDestinationRequest0 returns the union data inside the PutFeePayoutDestinationRequest as a PutFeePayoutDestinationRequest0
+func (t PutFeePayoutDestinationRequest) AsPutFeePayoutDestinationRequest0() (PutFeePayoutDestinationRequest0, error) {
+	var body PutFeePayoutDestinationRequest0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPutFeePayoutDestinationRequest0 overwrites any union data inside the PutFeePayoutDestinationRequest as the provided PutFeePayoutDestinationRequest0
+func (t *PutFeePayoutDestinationRequest) FromPutFeePayoutDestinationRequest0(v PutFeePayoutDestinationRequest0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePutFeePayoutDestinationRequest0 performs a merge with any union data inside the PutFeePayoutDestinationRequest, using the provided PutFeePayoutDestinationRequest0
+func (t *PutFeePayoutDestinationRequest) MergePutFeePayoutDestinationRequest0(v PutFeePayoutDestinationRequest0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t PutFeePayoutDestinationRequest) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	object := make(map[string]json.RawMessage)
+	if t.union != nil {
+		err = json.Unmarshal(b, &object)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if t.UsdcWallet != nil {
+		object["usdc_wallet"], err = json.Marshal(t.UsdcWallet)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'usdc_wallet': %w", err)
+		}
+	}
+	b, err = json.Marshal(object)
+	return b, err
+}
+
+func (t *PutFeePayoutDestinationRequest) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	if err != nil {
+		return err
+	}
+	object := make(map[string]json.RawMessage)
+	err = json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["usdc_wallet"]; found {
+		err = json.Unmarshal(raw, &t.UsdcWallet)
+		if err != nil {
+			return fmt.Errorf("error reading 'usdc_wallet': %w", err)
+		}
+	}
+
+	return err
+}
+
 // AsOneOffTransaction returns the union data inside the TransactionResource as a OneOffTransaction
 func (t TransactionResource) AsOneOffTransaction() (OneOffTransaction, error) {
 	var body OneOffTransaction
@@ -7701,6 +8711,14 @@ type ClientInterface interface {
 
 	UpdateAccount(ctx context.Context, accountId KSUID, params *UpdateAccountParams, body UpdateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetClientAgenticPolicy request
+	GetClientAgenticPolicy(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateClientAgenticPolicyWithBody request with any body
+	UpdateClientAgenticPolicyWithBody(ctx context.Context, params *UpdateClientAgenticPolicyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateClientAgenticPolicy(ctx context.Context, params *UpdateClientAgenticPolicyParams, body UpdateClientAgenticPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteAllApiKeys request
 	DeleteAllApiKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -7820,11 +8838,28 @@ type ClientInterface interface {
 
 	BulkImportFromSumsubTokens(ctx context.Context, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ImportPersonaTokensWithBody request with any body
+	ImportPersonaTokensWithBody(ctx context.Context, params *ImportPersonaTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ImportPersonaTokens(ctx context.Context, params *ImportPersonaTokensParams, body ImportPersonaTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPersonaImportJobs request
+	ListPersonaImportJobs(ctx context.Context, params *ListPersonaImportJobsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPersonaImportJob request
+	GetPersonaImportJob(ctx context.Context, jobId string, params *GetPersonaImportJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetSubClientSummary request
 	GetSubClientSummary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteCustomer request
+	DeleteCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetCustomer request
 	GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCustomerCapabilities request
+	GetCustomerCapabilities(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetCustomerInsights request
 	GetCustomerInsights(ctx context.Context, customerId string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7833,6 +8868,9 @@ type ClientInterface interface {
 	ChatCustomerInsightsWithBody(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	ChatCustomerInsights(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReEngageCustomer request
+	ReEngageCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListRecipients request
 	ListRecipients(ctx context.Context, customerId KSUID, params *ListRecipientsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7849,6 +8887,17 @@ type ClientInterface interface {
 
 	// ListEvents request
 	ListEvents(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteFeePayoutDestination request
+	DeleteFeePayoutDestination(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetFeePayoutDestination request
+	GetFeePayoutDestination(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutFeePayoutDestinationWithBody request with any body
+	PutFeePayoutDestinationWithBody(ctx context.Context, params *PutFeePayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutFeePayoutDestination(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateInstructionsWithBody request with any body
 	CreateInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7869,25 +8918,42 @@ type ClientInterface interface {
 	// GetMandate request
 	GetMandate(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// AmendMandateWithBody request with any body
+	AmendMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AmendMandate(ctx context.Context, mandateId string, body AmendMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ApproveMandateWithBody request with any body
 	ApproveMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	ApproveMandate(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMandateBudget request
+	GetMandateBudget(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CancelMandateWithBody request with any body
 	CancelMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CancelMandate(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListMandateVersions request
+	ListMandateVersions(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreatePaymentAgentWithBody request with any body
 	CreatePaymentAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreatePaymentAgent(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetPaymentAgent request
+	GetPaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreatePaymentAgentProposalsWithBody request with any body
 	CreatePaymentAgentProposalsWithBody(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreatePaymentAgentProposals(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPaymentAgentProposalsProgress request
+	GetPaymentAgentProposalsProgress(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RevokePaymentAgent request
 	RevokePaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7982,6 +9048,11 @@ type ClientInterface interface {
 	// ListScheduledPayments request
 	ListScheduledPayments(ctx context.Context, params *ListScheduledPaymentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateScheduledPaymentWithBody request with any body
+	CreateScheduledPaymentWithBody(ctx context.Context, params *CreateScheduledPaymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateScheduledPayment(ctx context.Context, params *CreateScheduledPaymentParams, body CreateScheduledPaymentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CancelScheduledPayment request
 	CancelScheduledPayment(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -8011,7 +9082,7 @@ type ClientInterface interface {
 	CreateSignerGroup(ctx context.Context, params *CreateSignerGroupParams, body CreateSignerGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSignerGroup request
-	GetSignerGroup(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetSignerGroup(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateSignerGroupSignerWithBody request with any body
 	CreateSignerGroupSignerWithBody(ctx context.Context, signerGroupId KSUID, params *CreateSignerGroupSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -8019,7 +9090,7 @@ type ClientInterface interface {
 	CreateSignerGroupSigner(ctx context.Context, signerGroupId KSUID, params *CreateSignerGroupSignerParams, body CreateSignerGroupSignerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteSignerGroupSigner request
-	DeleteSignerGroupSigner(ctx context.Context, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteSignerGroupSigner(ctx context.Context, signerGroupId KSUID, signerId KSUID, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetWalletsForSignerGroup request
 	GetWalletsForSignerGroup(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -8197,6 +9268,42 @@ func (c *APIClient) UpdateAccountWithBody(ctx context.Context, accountId KSUID, 
 
 func (c *APIClient) UpdateAccount(ctx context.Context, accountId KSUID, params *UpdateAccountParams, body UpdateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateAccountRequest(c.Server, accountId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetClientAgenticPolicy(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetClientAgenticPolicyRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateClientAgenticPolicyWithBody(ctx context.Context, params *UpdateClientAgenticPolicyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateClientAgenticPolicyRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateClientAgenticPolicy(ctx context.Context, params *UpdateClientAgenticPolicyParams, body UpdateClientAgenticPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateClientAgenticPolicyRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -8735,6 +9842,54 @@ func (c *APIClient) BulkImportFromSumsubTokens(ctx context.Context, params *Bulk
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) ImportPersonaTokensWithBody(ctx context.Context, params *ImportPersonaTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportPersonaTokensRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ImportPersonaTokens(ctx context.Context, params *ImportPersonaTokensParams, body ImportPersonaTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportPersonaTokensRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListPersonaImportJobs(ctx context.Context, params *ListPersonaImportJobsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPersonaImportJobsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetPersonaImportJob(ctx context.Context, jobId string, params *GetPersonaImportJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPersonaImportJobRequest(c.Server, jobId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetSubClientSummary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSubClientSummaryRequest(c.Server)
 	if err != nil {
@@ -8747,8 +9902,32 @@ func (c *APIClient) GetSubClientSummary(ctx context.Context, reqEditors ...Reque
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) DeleteCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCustomerRequest(c.Server, customerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCustomerRequest(c.Server, customerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetCustomerCapabilities(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCustomerCapabilitiesRequest(c.Server, customerId)
 	if err != nil {
 		return nil, err
 	}
@@ -8785,6 +9964,18 @@ func (c *APIClient) ChatCustomerInsightsWithBody(ctx context.Context, customerId
 
 func (c *APIClient) ChatCustomerInsights(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewChatCustomerInsightsRequest(c.Server, customerId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ReEngageCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReEngageCustomerRequest(c.Server, customerId)
 	if err != nil {
 		return nil, err
 	}
@@ -8857,6 +10048,54 @@ func (c *APIClient) UpdateCustomerSubClient(ctx context.Context, customerId KSUI
 
 func (c *APIClient) ListEvents(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListEventsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) DeleteFeePayoutDestination(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteFeePayoutDestinationRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetFeePayoutDestination(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFeePayoutDestinationRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) PutFeePayoutDestinationWithBody(ctx context.Context, params *PutFeePayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutFeePayoutDestinationRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) PutFeePayoutDestination(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutFeePayoutDestinationRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -8951,6 +10190,30 @@ func (c *APIClient) GetMandate(ctx context.Context, mandateId string, reqEditors
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) AmendMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAmendMandateRequestWithBody(c.Server, mandateId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) AmendMandate(ctx context.Context, mandateId string, body AmendMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAmendMandateRequest(c.Server, mandateId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) ApproveMandateWithBody(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewApproveMandateRequestWithBody(c.Server, mandateId, contentType, body)
 	if err != nil {
@@ -8965,6 +10228,18 @@ func (c *APIClient) ApproveMandateWithBody(ctx context.Context, mandateId string
 
 func (c *APIClient) ApproveMandate(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewApproveMandateRequest(c.Server, mandateId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetMandateBudget(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMandateBudgetRequest(c.Server, mandateId)
 	if err != nil {
 		return nil, err
 	}
@@ -8999,6 +10274,18 @@ func (c *APIClient) CancelMandate(ctx context.Context, mandateId string, body Ca
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) ListMandateVersions(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMandateVersionsRequest(c.Server, mandateId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) CreatePaymentAgentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreatePaymentAgentRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -9023,6 +10310,18 @@ func (c *APIClient) CreatePaymentAgent(ctx context.Context, body CreatePaymentAg
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) GetPaymentAgent(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPaymentAgentRequest(c.Server, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) CreatePaymentAgentProposalsWithBody(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreatePaymentAgentProposalsRequestWithBody(c.Server, paymentAgentId, contentType, body)
 	if err != nil {
@@ -9037,6 +10336,18 @@ func (c *APIClient) CreatePaymentAgentProposalsWithBody(ctx context.Context, pay
 
 func (c *APIClient) CreatePaymentAgentProposals(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreatePaymentAgentProposalsRequest(c.Server, paymentAgentId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetPaymentAgentProposalsProgress(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPaymentAgentProposalsProgressRequest(c.Server, paymentAgentId)
 	if err != nil {
 		return nil, err
 	}
@@ -9467,6 +10778,30 @@ func (c *APIClient) ListScheduledPayments(ctx context.Context, params *ListSched
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) CreateScheduledPaymentWithBody(ctx context.Context, params *CreateScheduledPaymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateScheduledPaymentRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateScheduledPayment(ctx context.Context, params *CreateScheduledPaymentParams, body CreateScheduledPaymentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateScheduledPaymentRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) CancelScheduledPayment(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCancelScheduledPaymentRequest(c.Server, scheduledPaymentId)
 	if err != nil {
@@ -9587,8 +10922,8 @@ func (c *APIClient) CreateSignerGroup(ctx context.Context, params *CreateSignerG
 	return c.Client.Do(req)
 }
 
-func (c *APIClient) GetSignerGroup(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetSignerGroupRequest(c.Server, signerGroupId)
+func (c *APIClient) GetSignerGroup(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSignerGroupRequest(c.Server, signerGroupId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -9623,7 +10958,7 @@ func (c *APIClient) CreateSignerGroupSigner(ctx context.Context, signerGroupId K
 	return c.Client.Do(req)
 }
 
-func (c *APIClient) DeleteSignerGroupSigner(ctx context.Context, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *APIClient) DeleteSignerGroupSigner(ctx context.Context, signerGroupId KSUID, signerId KSUID, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteSignerGroupSignerRequest(c.Server, signerGroupId, signerId, params)
 	if err != nil {
 		return nil, err
@@ -10471,6 +11806,86 @@ func NewUpdateAccountRequestWithBody(server string, accountId KSUID, params *Upd
 	}
 
 	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetClientAgenticPolicyRequest generates requests for GetClientAgenticPolicy
+func NewGetClientAgenticPolicyRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agentic-policy")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateClientAgenticPolicyRequest calls the generic UpdateClientAgenticPolicy builder with application/json body
+func NewUpdateClientAgenticPolicyRequest(server string, params *UpdateClientAgenticPolicyParams, body UpdateClientAgenticPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateClientAgenticPolicyRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewUpdateClientAgenticPolicyRequestWithBody generates requests for UpdateClientAgenticPolicy with any type of body
+func NewUpdateClientAgenticPolicyRequestWithBody(server string, params *UpdateClientAgenticPolicyParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agentic-policy")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -12883,6 +14298,196 @@ func NewBulkImportFromSumsubTokensRequestWithBody(server string, params *BulkImp
 	return req, nil
 }
 
+// NewImportPersonaTokensRequest calls the generic ImportPersonaTokens builder with application/json body
+func NewImportPersonaTokensRequest(server string, params *ImportPersonaTokensParams, body ImportPersonaTokensJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewImportPersonaTokensRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewImportPersonaTokensRequestWithBody generates requests for ImportPersonaTokens with any type of body
+func NewImportPersonaTokensRequestWithBody(server string, params *ImportPersonaTokensParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/import-persona-tokens")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewListPersonaImportJobsRequest generates requests for ListPersonaImportJobs
+func NewListPersonaImportJobsRequest(server string, params *ListPersonaImportJobsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/persona-import-jobs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.StartingAfter != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "starting_after", runtime.ParamLocationQuery, *params.StartingAfter); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPersonaImportJobRequest generates requests for GetPersonaImportJob
+func NewGetPersonaImportJobRequest(server string, jobId string, params *GetPersonaImportJobParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "job_id", runtime.ParamLocationPath, jobId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/persona-import-jobs/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ResultsLimit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "results_limit", runtime.ParamLocationQuery, *params.ResultsLimit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.ResultsAfterIndex != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "results_after_index", runtime.ParamLocationQuery, *params.ResultsAfterIndex); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetSubClientSummaryRequest generates requests for GetSubClientSummary
 func NewGetSubClientSummaryRequest(server string) (*http.Request, error) {
 	var err error
@@ -12910,6 +14515,40 @@ func NewGetSubClientSummaryRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewDeleteCustomerRequest generates requests for DeleteCustomer
+func NewDeleteCustomerRequest(server string, customerId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetCustomerRequest generates requests for GetCustomer
 func NewGetCustomerRequest(server string, customerId KSUID) (*http.Request, error) {
 	var err error
@@ -12927,6 +14566,40 @@ func NewGetCustomerRequest(server string, customerId KSUID) (*http.Request, erro
 	}
 
 	operationPath := fmt.Sprintf("/customers/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCustomerCapabilitiesRequest generates requests for GetCustomerCapabilities
+func NewGetCustomerCapabilitiesRequest(server string, customerId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s/capabilities", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -13033,6 +14706,40 @@ func NewChatCustomerInsightsRequestWithBody(server string, customerId string, pa
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+	}
+
+	return req, nil
+}
+
+// NewReEngageCustomerRequest generates requests for ReEngageCustomer
+func NewReEngageCustomerRequest(server string, customerId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s/re-engagement", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -13314,6 +15021,113 @@ func NewListEventsRequest(server string, params *ListEventsParams) (*http.Reques
 	return req, nil
 }
 
+// NewDeleteFeePayoutDestinationRequest generates requests for DeleteFeePayoutDestination
+func NewDeleteFeePayoutDestinationRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/fee-payout-destination")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetFeePayoutDestinationRequest generates requests for GetFeePayoutDestination
+func NewGetFeePayoutDestinationRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/fee-payout-destination")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutFeePayoutDestinationRequest calls the generic PutFeePayoutDestination builder with application/json body
+func NewPutFeePayoutDestinationRequest(server string, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutFeePayoutDestinationRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPutFeePayoutDestinationRequestWithBody generates requests for PutFeePayoutDestination with any type of body
+func NewPutFeePayoutDestinationRequestWithBody(server string, params *PutFeePayoutDestinationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/fee-payout-destination")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewCreateInstructionsRequest calls the generic CreateInstructions builder with application/json body
 func NewCreateInstructionsRequest(server string, body CreateInstructionsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -13543,6 +15357,53 @@ func NewGetMandateRequest(server string, mandateId string) (*http.Request, error
 	return req, nil
 }
 
+// NewAmendMandateRequest calls the generic AmendMandate builder with application/json body
+func NewAmendMandateRequest(server string, mandateId string, body AmendMandateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAmendMandateRequestWithBody(server, mandateId, "application/json", bodyReader)
+}
+
+// NewAmendMandateRequestWithBody generates requests for AmendMandate with any type of body
+func NewAmendMandateRequestWithBody(server string, mandateId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "mandate_id", runtime.ParamLocationPath, mandateId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates/%s/amend", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewApproveMandateRequest calls the generic ApproveMandate builder with application/json body
 func NewApproveMandateRequest(server string, mandateId string, body ApproveMandateJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -13586,6 +15447,40 @@ func NewApproveMandateRequestWithBody(server string, mandateId string, contentTy
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMandateBudgetRequest generates requests for GetMandateBudget
+func NewGetMandateBudgetRequest(server string, mandateId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "mandate_id", runtime.ParamLocationPath, mandateId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates/%s/budget", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -13637,6 +15532,40 @@ func NewCancelMandateRequestWithBody(server string, mandateId string, contentTyp
 	return req, nil
 }
 
+// NewListMandateVersionsRequest generates requests for ListMandateVersions
+func NewListMandateVersionsRequest(server string, mandateId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "mandate_id", runtime.ParamLocationPath, mandateId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/mandates/%s/versions", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreatePaymentAgentRequest calls the generic CreatePaymentAgent builder with application/json body
 func NewCreatePaymentAgentRequest(server string, body CreatePaymentAgentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -13673,6 +15602,40 @@ func NewCreatePaymentAgentRequestWithBody(server string, contentType string, bod
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPaymentAgentRequest generates requests for GetPaymentAgent
+func NewGetPaymentAgentRequest(server string, paymentAgentId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "payment_agent_id", runtime.ParamLocationPath, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -13720,6 +15683,40 @@ func NewCreatePaymentAgentProposalsRequestWithBody(server string, paymentAgentId
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPaymentAgentProposalsProgressRequest generates requests for GetPaymentAgentProposalsProgress
+func NewGetPaymentAgentProposalsProgressRequest(server string, paymentAgentId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "payment_agent_id", runtime.ParamLocationPath, paymentAgentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/payment-agents/%s/proposals/progress", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -15102,9 +17099,57 @@ func NewListScheduledPaymentsRequest(server string, params *ListScheduledPayment
 
 		}
 
+		if params.MandateVersion != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mandate_version", runtime.ParamLocationQuery, *params.MandateVersion); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Status != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "status", runtime.ParamLocationQuery, *params.Status); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -15124,6 +17169,59 @@ func NewListScheduledPaymentsRequest(server string, params *ListScheduledPayment
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateScheduledPaymentRequest calls the generic CreateScheduledPayment builder with application/json body
+func NewCreateScheduledPaymentRequest(server string, params *CreateScheduledPaymentParams, body CreateScheduledPaymentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateScheduledPaymentRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewCreateScheduledPaymentRequestWithBody generates requests for CreateScheduledPayment with any type of body
+func NewCreateScheduledPaymentRequestWithBody(server string, params *CreateScheduledPaymentParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/scheduled-payments")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
 	}
 
 	return req, nil
@@ -15500,7 +17598,7 @@ func NewCreateSignerGroupRequestWithBody(server string, params *CreateSignerGrou
 }
 
 // NewGetSignerGroupRequest generates requests for GetSignerGroup
-func NewGetSignerGroupRequest(server string, signerGroupId KSUID) (*http.Request, error) {
+func NewGetSignerGroupRequest(server string, signerGroupId KSUID, params *GetSignerGroupParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -15523,6 +17621,28 @@ func NewGetSignerGroupRequest(server string, signerGroupId KSUID) (*http.Request
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.IncludeRemoved != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_removed", runtime.ParamLocationQuery, *params.IncludeRemoved); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -15594,7 +17714,7 @@ func NewCreateSignerGroupSignerRequestWithBody(server string, signerGroupId KSUI
 }
 
 // NewDeleteSignerGroupSignerRequest generates requests for DeleteSignerGroupSigner
-func NewDeleteSignerGroupSignerRequest(server string, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams) (*http.Request, error) {
+func NewDeleteSignerGroupSignerRequest(server string, signerGroupId KSUID, signerId KSUID, params *DeleteSignerGroupSignerParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -17598,6 +19718,14 @@ type ClientWithResponsesInterface interface {
 
 	UpdateAccountWithResponse(ctx context.Context, accountId KSUID, params *UpdateAccountParams, body UpdateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAccountResponse, error)
 
+	// GetClientAgenticPolicyWithResponse request
+	GetClientAgenticPolicyWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetClientAgenticPolicyResponse, error)
+
+	// UpdateClientAgenticPolicyWithBodyWithResponse request with any body
+	UpdateClientAgenticPolicyWithBodyWithResponse(ctx context.Context, params *UpdateClientAgenticPolicyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateClientAgenticPolicyResponse, error)
+
+	UpdateClientAgenticPolicyWithResponse(ctx context.Context, params *UpdateClientAgenticPolicyParams, body UpdateClientAgenticPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateClientAgenticPolicyResponse, error)
+
 	// DeleteAllApiKeysWithResponse request
 	DeleteAllApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteAllApiKeysResponse, error)
 
@@ -17717,11 +19845,28 @@ type ClientWithResponsesInterface interface {
 
 	BulkImportFromSumsubTokensWithResponse(ctx context.Context, params *BulkImportFromSumsubTokensParams, body BulkImportFromSumsubTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkImportFromSumsubTokensResponse, error)
 
+	// ImportPersonaTokensWithBodyWithResponse request with any body
+	ImportPersonaTokensWithBodyWithResponse(ctx context.Context, params *ImportPersonaTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportPersonaTokensResponse, error)
+
+	ImportPersonaTokensWithResponse(ctx context.Context, params *ImportPersonaTokensParams, body ImportPersonaTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*ImportPersonaTokensResponse, error)
+
+	// ListPersonaImportJobsWithResponse request
+	ListPersonaImportJobsWithResponse(ctx context.Context, params *ListPersonaImportJobsParams, reqEditors ...RequestEditorFn) (*ListPersonaImportJobsResponse, error)
+
+	// GetPersonaImportJobWithResponse request
+	GetPersonaImportJobWithResponse(ctx context.Context, jobId string, params *GetPersonaImportJobParams, reqEditors ...RequestEditorFn) (*GetPersonaImportJobResponse, error)
+
 	// GetSubClientSummaryWithResponse request
 	GetSubClientSummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubClientSummaryResponse, error)
 
+	// DeleteCustomerWithResponse request
+	DeleteCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*DeleteCustomerResponse, error)
+
 	// GetCustomerWithResponse request
 	GetCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerResponse, error)
+
+	// GetCustomerCapabilitiesWithResponse request
+	GetCustomerCapabilitiesWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerCapabilitiesResponse, error)
 
 	// GetCustomerInsightsWithResponse request
 	GetCustomerInsightsWithResponse(ctx context.Context, customerId string, reqEditors ...RequestEditorFn) (*GetCustomerInsightsResponse, error)
@@ -17730,6 +19875,9 @@ type ClientWithResponsesInterface interface {
 	ChatCustomerInsightsWithBodyWithResponse(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChatCustomerInsightsResponse, error)
 
 	ChatCustomerInsightsWithResponse(ctx context.Context, customerId string, params *ChatCustomerInsightsParams, body ChatCustomerInsightsJSONRequestBody, reqEditors ...RequestEditorFn) (*ChatCustomerInsightsResponse, error)
+
+	// ReEngageCustomerWithResponse request
+	ReEngageCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*ReEngageCustomerResponse, error)
 
 	// ListRecipientsWithResponse request
 	ListRecipientsWithResponse(ctx context.Context, customerId KSUID, params *ListRecipientsParams, reqEditors ...RequestEditorFn) (*ListRecipientsResponse, error)
@@ -17746,6 +19894,17 @@ type ClientWithResponsesInterface interface {
 
 	// ListEventsWithResponse request
 	ListEventsWithResponse(ctx context.Context, params *ListEventsParams, reqEditors ...RequestEditorFn) (*ListEventsResponse, error)
+
+	// DeleteFeePayoutDestinationWithResponse request
+	DeleteFeePayoutDestinationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteFeePayoutDestinationResponse, error)
+
+	// GetFeePayoutDestinationWithResponse request
+	GetFeePayoutDestinationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeePayoutDestinationResponse, error)
+
+	// PutFeePayoutDestinationWithBodyWithResponse request with any body
+	PutFeePayoutDestinationWithBodyWithResponse(ctx context.Context, params *PutFeePayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFeePayoutDestinationResponse, error)
+
+	PutFeePayoutDestinationWithResponse(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutFeePayoutDestinationResponse, error)
 
 	// CreateInstructionsWithBodyWithResponse request with any body
 	CreateInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateInstructionsResponse, error)
@@ -17766,25 +19925,42 @@ type ClientWithResponsesInterface interface {
 	// GetMandateWithResponse request
 	GetMandateWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*GetMandateResponse, error)
 
+	// AmendMandateWithBodyWithResponse request with any body
+	AmendMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AmendMandateResponse, error)
+
+	AmendMandateWithResponse(ctx context.Context, mandateId string, body AmendMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*AmendMandateResponse, error)
+
 	// ApproveMandateWithBodyWithResponse request with any body
 	ApproveMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error)
 
 	ApproveMandateWithResponse(ctx context.Context, mandateId string, body ApproveMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error)
+
+	// GetMandateBudgetWithResponse request
+	GetMandateBudgetWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*GetMandateBudgetResponse, error)
 
 	// CancelMandateWithBodyWithResponse request with any body
 	CancelMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error)
 
 	CancelMandateWithResponse(ctx context.Context, mandateId string, body CancelMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*CancelMandateResponse, error)
 
+	// ListMandateVersionsWithResponse request
+	ListMandateVersionsWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*ListMandateVersionsResponse, error)
+
 	// CreatePaymentAgentWithBodyWithResponse request with any body
 	CreatePaymentAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error)
 
 	CreatePaymentAgentWithResponse(ctx context.Context, body CreatePaymentAgentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error)
 
+	// GetPaymentAgentWithResponse request
+	GetPaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*GetPaymentAgentResponse, error)
+
 	// CreatePaymentAgentProposalsWithBodyWithResponse request with any body
 	CreatePaymentAgentProposalsWithBodyWithResponse(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error)
 
 	CreatePaymentAgentProposalsWithResponse(ctx context.Context, paymentAgentId string, body CreatePaymentAgentProposalsJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error)
+
+	// GetPaymentAgentProposalsProgressWithResponse request
+	GetPaymentAgentProposalsProgressWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*GetPaymentAgentProposalsProgressResponse, error)
 
 	// RevokePaymentAgentWithResponse request
 	RevokePaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*RevokePaymentAgentResponse, error)
@@ -17879,6 +20055,11 @@ type ClientWithResponsesInterface interface {
 	// ListScheduledPaymentsWithResponse request
 	ListScheduledPaymentsWithResponse(ctx context.Context, params *ListScheduledPaymentsParams, reqEditors ...RequestEditorFn) (*ListScheduledPaymentsResponse, error)
 
+	// CreateScheduledPaymentWithBodyWithResponse request with any body
+	CreateScheduledPaymentWithBodyWithResponse(ctx context.Context, params *CreateScheduledPaymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateScheduledPaymentResponse, error)
+
+	CreateScheduledPaymentWithResponse(ctx context.Context, params *CreateScheduledPaymentParams, body CreateScheduledPaymentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateScheduledPaymentResponse, error)
+
 	// CancelScheduledPaymentWithResponse request
 	CancelScheduledPaymentWithResponse(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*CancelScheduledPaymentResponse, error)
 
@@ -17908,7 +20089,7 @@ type ClientWithResponsesInterface interface {
 	CreateSignerGroupWithResponse(ctx context.Context, params *CreateSignerGroupParams, body CreateSignerGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSignerGroupResponse, error)
 
 	// GetSignerGroupWithResponse request
-	GetSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*GetSignerGroupResponse, error)
+	GetSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*GetSignerGroupResponse, error)
 
 	// CreateSignerGroupSignerWithBodyWithResponse request with any body
 	CreateSignerGroupSignerWithBodyWithResponse(ctx context.Context, signerGroupId KSUID, params *CreateSignerGroupSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSignerGroupSignerResponse, error)
@@ -17916,7 +20097,7 @@ type ClientWithResponsesInterface interface {
 	CreateSignerGroupSignerWithResponse(ctx context.Context, signerGroupId KSUID, params *CreateSignerGroupSignerParams, body CreateSignerGroupSignerJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSignerGroupSignerResponse, error)
 
 	// DeleteSignerGroupSignerWithResponse request
-	DeleteSignerGroupSignerWithResponse(ctx context.Context, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*DeleteSignerGroupSignerResponse, error)
+	DeleteSignerGroupSignerWithResponse(ctx context.Context, signerGroupId KSUID, signerId KSUID, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*DeleteSignerGroupSignerResponse, error)
 
 	// GetWalletsForSignerGroupWithResponse request
 	GetWalletsForSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*GetWalletsForSignerGroupResponse, error)
@@ -18155,6 +20336,56 @@ func (r UpdateAccountResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateAccountResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetClientAgenticPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RegisteredAgenticClientPolicy
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetClientAgenticPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetClientAgenticPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateClientAgenticPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RegisteredAgenticClientPolicy
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateClientAgenticPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateClientAgenticPolicyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -18997,6 +21228,119 @@ func (r BulkImportFromSumsubTokensResponse) StatusCode() int {
 	return 0
 }
 
+type ImportPersonaTokensResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *struct {
+		Accepted *int    `json:"accepted,omitempty"`
+		JobId    *string `json:"job_id,omitempty"`
+
+		// Skipped Token strings that could not be queued, with their index and
+		// reason (malformed, duplicate in batch, or already imported). This
+		// is about the token string only — never a compliance decision about
+		// a person or application.
+		Skipped *[]struct {
+			Index  *int    `json:"index,omitempty"`
+			Reason *string `json:"reason,omitempty"`
+
+			// Token Redacted token (suffix only)
+			Token *string `json:"token,omitempty"`
+		} `json:"skipped,omitempty"`
+
+		// SkippedCount Number of token strings that could not be queued
+		SkippedCount *int    `json:"skipped_count,omitempty"`
+		Status       *string `json:"status,omitempty"`
+
+		// Total Number of tokens accepted into the job
+		Total *int `json:"total,omitempty"`
+	}
+	JSON400 *ProblemDetails
+	JSON401 *ProblemDetails
+	JSON404 *ProblemDetails
+	JSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportPersonaTokensResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportPersonaTokensResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListPersonaImportJobsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		HasMore *bool                      `json:"has_more,omitempty"`
+		Jobs    *[]PersonaImportJobSummary `json:"jobs,omitempty"`
+	}
+	JSON401 *ProblemDetails
+	JSON404 *ProblemDetails
+	JSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPersonaImportJobsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPersonaImportJobsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPersonaImportJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Counts Row counts keyed by row state
+		Counts         *map[string]int           `json:"counts,omitempty"`
+		FinishedAt     *int64                    `json:"finished_at,omitempty"`
+		HasMoreResults *bool                     `json:"has_more_results,omitempty"`
+		JobId          *string                   `json:"job_id,omitempty"`
+		Results        *[]PersonaImportRowResult `json:"results,omitempty"`
+		StartedAt      *int64                    `json:"started_at,omitempty"`
+
+		// Status running, paused, cancelled, or completed
+		Status *string `json:"status,omitempty"`
+		Total  *int    `json:"total,omitempty"`
+	}
+	JSON401 *ProblemDetails
+	JSON404 *ProblemDetails
+	JSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPersonaImportJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPersonaImportJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetSubClientSummaryResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -19015,6 +21359,32 @@ func (r GetSubClientSummaryResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetSubClientSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteCustomerResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCustomerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCustomerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19041,6 +21411,33 @@ func (r GetCustomerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetCustomerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetCustomerCapabilitiesResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *CustomerCapabilities
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCustomerCapabilitiesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCustomerCapabilitiesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19090,6 +21487,33 @@ func (r ChatCustomerInsightsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ChatCustomerInsightsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReEngageCustomerResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *CustomerReEngagementResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ReEngageCustomerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReEngageCustomerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19197,6 +21621,81 @@ func (r ListEventsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ListEventsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteFeePayoutDestinationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteFeePayoutDestinationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteFeePayoutDestinationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetFeePayoutDestinationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *FeePayoutDestination
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFeePayoutDestinationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFeePayoutDestinationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutFeePayoutDestinationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *FeePayoutDestination
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r PutFeePayoutDestinationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutFeePayoutDestinationResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19323,6 +21822,30 @@ func (r GetMandateResponse) StatusCode() int {
 	return 0
 }
 
+type AmendMandateResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *Mandate
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r AmendMandateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AmendMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ApproveMandateResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -19341,6 +21864,30 @@ func (r ApproveMandateResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ApproveMandateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetMandateBudgetResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *MandateBudget
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMandateBudgetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMandateBudgetResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -19371,11 +21918,36 @@ func (r CancelMandateResponse) StatusCode() int {
 	return 0
 }
 
+type ListMandateVersionsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *[]MandateVersion
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMandateVersionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMandateVersionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreatePaymentAgentResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	JSON201                   *PaymentAgentResponse
 	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
 	ApplicationproblemJSON404 *ProblemDetails
 }
 
@@ -19395,11 +21967,35 @@ func (r CreatePaymentAgentResponse) StatusCode() int {
 	return 0
 }
 
+type GetPaymentAgentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *PaymentAgentResponse
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPaymentAgentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPaymentAgentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreatePaymentAgentProposalsResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	JSON200                   *AgenticProposalsResult
 	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
 	ApplicationproblemJSON404 *ProblemDetails
 	ApplicationproblemJSON429 *ProblemDetails
 }
@@ -19414,6 +22010,30 @@ func (r CreatePaymentAgentProposalsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreatePaymentAgentProposalsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPaymentAgentProposalsProgressResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AgenticProposalsProgress
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPaymentAgentProposalsProgressResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPaymentAgentProposalsProgressResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -20034,7 +22654,7 @@ func (r AdvanceSimulationResponse) StatusCode() int {
 type ListScheduledPaymentsResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
-	JSON200                   *[]ScheduledPaymentResponse
+	JSON200                   *ScheduledPaymentList
 	ApplicationproblemJSON400 *ProblemDetails
 	ApplicationproblemJSON404 *ProblemDetails
 }
@@ -20049,6 +22669,31 @@ func (r ListScheduledPaymentsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ListScheduledPaymentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateScheduledPaymentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *[]ScheduledPaymentResponse
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateScheduledPaymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateScheduledPaymentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -21129,6 +23774,32 @@ func (c *ClientWithResponses) UpdateAccountWithResponse(ctx context.Context, acc
 	return ParseUpdateAccountResponse(rsp)
 }
 
+// GetClientAgenticPolicyWithResponse request returning *GetClientAgenticPolicyResponse
+func (c *ClientWithResponses) GetClientAgenticPolicyWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetClientAgenticPolicyResponse, error) {
+	rsp, err := c.GetClientAgenticPolicy(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetClientAgenticPolicyResponse(rsp)
+}
+
+// UpdateClientAgenticPolicyWithBodyWithResponse request with arbitrary body returning *UpdateClientAgenticPolicyResponse
+func (c *ClientWithResponses) UpdateClientAgenticPolicyWithBodyWithResponse(ctx context.Context, params *UpdateClientAgenticPolicyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateClientAgenticPolicyResponse, error) {
+	rsp, err := c.UpdateClientAgenticPolicyWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateClientAgenticPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateClientAgenticPolicyWithResponse(ctx context.Context, params *UpdateClientAgenticPolicyParams, body UpdateClientAgenticPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateClientAgenticPolicyResponse, error) {
+	rsp, err := c.UpdateClientAgenticPolicy(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateClientAgenticPolicyResponse(rsp)
+}
+
 // DeleteAllApiKeysWithResponse request returning *DeleteAllApiKeysResponse
 func (c *ClientWithResponses) DeleteAllApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteAllApiKeysResponse, error) {
 	rsp, err := c.DeleteAllApiKeys(ctx, reqEditors...)
@@ -21512,6 +24183,41 @@ func (c *ClientWithResponses) BulkImportFromSumsubTokensWithResponse(ctx context
 	return ParseBulkImportFromSumsubTokensResponse(rsp)
 }
 
+// ImportPersonaTokensWithBodyWithResponse request with arbitrary body returning *ImportPersonaTokensResponse
+func (c *ClientWithResponses) ImportPersonaTokensWithBodyWithResponse(ctx context.Context, params *ImportPersonaTokensParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportPersonaTokensResponse, error) {
+	rsp, err := c.ImportPersonaTokensWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportPersonaTokensResponse(rsp)
+}
+
+func (c *ClientWithResponses) ImportPersonaTokensWithResponse(ctx context.Context, params *ImportPersonaTokensParams, body ImportPersonaTokensJSONRequestBody, reqEditors ...RequestEditorFn) (*ImportPersonaTokensResponse, error) {
+	rsp, err := c.ImportPersonaTokens(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportPersonaTokensResponse(rsp)
+}
+
+// ListPersonaImportJobsWithResponse request returning *ListPersonaImportJobsResponse
+func (c *ClientWithResponses) ListPersonaImportJobsWithResponse(ctx context.Context, params *ListPersonaImportJobsParams, reqEditors ...RequestEditorFn) (*ListPersonaImportJobsResponse, error) {
+	rsp, err := c.ListPersonaImportJobs(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPersonaImportJobsResponse(rsp)
+}
+
+// GetPersonaImportJobWithResponse request returning *GetPersonaImportJobResponse
+func (c *ClientWithResponses) GetPersonaImportJobWithResponse(ctx context.Context, jobId string, params *GetPersonaImportJobParams, reqEditors ...RequestEditorFn) (*GetPersonaImportJobResponse, error) {
+	rsp, err := c.GetPersonaImportJob(ctx, jobId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPersonaImportJobResponse(rsp)
+}
+
 // GetSubClientSummaryWithResponse request returning *GetSubClientSummaryResponse
 func (c *ClientWithResponses) GetSubClientSummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubClientSummaryResponse, error) {
 	rsp, err := c.GetSubClientSummary(ctx, reqEditors...)
@@ -21521,6 +24227,15 @@ func (c *ClientWithResponses) GetSubClientSummaryWithResponse(ctx context.Contex
 	return ParseGetSubClientSummaryResponse(rsp)
 }
 
+// DeleteCustomerWithResponse request returning *DeleteCustomerResponse
+func (c *ClientWithResponses) DeleteCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*DeleteCustomerResponse, error) {
+	rsp, err := c.DeleteCustomer(ctx, customerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCustomerResponse(rsp)
+}
+
 // GetCustomerWithResponse request returning *GetCustomerResponse
 func (c *ClientWithResponses) GetCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerResponse, error) {
 	rsp, err := c.GetCustomer(ctx, customerId, reqEditors...)
@@ -21528,6 +24243,15 @@ func (c *ClientWithResponses) GetCustomerWithResponse(ctx context.Context, custo
 		return nil, err
 	}
 	return ParseGetCustomerResponse(rsp)
+}
+
+// GetCustomerCapabilitiesWithResponse request returning *GetCustomerCapabilitiesResponse
+func (c *ClientWithResponses) GetCustomerCapabilitiesWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerCapabilitiesResponse, error) {
+	rsp, err := c.GetCustomerCapabilities(ctx, customerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCustomerCapabilitiesResponse(rsp)
 }
 
 // GetCustomerInsightsWithResponse request returning *GetCustomerInsightsResponse
@@ -21554,6 +24278,15 @@ func (c *ClientWithResponses) ChatCustomerInsightsWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseChatCustomerInsightsResponse(rsp)
+}
+
+// ReEngageCustomerWithResponse request returning *ReEngageCustomerResponse
+func (c *ClientWithResponses) ReEngageCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*ReEngageCustomerResponse, error) {
+	rsp, err := c.ReEngageCustomer(ctx, customerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReEngageCustomerResponse(rsp)
 }
 
 // ListRecipientsWithResponse request returning *ListRecipientsResponse
@@ -21606,6 +24339,41 @@ func (c *ClientWithResponses) ListEventsWithResponse(ctx context.Context, params
 		return nil, err
 	}
 	return ParseListEventsResponse(rsp)
+}
+
+// DeleteFeePayoutDestinationWithResponse request returning *DeleteFeePayoutDestinationResponse
+func (c *ClientWithResponses) DeleteFeePayoutDestinationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteFeePayoutDestinationResponse, error) {
+	rsp, err := c.DeleteFeePayoutDestination(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteFeePayoutDestinationResponse(rsp)
+}
+
+// GetFeePayoutDestinationWithResponse request returning *GetFeePayoutDestinationResponse
+func (c *ClientWithResponses) GetFeePayoutDestinationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeePayoutDestinationResponse, error) {
+	rsp, err := c.GetFeePayoutDestination(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFeePayoutDestinationResponse(rsp)
+}
+
+// PutFeePayoutDestinationWithBodyWithResponse request with arbitrary body returning *PutFeePayoutDestinationResponse
+func (c *ClientWithResponses) PutFeePayoutDestinationWithBodyWithResponse(ctx context.Context, params *PutFeePayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFeePayoutDestinationResponse, error) {
+	rsp, err := c.PutFeePayoutDestinationWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutFeePayoutDestinationResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutFeePayoutDestinationWithResponse(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutFeePayoutDestinationResponse, error) {
+	rsp, err := c.PutFeePayoutDestination(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutFeePayoutDestinationResponse(rsp)
 }
 
 // CreateInstructionsWithBodyWithResponse request with arbitrary body returning *CreateInstructionsResponse
@@ -21669,6 +24437,23 @@ func (c *ClientWithResponses) GetMandateWithResponse(ctx context.Context, mandat
 	return ParseGetMandateResponse(rsp)
 }
 
+// AmendMandateWithBodyWithResponse request with arbitrary body returning *AmendMandateResponse
+func (c *ClientWithResponses) AmendMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AmendMandateResponse, error) {
+	rsp, err := c.AmendMandateWithBody(ctx, mandateId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAmendMandateResponse(rsp)
+}
+
+func (c *ClientWithResponses) AmendMandateWithResponse(ctx context.Context, mandateId string, body AmendMandateJSONRequestBody, reqEditors ...RequestEditorFn) (*AmendMandateResponse, error) {
+	rsp, err := c.AmendMandate(ctx, mandateId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAmendMandateResponse(rsp)
+}
+
 // ApproveMandateWithBodyWithResponse request with arbitrary body returning *ApproveMandateResponse
 func (c *ClientWithResponses) ApproveMandateWithBodyWithResponse(ctx context.Context, mandateId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApproveMandateResponse, error) {
 	rsp, err := c.ApproveMandateWithBody(ctx, mandateId, contentType, body, reqEditors...)
@@ -21684,6 +24469,15 @@ func (c *ClientWithResponses) ApproveMandateWithResponse(ctx context.Context, ma
 		return nil, err
 	}
 	return ParseApproveMandateResponse(rsp)
+}
+
+// GetMandateBudgetWithResponse request returning *GetMandateBudgetResponse
+func (c *ClientWithResponses) GetMandateBudgetWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*GetMandateBudgetResponse, error) {
+	rsp, err := c.GetMandateBudget(ctx, mandateId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMandateBudgetResponse(rsp)
 }
 
 // CancelMandateWithBodyWithResponse request with arbitrary body returning *CancelMandateResponse
@@ -21703,6 +24497,15 @@ func (c *ClientWithResponses) CancelMandateWithResponse(ctx context.Context, man
 	return ParseCancelMandateResponse(rsp)
 }
 
+// ListMandateVersionsWithResponse request returning *ListMandateVersionsResponse
+func (c *ClientWithResponses) ListMandateVersionsWithResponse(ctx context.Context, mandateId string, reqEditors ...RequestEditorFn) (*ListMandateVersionsResponse, error) {
+	rsp, err := c.ListMandateVersions(ctx, mandateId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMandateVersionsResponse(rsp)
+}
+
 // CreatePaymentAgentWithBodyWithResponse request with arbitrary body returning *CreatePaymentAgentResponse
 func (c *ClientWithResponses) CreatePaymentAgentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentResponse, error) {
 	rsp, err := c.CreatePaymentAgentWithBody(ctx, contentType, body, reqEditors...)
@@ -21720,6 +24523,15 @@ func (c *ClientWithResponses) CreatePaymentAgentWithResponse(ctx context.Context
 	return ParseCreatePaymentAgentResponse(rsp)
 }
 
+// GetPaymentAgentWithResponse request returning *GetPaymentAgentResponse
+func (c *ClientWithResponses) GetPaymentAgentWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*GetPaymentAgentResponse, error) {
+	rsp, err := c.GetPaymentAgent(ctx, paymentAgentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPaymentAgentResponse(rsp)
+}
+
 // CreatePaymentAgentProposalsWithBodyWithResponse request with arbitrary body returning *CreatePaymentAgentProposalsResponse
 func (c *ClientWithResponses) CreatePaymentAgentProposalsWithBodyWithResponse(ctx context.Context, paymentAgentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePaymentAgentProposalsResponse, error) {
 	rsp, err := c.CreatePaymentAgentProposalsWithBody(ctx, paymentAgentId, contentType, body, reqEditors...)
@@ -21735,6 +24547,15 @@ func (c *ClientWithResponses) CreatePaymentAgentProposalsWithResponse(ctx contex
 		return nil, err
 	}
 	return ParseCreatePaymentAgentProposalsResponse(rsp)
+}
+
+// GetPaymentAgentProposalsProgressWithResponse request returning *GetPaymentAgentProposalsProgressResponse
+func (c *ClientWithResponses) GetPaymentAgentProposalsProgressWithResponse(ctx context.Context, paymentAgentId string, reqEditors ...RequestEditorFn) (*GetPaymentAgentProposalsProgressResponse, error) {
+	rsp, err := c.GetPaymentAgentProposalsProgress(ctx, paymentAgentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPaymentAgentProposalsProgressResponse(rsp)
 }
 
 // RevokePaymentAgentWithResponse request returning *RevokePaymentAgentResponse
@@ -22040,6 +24861,23 @@ func (c *ClientWithResponses) ListScheduledPaymentsWithResponse(ctx context.Cont
 	return ParseListScheduledPaymentsResponse(rsp)
 }
 
+// CreateScheduledPaymentWithBodyWithResponse request with arbitrary body returning *CreateScheduledPaymentResponse
+func (c *ClientWithResponses) CreateScheduledPaymentWithBodyWithResponse(ctx context.Context, params *CreateScheduledPaymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateScheduledPaymentResponse, error) {
+	rsp, err := c.CreateScheduledPaymentWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateScheduledPaymentResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateScheduledPaymentWithResponse(ctx context.Context, params *CreateScheduledPaymentParams, body CreateScheduledPaymentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateScheduledPaymentResponse, error) {
+	rsp, err := c.CreateScheduledPayment(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateScheduledPaymentResponse(rsp)
+}
+
 // CancelScheduledPaymentWithResponse request returning *CancelScheduledPaymentResponse
 func (c *ClientWithResponses) CancelScheduledPaymentWithResponse(ctx context.Context, scheduledPaymentId string, reqEditors ...RequestEditorFn) (*CancelScheduledPaymentResponse, error) {
 	rsp, err := c.CancelScheduledPayment(ctx, scheduledPaymentId, reqEditors...)
@@ -22129,8 +24967,8 @@ func (c *ClientWithResponses) CreateSignerGroupWithResponse(ctx context.Context,
 }
 
 // GetSignerGroupWithResponse request returning *GetSignerGroupResponse
-func (c *ClientWithResponses) GetSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, reqEditors ...RequestEditorFn) (*GetSignerGroupResponse, error) {
-	rsp, err := c.GetSignerGroup(ctx, signerGroupId, reqEditors...)
+func (c *ClientWithResponses) GetSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*GetSignerGroupResponse, error) {
+	rsp, err := c.GetSignerGroup(ctx, signerGroupId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -22155,7 +24993,7 @@ func (c *ClientWithResponses) CreateSignerGroupSignerWithResponse(ctx context.Co
 }
 
 // DeleteSignerGroupSignerWithResponse request returning *DeleteSignerGroupSignerResponse
-func (c *ClientWithResponses) DeleteSignerGroupSignerWithResponse(ctx context.Context, signerGroupId KSUID, signerId string, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*DeleteSignerGroupSignerResponse, error) {
+func (c *ClientWithResponses) DeleteSignerGroupSignerWithResponse(ctx context.Context, signerGroupId KSUID, signerId KSUID, params *DeleteSignerGroupSignerParams, reqEditors ...RequestEditorFn) (*DeleteSignerGroupSignerResponse, error) {
 	rsp, err := c.DeleteSignerGroupSigner(ctx, signerGroupId, signerId, params, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -22827,6 +25665,100 @@ func ParseUpdateAccountResponse(rsp *http.Response) (*UpdateAccountResponse, err
 			return nil, err
 		}
 		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetClientAgenticPolicyResponse parses an HTTP response from a GetClientAgenticPolicyWithResponse call
+func ParseGetClientAgenticPolicyResponse(rsp *http.Response) (*GetClientAgenticPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetClientAgenticPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RegisteredAgenticClientPolicy
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateClientAgenticPolicyResponse parses an HTTP response from a UpdateClientAgenticPolicyWithResponse call
+func ParseUpdateClientAgenticPolicyResponse(rsp *http.Response) (*UpdateClientAgenticPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateClientAgenticPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RegisteredAgenticClientPolicy
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
 
 	}
 
@@ -24513,6 +27445,191 @@ func ParseBulkImportFromSumsubTokensResponse(rsp *http.Response) (*BulkImportFro
 	return response, nil
 }
 
+// ParseImportPersonaTokensResponse parses an HTTP response from a ImportPersonaTokensWithResponse call
+func ParseImportPersonaTokensResponse(rsp *http.Response) (*ImportPersonaTokensResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportPersonaTokensResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest struct {
+			Accepted *int    `json:"accepted,omitempty"`
+			JobId    *string `json:"job_id,omitempty"`
+
+			// Skipped Token strings that could not be queued, with their index and
+			// reason (malformed, duplicate in batch, or already imported). This
+			// is about the token string only — never a compliance decision about
+			// a person or application.
+			Skipped *[]struct {
+				Index  *int    `json:"index,omitempty"`
+				Reason *string `json:"reason,omitempty"`
+
+				// Token Redacted token (suffix only)
+				Token *string `json:"token,omitempty"`
+			} `json:"skipped,omitempty"`
+
+			// SkippedCount Number of token strings that could not be queued
+			SkippedCount *int    `json:"skipped_count,omitempty"`
+			Status       *string `json:"status,omitempty"`
+
+			// Total Number of tokens accepted into the job
+			Total *int `json:"total,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPersonaImportJobsResponse parses an HTTP response from a ListPersonaImportJobsWithResponse call
+func ParseListPersonaImportJobsResponse(rsp *http.Response) (*ListPersonaImportJobsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPersonaImportJobsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			HasMore *bool                      `json:"has_more,omitempty"`
+			Jobs    *[]PersonaImportJobSummary `json:"jobs,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPersonaImportJobResponse parses an HTTP response from a GetPersonaImportJobWithResponse call
+func ParseGetPersonaImportJobResponse(rsp *http.Response) (*GetPersonaImportJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPersonaImportJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Counts Row counts keyed by row state
+			Counts         *map[string]int           `json:"counts,omitempty"`
+			FinishedAt     *int64                    `json:"finished_at,omitempty"`
+			HasMoreResults *bool                     `json:"has_more_results,omitempty"`
+			JobId          *string                   `json:"job_id,omitempty"`
+			Results        *[]PersonaImportRowResult `json:"results,omitempty"`
+			StartedAt      *int64                    `json:"started_at,omitempty"`
+
+			// Status running, paused, cancelled, or completed
+			Status *string `json:"status,omitempty"`
+			Total  *int    `json:"total,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetSubClientSummaryResponse parses an HTTP response from a GetSubClientSummaryWithResponse call
 func ParseGetSubClientSummaryResponse(rsp *http.Response) (*GetSubClientSummaryResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -24535,6 +27652,60 @@ func ParseGetSubClientSummaryResponse(rsp *http.Response) (*GetSubClientSummaryR
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCustomerResponse parses an HTTP response from a DeleteCustomerWithResponse call
+func ParseDeleteCustomerResponse(rsp *http.Response) (*DeleteCustomerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCustomerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
 
 	}
 
@@ -24589,6 +27760,67 @@ func ParseGetCustomerResponse(rsp *http.Response) (*GetCustomerResponse, error) 
 			return nil, err
 		}
 		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCustomerCapabilitiesResponse parses an HTTP response from a GetCustomerCapabilitiesWithResponse call
+func ParseGetCustomerCapabilitiesResponse(rsp *http.Response) (*GetCustomerCapabilitiesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCustomerCapabilitiesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CustomerCapabilities
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
 
 	}
 
@@ -24676,6 +27908,67 @@ func ParseChatCustomerInsightsResponse(rsp *http.Response) (*ChatCustomerInsight
 			return nil, err
 		}
 		response.ApplicationproblemJSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReEngageCustomerResponse parses an HTTP response from a ReEngageCustomerWithResponse call
+func ParseReEngageCustomerResponse(rsp *http.Response) (*ReEngageCustomerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReEngageCustomerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CustomerReEngagementResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
 
 	}
 
@@ -24889,6 +28182,147 @@ func ParseListEventsResponse(rsp *http.Response) (*ListEventsResponse, error) {
 	return response, nil
 }
 
+// ParseDeleteFeePayoutDestinationResponse parses an HTTP response from a DeleteFeePayoutDestinationWithResponse call
+func ParseDeleteFeePayoutDestinationResponse(rsp *http.Response) (*DeleteFeePayoutDestinationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteFeePayoutDestinationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFeePayoutDestinationResponse parses an HTTP response from a GetFeePayoutDestinationWithResponse call
+func ParseGetFeePayoutDestinationResponse(rsp *http.Response) (*GetFeePayoutDestinationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFeePayoutDestinationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FeePayoutDestination
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutFeePayoutDestinationResponse parses an HTTP response from a PutFeePayoutDestinationWithResponse call
+func ParsePutFeePayoutDestinationResponse(rsp *http.Response) (*PutFeePayoutDestinationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutFeePayoutDestinationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FeePayoutDestination
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateInstructionsResponse parses an HTTP response from a CreateInstructionsWithResponse call
 func ParseCreateInstructionsResponse(rsp *http.Response) (*CreateInstructionsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -25089,6 +28523,46 @@ func ParseGetMandateResponse(rsp *http.Response) (*GetMandateResponse, error) {
 	return response, nil
 }
 
+// ParseAmendMandateResponse parses an HTTP response from a AmendMandateWithResponse call
+func ParseAmendMandateResponse(rsp *http.Response) (*AmendMandateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AmendMandateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Mandate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseApproveMandateResponse parses an HTTP response from a ApproveMandateWithResponse call
 func ParseApproveMandateResponse(rsp *http.Response) (*ApproveMandateResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -25105,6 +28579,46 @@ func ParseApproveMandateResponse(rsp *http.Response) (*ApproveMandateResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest MandateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMandateBudgetResponse parses an HTTP response from a GetMandateBudgetWithResponse call
+func ParseGetMandateBudgetResponse(rsp *http.Response) (*GetMandateBudgetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMandateBudgetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MandateBudget
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -25169,6 +28683,46 @@ func ParseCancelMandateResponse(rsp *http.Response) (*CancelMandateResponse, err
 	return response, nil
 }
 
+// ParseListMandateVersionsResponse parses an HTTP response from a ListMandateVersionsWithResponse call
+func ParseListMandateVersionsResponse(rsp *http.Response) (*ListMandateVersionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMandateVersionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []MandateVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreatePaymentAgentResponse parses an HTTP response from a CreatePaymentAgentWithResponse call
 func ParseCreatePaymentAgentResponse(rsp *http.Response) (*CreatePaymentAgentResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -25196,6 +28750,46 @@ func ParseCreatePaymentAgentResponse(rsp *http.Response) (*CreatePaymentAgentRes
 			return nil, err
 		}
 		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPaymentAgentResponse parses an HTTP response from a GetPaymentAgentWithResponse call
+func ParseGetPaymentAgentResponse(rsp *http.Response) (*GetPaymentAgentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPaymentAgentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaymentAgentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ProblemDetails
@@ -25237,6 +28831,13 @@ func ParseCreatePaymentAgentProposalsResponse(rsp *http.Response) (*CreatePaymen
 		}
 		response.ApplicationproblemJSON400 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -25250,6 +28851,46 @@ func ParseCreatePaymentAgentProposalsResponse(rsp *http.Response) (*CreatePaymen
 			return nil, err
 		}
 		response.ApplicationproblemJSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPaymentAgentProposalsProgressResponse parses an HTTP response from a GetPaymentAgentProposalsProgressWithResponse call
+func ParseGetPaymentAgentProposalsProgressResponse(rsp *http.Response) (*GetPaymentAgentProposalsProgressResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPaymentAgentProposalsProgressResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgenticProposalsProgress
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
 
 	}
 
@@ -26570,7 +30211,7 @@ func ParseListScheduledPaymentsResponse(rsp *http.Response) (*ListScheduledPayme
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []ScheduledPaymentResponse
+		var dest ScheduledPaymentList
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -26582,6 +30223,53 @@ func ParseListScheduledPaymentsResponse(rsp *http.Response) (*ListScheduledPayme
 			return nil, err
 		}
 		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateScheduledPaymentResponse parses an HTTP response from a CreateScheduledPaymentWithResponse call
+func ParseCreateScheduledPaymentResponse(rsp *http.Response) (*CreateScheduledPaymentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateScheduledPaymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest []ScheduledPaymentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ProblemDetails

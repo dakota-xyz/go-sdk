@@ -66,7 +66,7 @@ func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicK
 	}
 
 	// Idempotency: skip the add if the signer's key is already a member.
-	grp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, spendingGroupID))
+	grp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, spendingGroupID, nil))
 	if err != nil {
 		return false, fmt.Errorf("get signer group: %w", err)
 	}
@@ -134,7 +134,7 @@ func (c *Client) DetachUserFromWallet(ctx context.Context, walletID, signerPubli
 
 	// Resolve the signer's public key → its resource id within the group: the delete
 	// endpoint addresses members by id, not key. Absent ⇒ idempotent no-op.
-	grp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, spendingGroupID))
+	grp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, spendingGroupID, nil))
 	if err != nil {
 		return false, fmt.Errorf("get signer group: %w", err)
 	}
