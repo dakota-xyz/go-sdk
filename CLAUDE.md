@@ -83,6 +83,24 @@ If OpenAPI spec changes:
 make generate-client
 ```
 
+### Syncing the spec — the platform's public spec can be stale
+
+`client/gen/openapi.yaml` is synced from the platform's
+`openapi.public.yaml`, which the platform GENERATES from its internal
+`openapi.yaml` (`make openapi-public`). That generation is a manual step,
+so the public file can lag the routes the server actually serves — the
+internal `openapi.yaml` is what `internal/api/oapi/routes.go` is
+generated from, and is therefore authoritative.
+
+This has already bitten the TypeScript SDK: it shipped
+`/clients/{client_id}/agentic-policy` from a stale public spec while the
+server served `/agentic-policy`, so every call 404'd (fixed in ts-sdk
+2.2.1). **After any sync, if a path looks wrong, check the platform's
+internal `openapi.yaml` and `routes.go` before trusting the public
+file.** Deliberate deviations are pinned by `TestSpecGuards` in
+`client/spec_guards_test.go` — add a case there whenever you hand-correct
+the spec, so a later sync fails loudly instead of shipping.
+
 ## Testing
 
 ```bash

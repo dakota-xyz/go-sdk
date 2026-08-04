@@ -41,6 +41,13 @@ const (
 	// MandateActionCancel authorizes a mandate's cancellation (pending → rejected,
 	// or active → revoked; the outcome follows the mandate's current status).
 	MandateActionCancel MandateAction = "cancel"
+	// MandateActionAmend authorizes appending a NEW immutable version to an
+	// active mandate.
+	//
+	// Its payload is MandateAmendSignPayload, NOT MandateSignPayload — an amend
+	// signature must commit to the version it creates, or a signature for v2
+	// replays as v3. MandateSignPayload refuses this verb for that reason.
+	MandateActionAmend MandateAction = "amend"
 )
 
 // Signer produces the §8 signature the platform verifies for a mandate
@@ -66,6 +73,13 @@ type Signer interface {
 // the platform) and may change without a major-version bump.
 func MandateSignPayload(m gen.Mandate, action MandateAction) ([]byte, error) {
 	switch {
+	case action == MandateActionAmend:
+		// These bytes are FROZEN — every deployed client and every signature
+		// already collected reproduces exactly this shape, so no key may be
+		// added. Amend therefore gets its own function rather than an extra key
+		// here, and is refused outright so it is impossible to produce an amend
+		// payload that omits the version it authorizes.
+		return nil, errors.New(`the "amend" action signs MandateAmendSignPayload (it must commit to the version)`)
 	case m.Id == nil || *m.Id == "":
 		return nil, errors.New("mandate has no id")
 	case m.BoundSignerId == nil || *m.BoundSignerId == "":
@@ -83,6 +97,50 @@ func MandateSignPayload(m gen.Mandate, action MandateAction) ([]byte, error) {
 		"rule":         *m.Rule,
 		"valid_from":   derefInt64(m.ValidFrom),
 		"valid_until":  derefInt64(m.ValidUntil),
+	})
+}
+
+// MandateAmendSignPayload reproduces, byte-for-byte, the canonical bytes the
+// platform verifies for an AMEND — appending version `version`, carrying
+// `rule`, to `m`. The result is what a Signer signs.
+//
+// It is the same JCS JSON as MandateSignPayload plus one key, "version":
+//
+//	{"action":"amend", "id":…, "bound_signer":…, "rule":<the NEW rule>,
+//	 "valid_from":…, "valid_until":…, "version":<the version this creates>}
+//
+// version is what stops cross-version replay. Without it, a signature over
+// {amend, rule R} would authorize "make the current rule R" forever: a customer
+// who signs v2 raising a limit to 20,000 and then v3 lowering it to 5,000 could
+// have the v2 signature replayed to append a v4 of 20,000 — a rollback of their
+// own reduction, using their own signature. Binding the exact version number
+// makes each amend signature usable once, at one point in the mandate's history.
+//
+// rule is the NEW rule (what the signer is agreeing to), not the outgoing one,
+// and is taken verbatim — the amend endpoint never normalizes it, so the bytes
+// signed here are the bytes the server verifies. Pass the SAME rule to
+// AmendMandate.
+//
+// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// the platform) and may change without a major-version bump.
+func MandateAmendSignPayload(m gen.Mandate, version int, rule gen.MandateRule) ([]byte, error) {
+	switch {
+	case m.Id == nil || *m.Id == "":
+		return nil, errors.New("mandate has no id")
+	case m.BoundSignerId == nil || *m.BoundSignerId == "":
+		return nil, errors.New("mandate has no bound_signer_id")
+	case version < 2:
+		// v1 is created and approved, never amended.
+		return nil, fmt.Errorf("amend version must be >= 2 (the version being created), got %d", version)
+	}
+	return canonicalJSON(map[string]any{
+		"action":       string(MandateActionAmend),
+		"id":           *m.Id,
+		"bound_signer": *m.BoundSignerId,
+		"rule":         rule,
+		"valid_from":   derefInt64(m.ValidFrom),
+		"valid_until":  derefInt64(m.ValidUntil),
+		"version":      version,
 	})
 }
 

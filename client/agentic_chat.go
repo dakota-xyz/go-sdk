@@ -12,6 +12,11 @@ import (
 	"github.com/dakota-xyz/go-sdk/client/gen"
 )
 
+// conversationStatusRejectedInput is the boundary screen's verdict for a message
+// refused wholesale. Its contract is that the message must NOT be added to the
+// conversation history — see ConversationTurn.ConversationStatus.
+const conversationStatusRejectedInput = "rejected_input"
+
 // ChatMessage is one turn of an agent conversation. Role is "user" or "assistant".
 type ChatMessage struct {
 	Role        string       `json:"role"`
@@ -37,25 +42,71 @@ type Attachment struct {
 // For a stateless backend (one HTTP request per chat message), persist
 // Messages() between requests and rebuild with Client.ResumeAgentConversation.
 type AgentConversation struct {
-	client  *Client
-	agentID string
-	history []ChatMessage
+	client       *Client
+	agentID      string
+	history      []ChatMessage
+	timezone     string
+	clientPolicy *gen.AgenticClientPolicy
+}
+
+// ConversationOption configures an AgentConversation.
+type ConversationOption func(*AgentConversation)
+
+// WithTimezone sets the customer's IANA timezone (e.g. "America/Los_Angeles").
+//
+// The agent then resolves every relative date ("tomorrow", "Friday") and clock
+// time ("10 am") in THAT zone: a date without a time is drafted for 10:00
+// local, and a time without a date means its next local occurrence. Unset,
+// times resolve as UTC and the agent says so when a specific clock time
+// matters.
+//
+// The conversation resends it on every turn, since the endpoint is stateless.
+// Note the zone's UTC offset is captured at drafting time, so a DST transition
+// before a far-future fire date shifts it by the DST delta.
+func WithTimezone(tz string) ConversationOption {
+	return func(cv *AgentConversation) { cv.timezone = tz }
+}
+
+// WithClientPolicy sets a per-turn client_policy override — the vocabulary and
+// payout constraints the agent drafts under.
+//
+// This is a DEVELOPMENT override. It wins for this conversation's turns and the
+// server logs that it did. For production, register the policy once with
+// PUT /agentic-policy (Raw().UpdateClientAgenticPolicyWithResponse) instead:
+// forgetting to pass it here fails SILENTLY — the agent simply narrates in the
+// platform's nouns again ("destination", "mandate"), with no error anywhere.
+//
+// Resolution per request is: a non-empty policy here, else the client's
+// registration, else platform defaults.
+func WithClientPolicy(p gen.AgenticClientPolicy) ConversationOption {
+	return func(cv *AgentConversation) { cv.clientPolicy = &p }
 }
 
 // NewAgentConversation starts a fresh conversation with the agent.
 //
 // Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
 // the platform) and may change without a major-version bump.
-func (c *Client) NewAgentConversation(agentID string) *AgentConversation {
-	return &AgentConversation{client: c, agentID: agentID}
+func (c *Client) NewAgentConversation(agentID string, opts ...ConversationOption) *AgentConversation {
+	cv := &AgentConversation{client: c, agentID: agentID}
+	for _, o := range opts {
+		o(cv)
+	}
+	return cv
 }
 
 // ResumeAgentConversation rebuilds a conversation from a persisted transcript
 // (oldest first) — for backends that store the history between requests.
-func (c *Client) ResumeAgentConversation(agentID string, history []ChatMessage) *AgentConversation {
+//
+// A stateless backend must pass its options again here: the transcript carries
+// the messages, not the timezone or the policy override.
+func (c *Client) ResumeAgentConversation(agentID string, history []ChatMessage, opts ...ConversationOption) *AgentConversation {
 	h := make([]ChatMessage, len(history))
 	copy(h, history)
-	return &AgentConversation{client: c, agentID: agentID, history: h}
+	cv := &AgentConversation{client: c, agentID: agentID, history: h}
+	for _, o := range opts {
+		o(cv)
+	}
+	return cv
 }
 
 // ConversationTurn is the agent's response to one user message.
@@ -68,10 +119,38 @@ type ConversationTurn struct {
 	Proposals []gen.AgenticProposal
 	// HasProposals reports whether the agent drafted proposals this turn.
 	HasProposals bool
-	// ConversationStatus is the boundary screen's verdict for this turn: "ok"
-	// (normal), "warned" (off-topic — the customer was warned), or "blocked" (the
-	// chat is terminated; stop serving and offer a fresh conversation). Empty when
-	// the platform sent none.
+	// Blockers are machine-actionable reasons the turn could not complete — for
+	// the CLIENT APPLICATION, not the customer. Reply says the same thing in
+	// prose, which software cannot branch on: "extend the limit to cover Priya",
+	// "I need her bank details" and "that rail is not supported" all arrive as
+	// some text.
+	//
+	// These ACCOMPANY proposals rather than replacing them, and routinely do.
+	// The common case is a payee who does not exist yet: the turn proposes
+	// creating them AND reports that the limit will not reach them, because the
+	// client has to do both, in that order — accept the proposal so the payee
+	// has an id, then amend the limit to include it. Never treat proposals and
+	// blockers as alternatives.
+	//
+	// Empty when nothing blocked the turn. Always switch on Code and ignore
+	// codes you do not know; new ones are added over time.
+	Blockers []gen.AgenticBlocker
+	// HasBlockers reports whether the turn returned any blocker.
+	HasBlockers bool
+	// ConversationStatus is the boundary screen's verdict for this turn:
+	//
+	//	"ok"             normal payments turn
+	//	"warned"         off-topic — the customer was warned but may continue
+	//	"blocked"        the chat is terminated; stop serving it and offer a
+	//	                 fresh conversation
+	//	"rejected_input" this message was refused WHOLESALE (e.g. more payees
+	//	                 than one conversation supports). Reply explains what to
+	//	                 resend; the conversation continues unaffected, and the
+	//	                 SDK has already dropped the refused message from the
+	//	                 transcript for you.
+	//
+	// Empty when the platform sent none. Treat it as an OPEN set — new values
+	// may be added.
 	ConversationStatus string
 }
 
@@ -127,9 +206,18 @@ func (cv *AgentConversation) SendWithAttachments(ctx context.Context, userMessag
 		cv.history[len(cv.history)-1].Attachments = nil
 	}
 
-	resp, err := CheckResponse(cv.client.Raw().CreatePaymentAgentProposalsWithResponse(ctx, cv.agentID, gen.CreateProposalsRequest{
-		Messages: &msgs,
-	}))
+	// Timezone and the policy override are resent on EVERY turn — the endpoint
+	// is stateless, so either one given once would be forgotten on the next.
+	body := gen.CreateProposalsRequest{Messages: &msgs}
+	if cv.timezone != "" {
+		tz := cv.timezone
+		body.Timezone = &tz
+	}
+	if cv.clientPolicy != nil {
+		body.ClientPolicy = cv.clientPolicy
+	}
+
+	resp, err := CheckResponse(cv.client.Raw().CreatePaymentAgentProposalsWithResponse(ctx, cv.agentID, body))
 	if err != nil {
 		cv.history = cv.history[:len(cv.history)-1] // roll back the optimistic user turn
 		return nil, fmt.Errorf("agent conversation: %w", err)
@@ -144,11 +232,30 @@ func (cv *AgentConversation) SendWithAttachments(ctx context.Context, userMessag
 		turn.Reply = *resp.JSON200.Reply
 	}
 	if resp.JSON200.ConversationStatus != nil {
-		turn.ConversationStatus = *resp.JSON200.ConversationStatus
+		turn.ConversationStatus = string(*resp.JSON200.ConversationStatus)
 	}
 	if resp.JSON200.Proposals != nil {
 		turn.Proposals = *resp.JSON200.Proposals
 		turn.HasProposals = len(turn.Proposals) > 0
+	}
+	if resp.JSON200.Blockers != nil {
+		turn.Blockers = *resp.JSON200.Blockers
+		turn.HasBlockers = len(turn.Blockers) > 0
+	}
+
+	// rejected_input: the server refused this message WHOLESALE and told us not
+	// to keep it. Roll the optimistic user turn back and record no assistant
+	// turn, so the transcript is byte-identical to before this Send. The
+	// conversation itself continues unaffected — the caller still gets the turn,
+	// whose Reply explains what to resend.
+	//
+	// Without this the refused message stays in history and is re-transmitted on
+	// every later turn — the exact message the server asked the client to drop —
+	// corrupting the conversation from here on. Messages() returns a copy, so a
+	// caller could not repair the history even if it noticed.
+	if turn.ConversationStatus == conversationStatusRejectedInput {
+		cv.history = cv.history[:len(cv.history)-1]
+		return turn, nil
 	}
 
 	// Record an assistant turn so the transcript keeps alternating — the platform
