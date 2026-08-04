@@ -249,3 +249,101 @@ func TestAgentConversationResendsTimezoneAndPolicy(t *testing.T) {
 }
 
 func ptrTo[T any](v T) *T { return &v }
+
+// TestAgentConversationRejectedInputLeavesTranscriptClean: a rejected_input turn
+// was refused WHOLESALE and must not enter the transcript — the spec is explicit
+// that it "should NOT be added to the conversation history".
+//
+// Left in, the refused message is re-transmitted on every later turn — the exact
+// message the server asked the client to drop — corrupting the conversation from
+// that point on. Messages() returns a copy, so a caller could not repair it.
+func TestAgentConversationRejectedInputLeavesTranscriptClean(t *testing.T) {
+	t.Parallel()
+
+	var sent [][]ChatMessage
+	turn := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Messages []ChatMessage `json:"messages"`
+		}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		sent = append(sent, body.Messages)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK) // NOTE: 200, not an error — that is the trap
+		switch turn {
+		case 0:
+			_, _ = w.Write([]byte(`{"reply":"Got it.","conversation_status":"ok"}`))
+		case 1:
+			_, _ = w.Write([]byte(`{"reply":"Too many payees — resend with one.","conversation_status":"rejected_input"}`))
+		default:
+			_, _ = w.Write([]byte(`{"reply":"Sure.","conversation_status":"ok"}`))
+		}
+		turn++
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+	require.NoError(t, err)
+	conv := c.NewAgentConversation("agt_1")
+
+	_, err = conv.Send(context.Background(), "pay alice")
+	require.NoError(t, err)
+	before := conv.Messages()
+	require.Len(t, before, 2) // user + assistant
+
+	// The refused turn: the caller still gets the reply and the status...
+	rejected, err := conv.Send(context.Background(), "pay these 400 payees")
+	require.NoError(t, err)
+	require.Equal(t, "rejected_input", rejected.ConversationStatus)
+	require.Equal(t, "Too many payees — resend with one.", rejected.Reply)
+
+	// ...but the transcript is byte-identical to before it.
+	require.Equal(t, before, conv.Messages(),
+		"a rejected_input message must leave no trace — neither the user turn nor a synthetic assistant turn")
+
+	// And the next turn must not re-transmit the refused message.
+	_, err = conv.Send(context.Background(), "pay bob")
+	require.NoError(t, err)
+	require.Len(t, sent, 3)
+	for _, m := range sent[2] {
+		require.NotEqual(t, "pay these 400 payees", m.Content,
+			"the refused message was re-sent — the server explicitly asked the client to drop it")
+	}
+	// The third request carries: alice, assistant, bob. Not the refused one.
+	require.Equal(t, []ChatMessage{
+		{Role: "user", Content: "pay alice"},
+		{Role: "assistant", Content: "Got it."},
+		{Role: "user", Content: "pay bob"},
+	}, sent[2])
+}
+
+// TestAgentConversationWarnedAndBlockedStayInTranscript: only rejected_input is
+// dropped. warned and blocked are ordinary turns that happened, and removing
+// them would break the alternating transcript the platform requires.
+func TestAgentConversationWarnedAndBlockedStayInTranscript(t *testing.T) {
+	t.Parallel()
+
+	for _, status := range []string{"ok", "warned", "blocked"} {
+		t.Run(status, func(t *testing.T) {
+			t.Parallel()
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"reply":"noted","conversation_status":"` + status + `"}`))
+			}))
+			defer srv.Close()
+
+			c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+			require.NoError(t, err)
+			conv := c.NewAgentConversation("agt_1")
+
+			_, err = conv.Send(context.Background(), "hello")
+			require.NoError(t, err)
+			require.Equal(t, []ChatMessage{
+				{Role: "user", Content: "hello"},
+				{Role: "assistant", Content: "noted"},
+			}, conv.Messages())
+		})
+	}
+}

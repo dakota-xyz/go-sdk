@@ -28,6 +28,15 @@ hand-written surface.
   platform's own `MandateAmendPayload`. The endpoints
   (`AmendMandateWithResponse`, `ListMandateVersionsWithResponse`,
   `GetMandateBudgetWithResponse`) are on `c.Raw()`.
+- **`rejected_input` no longer poisons the transcript.** The spec's fourth
+  `conversation_status` means the message was refused WHOLESALE and must
+  not be added to the conversation history. `AgentConversation` now rolls
+  the refused user turn back and records no assistant turn, so the
+  transcript is byte-identical to before the call — while the caller still
+  gets the reply explaining what to resend. Left in, the refused message
+  was re-transmitted on every later turn, corrupting the conversation from
+  that point on. `warned` and `blocked` are unaffected: those turns
+  happened and stay in the transcript.
 - **Conversation options.** `WithTimezone` resolves "tomorrow" and "10 am" in
   the customer's IANA zone instead of UTC. `WithClientPolicy` sets the
   per-turn vocabulary override. Both are resent on every turn, since the

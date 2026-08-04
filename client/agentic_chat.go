@@ -12,6 +12,11 @@ import (
 	"github.com/dakota-xyz/go-sdk/client/gen"
 )
 
+// conversationStatusRejectedInput is the boundary screen's verdict for a message
+// refused wholesale. Its contract is that the message must NOT be added to the
+// conversation history — see ConversationTurn.ConversationStatus.
+const conversationStatusRejectedInput = "rejected_input"
+
 // ChatMessage is one turn of an agent conversation. Role is "user" or "assistant".
 type ChatMessage struct {
 	Role        string       `json:"role"`
@@ -132,10 +137,20 @@ type ConversationTurn struct {
 	Blockers []gen.AgenticBlocker
 	// HasBlockers reports whether the turn returned any blocker.
 	HasBlockers bool
-	// ConversationStatus is the boundary screen's verdict for this turn: "ok"
-	// (normal), "warned" (off-topic — the customer was warned), or "blocked" (the
-	// chat is terminated; stop serving and offer a fresh conversation). Empty when
-	// the platform sent none.
+	// ConversationStatus is the boundary screen's verdict for this turn:
+	//
+	//	"ok"             normal payments turn
+	//	"warned"         off-topic — the customer was warned but may continue
+	//	"blocked"        the chat is terminated; stop serving it and offer a
+	//	                 fresh conversation
+	//	"rejected_input" this message was refused WHOLESALE (e.g. more payees
+	//	                 than one conversation supports). Reply explains what to
+	//	                 resend; the conversation continues unaffected, and the
+	//	                 SDK has already dropped the refused message from the
+	//	                 transcript for you.
+	//
+	// Empty when the platform sent none. Treat it as an OPEN set — new values
+	// may be added.
 	ConversationStatus string
 }
 
@@ -226,6 +241,21 @@ func (cv *AgentConversation) SendWithAttachments(ctx context.Context, userMessag
 	if resp.JSON200.Blockers != nil {
 		turn.Blockers = *resp.JSON200.Blockers
 		turn.HasBlockers = len(turn.Blockers) > 0
+	}
+
+	// rejected_input: the server refused this message WHOLESALE and told us not
+	// to keep it. Roll the optimistic user turn back and record no assistant
+	// turn, so the transcript is byte-identical to before this Send. The
+	// conversation itself continues unaffected — the caller still gets the turn,
+	// whose Reply explains what to resend.
+	//
+	// Without this the refused message stays in history and is re-transmitted on
+	// every later turn — the exact message the server asked the client to drop —
+	// corrupting the conversation from here on. Messages() returns a copy, so a
+	// caller could not repair the history even if it noticed.
+	if turn.ConversationStatus == conversationStatusRejectedInput {
+		cv.history = cv.history[:len(cv.history)-1]
+		return turn, nil
 	}
 
 	// Record an assistant turn so the transcript keeps alternating — the platform
