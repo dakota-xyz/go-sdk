@@ -84,6 +84,17 @@ hand-written surface.
   is `payment_agent_id` (was `agent_id`), operations are `…PaymentAgent`, schemas
   are `PaymentAgent…`, and the single-value `type` field is dropped.
 
+### Fixed
+
+- **`types.KYBStatusData` now matches the payload the platform actually sends.**
+  The struct decoded `status` and `reason`, but `customer.kyb_status.created`
+  and `customer.kyb_status.updated` carry `kyb_status` and an optional
+  `reason_code`. Every real KYB webhook therefore unmarshalled into an empty
+  `Status` and a nil `Reason`. `Status` is retagged to `kyb_status`, and
+  `Reason` is renamed to `ReasonCode` (tag `reason_code`). The rename is
+  source-breaking for anything that referenced `.Reason`, but that field never
+  held a value on any released version, so no working code can regress.
+
 ## [0.4.0] - 2026-06-17
 
 ### Summary
