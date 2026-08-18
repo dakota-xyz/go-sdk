@@ -57,10 +57,15 @@ type CustomerData struct {
 
 // KYBStatusData is the event payload for customer.kyb_status.created and
 // customer.kyb_status.updated events.
+//
+// ReasonCode is only ever populated on customer.kyb_status.updated, and only
+// for status changes driven by the Proof-of-Address flow (for example
+// "pending_proof_of_address", "proof_of_address_approved",
+// "proof_of_address_rejected"). It is nil on every other KYB status change.
 type KYBStatusData struct {
 	CustomerID string  `json:"customer_id"`
-	Status     string  `json:"status"`
-	Reason     *string `json:"reason,omitempty"`
+	Status     string  `json:"kyb_status"`
+	ReasonCode *string `json:"reason_code,omitempty"`
 }
 
 // KYBLinkData is the event payload for customer.kyb_link.created and

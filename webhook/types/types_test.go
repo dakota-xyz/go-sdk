@@ -119,23 +119,63 @@ func TestEventDataAs_CustomerData(t *testing.T) {
 	}
 }
 
-func TestEventDataAs_KYBStatusData(t *testing.T) {
-	reason := "documents verified"
+func TestEventDataAs_KYBStatusData_Updated(t *testing.T) {
+	payload := `{
+		"customer_id":"1NFHrqBHb3cTfLVkFSGmHZqdDPw",
+		"kyb_status":"frozen",
+		"reason_code":"pending_proof_of_address"
+	}`
+
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventCustomerKYBStatusUpdated,
-		Data: webhook.EventData{Object: json.RawMessage(`{"customer_id":"cust_1","status":"approved","reason":"documents verified"}`)},
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
 	}
 
 	data, err := webhook.EventDataAs[types.KYBStatusData](event)
 	if err != nil {
 		t.Fatalf("EventDataAs error: %v", err)
 	}
-	if data.CustomerID != "cust_1" {
-		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "cust_1")
+	if data.CustomerID != "1NFHrqBHb3cTfLVkFSGmHZqdDPw" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "1NFHrqBHb3cTfLVkFSGmHZqdDPw")
 	}
-	if data.Reason == nil || *data.Reason != reason {
-		t.Errorf("Reason = %v, want %q", data.Reason, reason)
+	if data.Status != "frozen" {
+		t.Errorf("Status = %q, want %q", data.Status, "frozen")
+	}
+	if data.ReasonCode == nil {
+		t.Fatal("expected non-nil ReasonCode")
+	}
+	if *data.ReasonCode != "pending_proof_of_address" {
+		t.Errorf("ReasonCode = %q, want %q", *data.ReasonCode, "pending_proof_of_address")
+	}
+}
+
+// customer.kyb_status.created never carries reason_code, so ReasonCode must
+// stay nil rather than decode to an empty string.
+func TestEventDataAs_KYBStatusData_Created(t *testing.T) {
+	payload := `{
+		"customer_id":"1NFHrqBHb3cTfLVkFSGmHZqdDPw",
+		"kyb_status":"in_review"
+	}`
+
+	event := webhook.Event{
+		ID:   "evt_2",
+		Type: webhook.EventCustomerKYBStatusCreated,
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	}
+
+	data, err := webhook.EventDataAs[types.KYBStatusData](event)
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.CustomerID != "1NFHrqBHb3cTfLVkFSGmHZqdDPw" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "1NFHrqBHb3cTfLVkFSGmHZqdDPw")
+	}
+	if data.Status != "in_review" {
+		t.Errorf("Status = %q, want %q", data.Status, "in_review")
+	}
+	if data.ReasonCode != nil {
+		t.Errorf("ReasonCode = %v, want nil", *data.ReasonCode)
 	}
 }
 
