@@ -3,6 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -330,5 +333,98 @@ func TestCollect_Success(t *testing.T) {
 	}
 	if len(items) != 2 {
 		t.Fatalf("len(items) = %d, want 2", len(items))
+	}
+}
+
+// TestPaginationMetaFieldGuard pins the field set of gen.Meta.
+//
+// OneOffTransactionsIterator copies gen.Meta into Page[T].Meta field-by-field
+// (see pagination.go) instead of by whole-struct assignment, because the
+// upstream response type it reads from is on its way to becoming a distinct
+// struct that merely shares gen.Meta's fields. A field-by-field copy has no
+// compiler check that it stays exhaustive: if gen.Meta grows a field, the
+// copy silently keeps dropping it. This guard fails loudly instead, the next
+// time the spec is synced and gen.Meta's shape changes.
+func TestPaginationMetaFieldGuard(t *testing.T) {
+	typ := reflect.TypeOf(gen.Meta{})
+
+	wantFields := []string{"HasMoreAfter", "HasMoreBefore", "TotalCount"}
+	if got := typ.NumField(); got != len(wantFields) {
+		t.Fatalf("gen.Meta has %d fields, want %d (%v) — update the field-by-field "+
+			"copy in OneOffTransactionsIterator (pagination.go) to match, then update this guard",
+			got, len(wantFields), wantFields)
+	}
+	for _, name := range wantFields {
+		if _, ok := typ.FieldByName(name); !ok {
+			t.Fatalf("gen.Meta is missing expected field %q", name)
+		}
+	}
+}
+
+// TestOneOffTransactionsIterator_TraversesTwoPages proves the field-by-field
+// Meta copy in OneOffTransactionsIterator preserves has_more_after, so the
+// iterator still advances to and terminates on a second page. This is the
+// one field-transposition mistake (has_more_after <-> has_more_before) the
+// compiler cannot catch, since both are plain bools.
+func TestOneOffTransactionsIterator_TraversesTwoPages(t *testing.T) {
+	requestCount := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/transactions" {
+			t.Fatalf("unexpected path: %s", r.URL.Path)
+		}
+		requestCount++
+		w.Header().Set("Content-Type", "application/json")
+
+		switch startingAfter := r.URL.Query().Get("starting_after"); startingAfter {
+		case "":
+			_, _ = w.Write([]byte(`{
+				"data": [
+					{"id": "txn_1"},
+					{"id": "txn_2"}
+				],
+				"meta": {"total_count": 3, "has_more_after": true, "has_more_before": false}
+			}`))
+		case "txn_2":
+			_, _ = w.Write([]byte(`{
+				"data": [
+					{"id": "txn_3"}
+				],
+				"meta": {"total_count": 3, "has_more_after": false, "has_more_before": true}
+			}`))
+		default:
+			t.Fatalf("unexpected starting_after: %q", startingAfter)
+		}
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test_key"))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	it := c.OneOffTransactionsIterator(nil)
+	var got []string
+	for {
+		item, ok, err := it.Next(context.Background())
+		if err != nil {
+			t.Fatalf("Next error: %v", err)
+		}
+		if !ok {
+			break
+		}
+		got = append(got, item.Id)
+	}
+
+	want := []string{"txn_1", "txn_2", "txn_3"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+	if requestCount != 2 {
+		t.Fatalf("requestCount = %d, want 2 (one per page)", requestCount)
 	}
 }
