@@ -376,9 +376,20 @@ func (c *Client) OneOffTransactionsIterator(
 					err,
 				)
 			}
+			// Field-by-field, not whole-struct, because the platform spec is
+			// mid-migration to a distinct transactions meta type that adds a
+			// required TransactionType field. That type shares these three
+			// fields with gen.Meta but is not assignable to or from it, so a
+			// keyed copy is the one form that compiles both before and after
+			// the next spec regen. See TestPaginationMetaFieldGuard, which
+			// fails loudly if gen.Meta grows a field this copy would drop.
 			return Page[gen.OneOffTransaction]{
 				Items: oneOffResp.Data,
-				Meta:  oneOffResp.Meta,
+				Meta: gen.Meta{
+					TotalCount:    oneOffResp.Meta.TotalCount,
+					HasMoreAfter:  oneOffResp.Meta.HasMoreAfter,
+					HasMoreBefore: oneOffResp.Meta.HasMoreBefore,
+				},
 			}, nil
 		},
 		cloneStartingAfter(baseParams.StartingAfter),
