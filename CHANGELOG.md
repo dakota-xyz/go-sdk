@@ -95,6 +95,12 @@ hand-written surface.
   source-breaking for anything that referenced `.Reason`, but that field never
   held a value on any released version, so no working code can regress.
 
+### Internal
+
+- `OneOffTransactionsIterator` now copies the transactions page `Meta` field-by-field
+  instead of by whole-struct assignment, so the SDK keeps compiling once the platform
+  spec gives transaction list responses their own `Meta` type. No behavior change.
+
 ## [0.4.0] - 2026-06-17
 
 ### Summary
