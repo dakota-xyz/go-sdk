@@ -376,13 +376,19 @@ func (c *Client) OneOffTransactionsIterator(
 					err,
 				)
 			}
-			// Field-by-field, not whole-struct, because the platform spec is
-			// mid-migration to a distinct transactions meta type that adds a
-			// required TransactionType field. That type shares these three
-			// fields with gen.Meta but is not assignable to or from it, so a
-			// keyed copy is the one form that compiles both before and after
-			// the next spec regen. See TestPaginationMetaFieldGuard, which
-			// fails loudly if gen.Meta grows a field this copy would drop.
+			// Field-by-field, not whole-struct: transaction lists carry their
+			// own gen.TransactionListMeta, which shares these three fields with
+			// gen.Meta but is a distinct type and assignable to neither.
+			//
+			// Its fourth field, TransactionType, is deliberately dropped. Page
+			// is generic over five iterators — applications, customers,
+			// transactions, recipients, events — and a transaction family means
+			// nothing to the other four. Surfacing it needs a decision about
+			// how a caller reaches page metadata at all, since Iterator exposes
+			// only Next and Stream and never hands back a Page.
+			//
+			// See TestPaginationMetaFieldGuard, which fails loudly if gen.Meta
+			// grows a field this copy would silently drop.
 			return Page[gen.OneOffTransaction]{
 				Items: oneOffResp.Data,
 				Meta: gen.Meta{
