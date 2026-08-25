@@ -95,11 +95,44 @@ hand-written surface.
   source-breaking for anything that referenced `.Reason`, but that field never
   held a value on any released version, so no working code can regress.
 
+### Removed
+
+- **`WithClientPolicy` is gone.** The platform removed `client_policy` from the
+  `POST /payment-agents/{id}/proposals` body deliberately: a policy is a property
+  of the CLIENT, not of a request, and carrying one per request let a two-call
+  conversation disagree with itself — a proposal drafted under one policy and
+  accepted without it is judged by different rules, so a legal draft could be
+  refused at the customer's approval click.
+
+  The option had therefore stopped doing anything, and it failed *silently* —
+  the agent simply narrated in platform's nouns again, with no error anywhere.
+  Deleting it converts that silence into a compile error.
+
+  **Migration:** register the policy once, out of band, instead of passing it
+  into each conversation:
+
+  ```go
+  // before — per turn, silently ignored by the current platform
+  conv := c.NewAgentConversation(agentID, client.WithClientPolicy(policy))
+
+  // after — once per client, at startup
+  _, err := c.Raw().UpdateClientAgenticPolicyWithResponse(ctx, nil, policy)
+  conv := c.NewAgentConversation(agentID)
+  ```
+
+  Registration is a full replace, not a merge, and takes effect on the next
+  turn. See `ExampleClient_Raw_registerAgenticPolicy`.
+
 ### Internal
 
+- Synced `client/gen/openapi.yaml` with the platform's `openapi.public.yaml` and
+  regenerated `client/gen/client.gen.go` via oapi-codegen v2.5.1, picking up three
+  weeks of platform work.
 - `OneOffTransactionsIterator` now copies the transactions page `Meta` field-by-field
-  instead of by whole-struct assignment, so the SDK keeps compiling once the platform
-  spec gives transaction list responses their own `Meta` type. No behavior change.
+  instead of by whole-struct assignment. Transaction list responses now carry their
+  own `TransactionListMeta`, which is not assignable to `gen.Meta`; the keyed copy
+  is what keeps the regeneration above compiling. Its `transaction_type` field is
+  not surfaced on `Page` — see the comment at the assignment site. No behavior change.
 
 ## [0.4.0] - 2026-06-17
 
