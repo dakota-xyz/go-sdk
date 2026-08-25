@@ -338,13 +338,16 @@ func TestCollect_Success(t *testing.T) {
 
 // TestPaginationMetaFieldGuard pins the field set of gen.Meta.
 //
-// OneOffTransactionsIterator copies gen.Meta into Page[T].Meta field-by-field
-// (see pagination.go) instead of by whole-struct assignment, because the
-// upstream response type it reads from is on its way to becoming a distinct
-// struct that merely shares gen.Meta's fields. A field-by-field copy has no
-// compiler check that it stays exhaustive: if gen.Meta grows a field, the
-// copy silently keeps dropping it. This guard fails loudly instead, the next
-// time the spec is synced and gen.Meta's shape changes.
+// OneOffTransactionsIterator fills Page[T].Meta field-by-field (see
+// pagination.go) rather than by whole-struct assignment, because the upstream
+// response type it reads from is gen.TransactionListMeta — a distinct struct
+// that merely shares gen.Meta's fields. A field-by-field copy has no compiler
+// check that it stays exhaustive: if gen.Meta grows a field, the copy silently
+// keeps dropping it. This guard fails loudly instead, the next time the spec
+// is synced and gen.Meta's shape changes.
+//
+// Note this pins the DESTINATION type. transaction_type lives on the source
+// and is dropped deliberately, so this guard stays green over that.
 func TestPaginationMetaFieldGuard(t *testing.T) {
 	typ := reflect.TypeOf(gen.Meta{})
 

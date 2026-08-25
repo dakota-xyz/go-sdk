@@ -38,16 +38,15 @@ hand-written surface.
   that point on. `warned` and `blocked` are unaffected: those turns
   happened and stay in the transcript.
 - **Conversation options.** `WithTimezone` resolves "tomorrow" and "10 am" in
-  the customer's IANA zone instead of UTC. `WithClientPolicy` sets the
-  per-turn vocabulary override. Both are resent on every turn, since the
-  endpoint is stateless — and both must be passed again to
+  the customer's IANA zone instead of UTC. It is resent on every turn, since
+  the endpoint is stateless — and must be passed again to
   `ResumeAgentConversation`, which restores the transcript, not the options.
 - **Client policy registration.** `GET`/`PUT /agentic-policy` via
   `c.Raw().GetClientAgenticPolicyWithResponse` /
-  `UpdateClientAgenticPolicyWithResponse`. Prefer registering once over the
-  per-turn override: forgetting the override fails SILENTLY, with the agent
-  narrating in platform nouns again and nothing erroring. Registration is a
-  full replace; `{}` clears it.
+  `UpdateClientAgenticPolicyWithResponse`. This is the ONLY way to set a
+  policy: it belongs to the client, not to a request, so a drafting turn and
+  the accept that follows it cannot be judged by different rules. Registration
+  is a full replace; `{}` clears it.
 - **Developer fee per payout type.** `CreateInstructionsRequest.DeveloperFee`
   declares `swap_bps` and `offramp_bps` independently.
 - Also generated: proposals progress, per-payment network selection,
@@ -97,22 +96,26 @@ hand-written surface.
 
 ### Removed
 
-- **`WithClientPolicy` is gone.** The platform removed `client_policy` from the
-  `POST /payment-agents/{id}/proposals` body deliberately: a policy is a property
-  of the CLIENT, not of a request, and carrying one per request let a two-call
-  conversation disagree with itself — a proposal drafted under one policy and
-  accepted without it is judged by different rules, so a legal draft could be
-  refused at the customer's approval click.
+- **`WithClientPolicy` — added and removed within this same unreleased cycle.**
+  No tagged release ever carried it, so no released version can regress and no
+  upgrade path is needed. It is called out only for anyone tracking an
+  unreleased commit.
 
-  The option had therefore stopped doing anything, and it failed *silently* —
-  the agent simply narrated in platform's nouns again, with no error anywhere.
-  Deleting it converts that silence into a compile error.
+  The platform removed `client_policy` from the
+  `POST /payment-agents/{id}/proposals` body deliberately: a policy is a
+  property of the CLIENT, not of a request, and carrying one per request let a
+  two-call conversation disagree with itself — a proposal drafted under one
+  policy and accepted without it is judged by different rules, so a legal draft
+  could be refused at the customer's approval click. The field is gone from the
+  request schema, so the option could no longer do anything, and it failed
+  *silently*: the agent simply narrated in platform's nouns again, with no
+  error anywhere.
 
-  **Migration:** register the policy once, out of band, instead of passing it
-  into each conversation:
+  If you are pinned to an unreleased commit that used it, register the policy
+  once instead of passing it per conversation:
 
   ```go
-  // before — per turn, silently ignored by the current platform
+  // before
   conv := c.NewAgentConversation(agentID, client.WithClientPolicy(policy))
 
   // after — once per client, at startup
@@ -120,14 +123,30 @@ hand-written surface.
   conv := c.NewAgentConversation(agentID)
   ```
 
-  Registration is a full replace, not a merge, and takes effect on the next
-  turn. See `ExampleClient_Raw_registerAgenticPolicy`.
+  See `ExampleClient_Raw_registerAgenticPolicy`.
+
+### Changed
+
+- **Regenerated `client/gen` against the current platform spec** (last sync
+  2026-08-04). `c.Raw()` and the `gen.` types are a documented part of this
+  SDK's surface, so the regen carries source-breaking changes for code using
+  them directly:
+  - `PaginatedOneOffTransactionResponse.Meta`,
+    `PaginatedWalletTransactionResponse.Meta` and
+    `PaginatedCustomerTransactionResponse.Meta` are now
+    `gen.TransactionListMeta` (was `gen.Meta`) — the same three pagination
+    fields plus a required `transaction_type` naming the family the page
+    lists. A whole-struct assignment between the two no longer compiles.
+  - `ApplicationDocumentUploadUrlRequest.Country` is now `*string` (was
+    `string`): some supporting documents, such as the generic `other` type,
+    have no issuing country.
+- **Five operations added** to `c.Raw()`:
+  `GetLegalAcceptanceContextWithResponse`, `ListLegalDocumentsWithResponse`,
+  `GetLegalDocumentWithResponse`, `ListRDMarketingFeeStatementsWithResponse`,
+  `GetRDMarketingFeeStatementWithResponse`.
 
 ### Internal
 
-- Synced `client/gen/openapi.yaml` with the platform's `openapi.public.yaml` and
-  regenerated `client/gen/client.gen.go` via oapi-codegen v2.5.1, picking up three
-  weeks of platform work.
 - `OneOffTransactionsIterator` now copies the transactions page `Meta` field-by-field
   instead of by whole-struct assignment. Transaction list responses now carry their
   own `TransactionListMeta`, which is not assignable to `gen.Meta`; the keyed copy

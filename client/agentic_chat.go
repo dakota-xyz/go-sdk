@@ -82,7 +82,7 @@ func (c *Client) NewAgentConversation(agentID string, opts ...ConversationOption
 // (oldest first) — for backends that store the history between requests.
 //
 // A stateless backend must pass its options again here: the transcript carries
-// the messages, not the timezone or the policy override.
+// the messages, not the timezone.
 func (c *Client) ResumeAgentConversation(agentID string, history []ChatMessage, opts ...ConversationOption) *AgentConversation {
 	h := make([]ChatMessage, len(history))
 	copy(h, history)

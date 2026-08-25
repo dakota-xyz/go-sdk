@@ -380,7 +380,9 @@ _, err := c.Raw().UpdateClientAgenticPolicyWithResponse(ctx, nil, gen.AgenticCli
 })
 ```
 
-Registration is a **full replace**, not a merge — `{}` clears it. You can also pass `WithClientPolicy(...)` per conversation, but that is a development override: forgetting it fails *silently* and the agent quietly reverts to platform nouns.
+Registration is a **full replace**, not a merge — `{}` clears it, and a change takes effect on the next turn.
+
+Registration is the **only** way to set a policy. It belongs to the client rather than to a request, so every drafting turn and every accept resolve it from the same place and cannot be judged by different rules.
 
 ### Timezones
 
