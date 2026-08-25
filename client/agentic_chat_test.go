@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/dakota-xyz/go-sdk/client/gen"
 )
 
 // TestAgentConversationMultiTurn proves the conversation hides the stateless
@@ -195,12 +193,17 @@ func TestAgentConversationNoBlockers(t *testing.T) {
 	require.Empty(t, turn.Blockers)
 }
 
-// TestAgentConversationResendsTimezoneAndPolicy: the endpoint is stateless, so
-// either value given once would be forgotten on the next turn. Both must ride
-// on EVERY request, and must be absent (not empty) when unset — an empty policy
-// object would read as an override meaning "platform defaults" rather than
-// falling through to the client's registration.
-func TestAgentConversationResendsTimezoneAndPolicy(t *testing.T) {
+// TestAgentConversationResendsTimezone: the endpoint is stateless, so a value
+// given once would be forgotten on the next turn. Timezone must ride on EVERY
+// request, and must be absent (not empty) when unset.
+//
+// The conversation deliberately sends NO client_policy. A policy is a property
+// of the client, not of a request: it is registered once via
+// PUT /agentic-policy and resolved server-side for every drafting turn and
+// every accept. Carrying one per request let a two-call conversation disagree
+// with itself — a draft judged legal under one policy could be refused at the
+// customer's approval click — so the request body no longer accepts the field.
+func TestAgentConversationResendsTimezone(t *testing.T) {
 	t.Parallel()
 
 	type capturedBody struct {
@@ -221,12 +224,7 @@ func TestAgentConversationResendsTimezoneAndPolicy(t *testing.T) {
 	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
 	require.NoError(t, err)
 
-	payee := "recipient"
-	policy := gen.AgenticClientPolicy{
-		PayeeModel: ptrTo(gen.AgenticClientPolicyPayeeModel("flat")),
-		Labels:     &map[string]string{"payee": payee},
-	}
-	conv := c.NewAgentConversation("agt_1", WithTimezone("America/Los_Angeles"), WithClientPolicy(policy))
+	conv := c.NewAgentConversation("agt_1", WithTimezone("America/Los_Angeles"))
 	_, err = conv.Send(context.Background(), "pay alice tomorrow")
 	require.NoError(t, err)
 	_, err = conv.Send(context.Background(), "make it friday")
@@ -236,19 +234,15 @@ func TestAgentConversationResendsTimezoneAndPolicy(t *testing.T) {
 	for i, b := range captured {
 		require.NotNil(t, b.Timezone, "turn %d lost the timezone", i)
 		require.Equal(t, "America/Los_Angeles", *b.Timezone)
-		require.Contains(t, string(b.ClientPolicy), `"flat"`, "turn %d lost the policy", i)
+		require.Empty(t, b.ClientPolicy, "turn %d sent a client_policy the endpoint no longer accepts", i)
 	}
 
-	// Unset: both keys absent, so the server falls through to the client's
-	// registration rather than seeing an override.
+	// Unset: the key is absent rather than empty.
 	plain := c.NewAgentConversation("agt_1")
 	_, err = plain.Send(context.Background(), "pay alice")
 	require.NoError(t, err)
 	require.Nil(t, captured[2].Timezone)
-	require.Empty(t, captured[2].ClientPolicy)
 }
-
-func ptrTo[T any](v T) *T { return &v }
 
 // TestAgentConversationRejectedInputLeavesTranscriptClean: a rejected_input turn
 // was refused WHOLESALE and must not enter the transcript — the spec is explicit
