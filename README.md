@@ -472,8 +472,11 @@ for {
     fmt.Printf("%s: %s\n", customer.Id, customer.Name)
 }
 
-// Iterate transactions with filters
-txIt := c.OneOffTransactionsIterator(&gen.ListOneOffTransactionsParams{
+// Iterate transactions with filters. The iterator always requests the
+// one_off family, so filtering by customer alone is safe here — a raw
+// GET /transactions with customer_id and no transaction_type would return
+// that customer's auto-account transactions instead.
+txIt := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{
     CustomerId: &customerID,
 })
 ```

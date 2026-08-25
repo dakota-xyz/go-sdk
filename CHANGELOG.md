@@ -123,6 +123,38 @@ hand-written surface.
   but if you implement either interface, typically a generated mock, regenerate
   it or add the five methods.
 
+### Fixed
+
+- **`OneOffTransactionsIterator` could return another family's transactions.**
+  `GET /transactions` serves three resource families from one path, and when
+  `transaction_type` is omitted the server infers the family from the other
+  filters — `customer_id` alone infers `auto_account`. The iterator did not
+  name a family, so the obvious spelling of "this customer's one-off
+  transactions":
+
+  ```go
+  c.OneOffTransactionsIterator(&gen.ListTransactionsParams{CustomerId: &id})
+  ```
+
+  returned that customer's **auto-account** transactions, which unmarshal into
+  `gen.OneOffTransaction` with zeroed fields rather than erroring. Nothing
+  surfaced the substitution, so a caller could not tell.
+
+  The iterator now always sends `transaction_type=one_off`, and additionally
+  verifies the family the response reports before yielding a page — a positive
+  mismatch only, since an absent `transaction_type` means the response did not
+  say rather than that it served the wrong family. Passing an explicit
+  `TransactionType` other than `one_off` is now an error rather than being
+  silently honored — reach another family through
+  `Raw().ListTransactionsWithResponse`.
+
+  This was live before the regen; the newly-synced spec is what made it
+  visible, since responses now name the family they served.
+
+  The README example at the "Iterate transactions with filters" heading taught
+  exactly this trap, and additionally named a `gen.ListOneOffTransactionsParams`
+  type that has never existed. Both corrected.
+
 ### Removed
 
 - **`WithClientPolicy` — added and removed within this same unreleased cycle.**

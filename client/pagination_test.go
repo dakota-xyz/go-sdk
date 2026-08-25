@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -377,6 +378,9 @@ func TestOneOffTransactionsIterator_TraversesTwoPages(t *testing.T) {
 		if r.URL.Path != "/transactions" {
 			t.Fatalf("unexpected path: %s", r.URL.Path)
 		}
+		if got := r.URL.Query().Get("transaction_type"); got != "one_off" {
+			t.Fatalf("transaction_type = %q, want %q on every page", got, "one_off")
+		}
 		requestCount++
 		w.Header().Set("Content-Type", "application/json")
 
@@ -387,14 +391,14 @@ func TestOneOffTransactionsIterator_TraversesTwoPages(t *testing.T) {
 					{"id": "txn_1"},
 					{"id": "txn_2"}
 				],
-				"meta": {"total_count": 3, "has_more_after": true, "has_more_before": false}
+				"meta": {"total_count": 3, "has_more_after": true, "has_more_before": false, "transaction_type": "one_off"}
 			}`))
 		case "txn_2":
 			_, _ = w.Write([]byte(`{
 				"data": [
 					{"id": "txn_3"}
 				],
-				"meta": {"total_count": 3, "has_more_after": false, "has_more_before": true}
+				"meta": {"total_count": 3, "has_more_after": false, "has_more_before": true, "transaction_type": "one_off"}
 			}`))
 		default:
 			t.Fatalf("unexpected starting_after: %q", startingAfter)
@@ -431,5 +435,131 @@ func TestOneOffTransactionsIterator_TraversesTwoPages(t *testing.T) {
 	}
 	if requestCount != 2 {
 		t.Fatalf("requestCount = %d, want 2 (one per page)", requestCount)
+	}
+}
+
+// TestOneOffTransactionsIterator_NamesFamilyWhenFilteringByCustomer pins the
+// fix for the family-inference trap.
+//
+// GET /transactions serves three resource families. With transaction_type
+// omitted the server infers one from the other filters, and customer_id ALONE
+// infers auto_account. So the obvious spelling of "this customer's one-off
+// transactions" used to return that customer's AUTO-ACCOUNT transactions,
+// which unmarshal into OneOffTransaction with zeroed fields and no error --
+// the caller could not tell. The iterator is typed to one family, so it must
+// name that family on the wire rather than let the request be inferred.
+func TestOneOffTransactionsIterator_NamesFamilyWhenFilteringByCustomer(t *testing.T) {
+	var gotType, gotCustomer string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotType = r.URL.Query().Get("transaction_type")
+		gotCustomer = r.URL.Query().Get("customer_id")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"data": [],
+			"meta": {"total_count": 0, "has_more_after": false, "has_more_before": false, "transaction_type": "one_off"}
+		}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test_key"))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	customer := gen.KSUID("2B5J8KZ9N7M1K3P6Q8R4T7V9")
+	it := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{CustomerId: &customer})
+	if _, _, err := it.Next(context.Background()); err != nil {
+		t.Fatalf("Next error: %v", err)
+	}
+
+	if gotType != "one_off" {
+		t.Fatalf("transaction_type = %q, want %q -- the server would otherwise infer auto_account from customer_id alone", gotType, "one_off")
+	}
+	if gotCustomer != string(customer) {
+		t.Fatalf("customer_id = %q, want %q", gotCustomer, string(customer))
+	}
+}
+
+// TestOneOffTransactionsIterator_RejectsAnotherFamily: asking a one-off-typed
+// iterator for a different family is incoherent, so say so rather than
+// silently overriding the caller's explicit choice.
+func TestOneOffTransactionsIterator_RejectsAnotherFamily(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("no request should reach the server")
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test_key"))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	wallet := gen.TransactionResourceTypeWallet
+	it := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{TransactionType: &wallet})
+	_, _, err = it.Next(context.Background())
+	if err == nil {
+		t.Fatal("want an error for a mismatched TransactionType, got nil")
+	}
+	if !strings.Contains(err.Error(), "wallet") {
+		t.Fatalf("error should name the offending family, got: %v", err)
+	}
+}
+
+// TestOneOffTransactionsIterator_RejectsMismatchedResponseFamily: pinning the
+// request should make this unreachable, but the failure it guards is silent,
+// so the iterator verifies what the response says it served.
+func TestOneOffTransactionsIterator_RejectsMismatchedResponseFamily(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"data": [{"id": "txn_1"}],
+			"meta": {"total_count": 1, "has_more_after": false, "has_more_before": false, "transaction_type": "auto_account"}
+		}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test_key"))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	it := c.OneOffTransactionsIterator(nil)
+	_, _, err = it.Next(context.Background())
+	if err == nil {
+		t.Fatal("want an error when the response reports another family, got nil")
+	}
+	if !strings.Contains(err.Error(), "auto_account") {
+		t.Fatalf("error should name the family actually served, got: %v", err)
+	}
+}
+
+// TestOneOffTransactionsIterator_ToleratesUnnamedResponseFamily: an empty
+// transaction_type means the response did not say which family it served,
+// which is not evidence that it served the wrong one. The request is already
+// pinned to one_off, so treating silence as a mismatch would only invent a
+// failure mode for servers that omit the field.
+func TestOneOffTransactionsIterator_ToleratesUnnamedResponseFamily(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"data": [{"id": "txn_1"}],
+			"meta": {"total_count": 1, "has_more_after": false, "has_more_before": false}
+		}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test_key"))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	it := c.OneOffTransactionsIterator(nil)
+	item, ok, err := it.Next(context.Background())
+	if err != nil {
+		t.Fatalf("an unnamed family should not be an error: %v", err)
+	}
+	if !ok || item.Id != "txn_1" {
+		t.Fatalf("got (%v, %v), want txn_1", item.Id, ok)
 	}
 }
