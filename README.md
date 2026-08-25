@@ -380,9 +380,7 @@ _, err := c.Raw().UpdateClientAgenticPolicyWithResponse(ctx, nil, gen.AgenticCli
 })
 ```
 
-Registration is a **full replace**, not a merge — `{}` clears it, and a change takes effect on the next turn.
-
-Registration is the **only** way to set a policy. It belongs to the client rather than to a request, so every drafting turn and every accept resolve it from the same place and cannot be judged by different rules.
+Registration is a **full replace**, not a merge — `{}` clears it, and a change takes effect on the next turn. The policy belongs to the client rather than to a request, so a drafting turn and the accept that follows it are always judged by the same rules.
 
 ### Timezones
 

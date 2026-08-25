@@ -341,13 +341,15 @@ func TestCollect_Success(t *testing.T) {
 // OneOffTransactionsIterator fills Page[T].Meta field-by-field (see
 // pagination.go) rather than by whole-struct assignment, because the upstream
 // response type it reads from is gen.TransactionListMeta — a distinct struct
-// that merely shares gen.Meta's fields. A field-by-field copy has no compiler
+// carrying gen.Meta's three fields plus its own TransactionType. A
+// field-by-field copy has no compiler
 // check that it stays exhaustive: if gen.Meta grows a field, the copy silently
 // keeps dropping it. This guard fails loudly instead, the next time the spec
 // is synced and gen.Meta's shape changes.
 //
-// Note this pins the DESTINATION type. transaction_type lives on the source
-// and is dropped deliberately, so this guard stays green over that.
+// Note this pins the DESTINATION type. TransactionType exists only on the
+// source and is dropped deliberately, so adding it upstream will not fail
+// this test.
 func TestPaginationMetaFieldGuard(t *testing.T) {
 	typ := reflect.TypeOf(gen.Meta{})
 

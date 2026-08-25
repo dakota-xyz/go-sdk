@@ -94,15 +94,46 @@ hand-written surface.
   source-breaking for anything that referenced `.Reason`, but that field never
   held a value on any released version, so no working code can regress.
 
+### Changed
+
+- **A second regeneration of `client/gen`**, on top of the one described at the
+  top of this section: the vendored spec was last synced 2026-08-04, and this
+  brings it level with platform main again. `c.Raw()` and the `gen.` types are
+  a documented part of this SDK's surface, so it carries source-breaking
+  changes for code using them directly:
+  - `PaginatedOneOffTransactionResponse.Meta`,
+    `PaginatedWalletTransactionResponse.Meta` and
+    `PaginatedCustomerTransactionResponse.Meta` are now
+    `gen.TransactionListMeta` (was `gen.Meta`) — the same three pagination
+    fields plus a required `transaction_type` naming the family the page
+    lists. A whole-struct assignment between the two no longer compiles.
+  - `ApplicationDocumentUploadUrlRequest.Country` is now `*string` (was
+    `string`): some supporting documents, such as the generic `other` type,
+    have no issuing country.
+  - `gen.CreateProposalsRequest.ClientPolicy` and
+    `gen.CreateInstructionsRequest.ClientPolicy` are gone — see **Removed**.
+- **Five operations added**, reachable via `c.Raw()`:
+  `GetLegalAcceptanceContextWithResponse`, `ListLegalDocumentsWithResponse`,
+  `GetLegalDocumentWithResponse`, `ListRDMarketingFeeStatementsWithResponse`,
+  `GetRDMarketingFeeStatementWithResponse`.
+
+  These five also join `gen.ClientInterface` and
+  `gen.ClientWithResponsesInterface` (185 methods each, now 190). `c.Raw()`
+  returns the concrete `*gen.ClientWithResponses`, so most code is unaffected —
+  but if you implement either interface, typically a generated mock, regenerate
+  it or add the five methods.
+
 ### Removed
 
 - **`WithClientPolicy` — added and removed within this same unreleased cycle.**
-  No tagged release ever carried it, so no released version can regress and no
-  upgrade path is needed. It is called out only for anyone tracking an
-  unreleased commit.
+  No tagged release ever carried it, so no released version can regress. It is
+  called out only for anyone tracking an unreleased commit; if that is you, see
+  the migration below.
 
   The platform removed `client_policy` from the
-  `POST /payment-agents/{id}/proposals` body deliberately: a policy is a
+  `POST /payment-agents/{id}/proposals` and `POST /instructions` bodies
+  deliberately — dropping the field from both
+  `gen.CreateProposalsRequest` and `gen.CreateInstructionsRequest`: a policy is a
   property of the CLIENT, not of a request, and carrying one per request let a
   two-call conversation disagree with itself — a proposal drafted under one
   policy and accepted without it is judged by different rules, so a legal draft
@@ -124,26 +155,6 @@ hand-written surface.
   ```
 
   See `ExampleClient_Raw_registerAgenticPolicy`.
-
-### Changed
-
-- **Regenerated `client/gen` against the current platform spec** (last sync
-  2026-08-04). `c.Raw()` and the `gen.` types are a documented part of this
-  SDK's surface, so the regen carries source-breaking changes for code using
-  them directly:
-  - `PaginatedOneOffTransactionResponse.Meta`,
-    `PaginatedWalletTransactionResponse.Meta` and
-    `PaginatedCustomerTransactionResponse.Meta` are now
-    `gen.TransactionListMeta` (was `gen.Meta`) — the same three pagination
-    fields plus a required `transaction_type` naming the family the page
-    lists. A whole-struct assignment between the two no longer compiles.
-  - `ApplicationDocumentUploadUrlRequest.Country` is now `*string` (was
-    `string`): some supporting documents, such as the generic `other` type,
-    have no issuing country.
-- **Five operations added** to `c.Raw()`:
-  `GetLegalAcceptanceContextWithResponse`, `ListLegalDocumentsWithResponse`,
-  `GetLegalDocumentWithResponse`, `ListRDMarketingFeeStatementsWithResponse`,
-  `GetRDMarketingFeeStatementWithResponse`.
 
 ### Internal
 
