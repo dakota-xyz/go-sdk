@@ -112,6 +112,13 @@ hand-written surface.
     have no issuing country.
   - `gen.CreateProposalsRequest.ClientPolicy` and
     `gen.CreateInstructionsRequest.ClientPolicy` are gone — see **Removed**.
+- **`OneOffTransactionsIterator` now rejects an explicit `TransactionType`
+  other than `one_off`**, where it previously honored it silently. The iterator
+  yields `gen.OneOffTransaction`, so asking it for the wallet or auto-account
+  family was always incoherent — it just failed quietly, unmarshalling foreign
+  rows into zeroed structs. The error surfaces from the first `Next` call.
+  Reach the other families through `Raw().ListTransactionsWithResponse`. See
+  **Fixed** for the silent-substitution half of this.
 - **Five operations added**, reachable via `c.Raw()`:
   `GetLegalAcceptanceContextWithResponse`, `ListLegalDocumentsWithResponse`,
   `GetLegalDocumentWithResponse`, `ListRDMarketingFeeStatementsWithResponse`,
@@ -143,17 +150,20 @@ hand-written surface.
   The iterator now always sends `transaction_type=one_off`, and additionally
   verifies the family the response reports before yielding a page — a positive
   mismatch only, since an absent `transaction_type` means the response did not
-  say rather than that it served the wrong family. Passing an explicit
-  `TransactionType` other than `one_off` is now an error rather than being
-  silently honored — reach another family through
-  `Raw().ListTransactionsWithResponse`.
+  say rather than that it served the wrong family.
+
+  **What changes for you:** if you filter by `customer_id` without naming a
+  family, you were receiving auto-account rows and will now receive one-off
+  rows. That is the correction, but it *is* a change in the data you get back.
+  See also the related breaking change under **Changed**.
 
   This was live before the regen; the newly-synced spec is what made it
   visible, since responses now name the family they served.
 
   The README example at the "Iterate transactions with filters" heading taught
   exactly this trap, and additionally named a `gen.ListOneOffTransactionsParams`
-  type that has never existed. Both corrected.
+  type that the generated client had already dropped by the time that example
+  was written — so it never compiled as printed. Both corrected.
 
 ### Removed
 

@@ -341,6 +341,21 @@ func (c *Client) CustomersIterator(
 }
 
 // OneOffTransactionsIterator returns a cursor iterator over one-off transactions.
+//
+// The iterator always requests the one_off resource family. GET /transactions
+// serves three families from one path and, when transaction_type is absent,
+// infers the family from the other filters — customer_id alone infers
+// auto_account. Naming the family is therefore what keeps the rows matching
+// this iterator's type, and it makes filtering by customer safe here:
+//
+//	it := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{CustomerId: &id})
+//
+// Setting params.TransactionType to anything other than one_off is an error,
+// surfaced from the first Next call, since this iterator yields
+// gen.OneOffTransaction. Reach the other families through
+// Raw().ListTransactionsWithResponse.
+//
+// The caller's params are never modified.
 func (c *Client) OneOffTransactionsIterator(
 	params *gen.ListTransactionsParams,
 ) *Iterator[gen.OneOffTransaction] {
@@ -406,9 +421,15 @@ func (c *Client) OneOffTransactionsIterator(
 			// than erroring, and a caller cannot tell from the result.
 			//
 			// Only a POSITIVE mismatch is an error. An empty value means the
-			// response did not say, which is not evidence of the wrong family:
-			// treating it as one would turn this backstop into a new failure
-			// mode the moment a server omits the field.
+			// response did not say, which is not evidence of the wrong family.
+			//
+			// This is not mere caution: the transaction_type QUERY PARAM has
+			// existed since the first generated client, so pinning the request
+			// works against every deployment — but meta.transaction_type
+			// arrives only with this PR's spec sync, so any platform older
+			// than it omits the field entirely. Erroring on empty would break
+			// the SDK against every one of them, to guard a case the request
+			// pinning already closed.
 			if oneOffResp.Meta.TransactionType != "" &&
 				oneOffResp.Meta.TransactionType != gen.TransactionResourceTypeOneOff {
 				return Page[gen.OneOffTransaction]{}, sdkerrors.New(

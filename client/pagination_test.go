@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	sdkerrors "github.com/dakota-xyz/go-sdk/errors"
 
 	"github.com/dakota-xyz/go-sdk/client/gen"
 )
@@ -504,6 +507,13 @@ func TestOneOffTransactionsIterator_RejectsAnotherFamily(t *testing.T) {
 	if !strings.Contains(err.Error(), "wallet") {
 		t.Fatalf("error should name the offending family, got: %v", err)
 	}
+	var sdkErr *sdkerrors.Error
+	if !errors.As(err, &sdkErr) {
+		t.Fatalf("want a *sdkerrors.Error, got %T", err)
+	}
+	if sdkErr.Code != sdkerrors.CodeInvalidConfig {
+		t.Fatalf("code = %q, want %q — a caller misconfiguration, not a server fault", sdkErr.Code, sdkerrors.CodeInvalidConfig)
+	}
 }
 
 // TestOneOffTransactionsIterator_RejectsMismatchedResponseFamily: pinning the
@@ -531,6 +541,13 @@ func TestOneOffTransactionsIterator_RejectsMismatchedResponseFamily(t *testing.T
 	}
 	if !strings.Contains(err.Error(), "auto_account") {
 		t.Fatalf("error should name the family actually served, got: %v", err)
+	}
+	var sdkErr *sdkerrors.Error
+	if !errors.As(err, &sdkErr) {
+		t.Fatalf("want a *sdkerrors.Error, got %T", err)
+	}
+	if sdkErr.Code != sdkerrors.CodeInternal {
+		t.Fatalf("code = %q, want %q — the server routed against an explicit request", sdkErr.Code, sdkerrors.CodeInternal)
 	}
 }
 
