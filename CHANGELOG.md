@@ -88,8 +88,8 @@ hand-written surface.
 
 - **`types.AmountThreshold.MinAmount` is now `int64`, not `string`.** The
   platform emits a policy rule's `min_amount` as a whole number of the
-  asset's smallest currency unit — a JSON number, as the bundled OpenAPI
-  spec already documents. Because `webhook.EventDataAs` is a strict
+  asset's smallest currency unit — a JSON number, as the bundled spec's
+  example shows. Because `webhook.EventDataAs` is a strict
   `json.Unmarshal`, a `string` field here did not decode to an empty value
   the way the rest of this sweep did: it failed the *entire* event. Any
   `wallet.created`, `wallet.updated`, `wallet.policy.created`, or
@@ -233,7 +233,6 @@ without them:
   `return_deadline`, `net_recovered_amount`, `reversal_reason`, and
   `reversal_initiated_at` on the transaction payloads (the return and
   reversal lifecycles).
-- `imad` on the one-off transaction receipt.
 - `developer_fee_bps` on `auto_account.created` / `auto_account.updated`.
 - `hash` on `api_key.created`, which will stay unmodeled by choice.
 - The gap between `webhook.AllEventTypes` and the set of event types the
