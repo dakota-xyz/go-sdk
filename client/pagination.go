@@ -426,10 +426,10 @@ func (c *Client) OneOffTransactionsIterator(
 			// This is not mere caution: the transaction_type QUERY PARAM has
 			// existed since the first generated client, so pinning the request
 			// works against every deployment — but meta.transaction_type
-			// arrives only with this PR's spec sync, so any platform older
-			// than it omits the field entirely. Erroring on empty would break
-			// the SDK against every one of them, to guard a case the request
-			// pinning already closed.
+			// arrives only with the 2026-08 spec sync (63beb0b), so any
+			// platform older than that omits the field entirely. Erroring on
+			// empty would break the SDK against every one of them, to guard a
+			// case the request pinning already closed.
 			if oneOffResp.Meta.TransactionType != "" &&
 				oneOffResp.Meta.TransactionType != gen.TransactionResourceTypeOneOff {
 				return Page[gen.OneOffTransaction]{}, sdkerrors.New(

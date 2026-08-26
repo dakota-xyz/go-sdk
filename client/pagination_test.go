@@ -580,3 +580,42 @@ func TestOneOffTransactionsIterator_ToleratesUnnamedResponseFamily(t *testing.T)
 		t.Fatalf("got (%v, %v), want txn_1", item.Id, ok)
 	}
 }
+
+// TestOneOffTransactionsIterator_DoesNotMutateCallerParams pins the guarantee
+// OneOffTransactionsIterator's godoc makes. The iterator sets TransactionType
+// on its own copy of the params for every fetch; a future edit that wrote
+// through the caller's pointer instead would be invisible until someone reused
+// a params struct across iterators.
+func TestOneOffTransactionsIterator_DoesNotMutateCallerParams(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"data": [],
+			"meta": {"total_count": 0, "has_more_after": false, "has_more_before": false, "transaction_type": "one_off"}
+		}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(WithBaseURL(srv.URL), WithAPIKey("test_key"))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	customer := gen.KSUID("2B5J8KZ9N7M1K3P6Q8R4T7V9")
+	params := &gen.ListTransactionsParams{CustomerId: &customer}
+
+	it := c.OneOffTransactionsIterator(params)
+	if _, _, err := it.Next(context.Background()); err != nil {
+		t.Fatalf("Next error: %v", err)
+	}
+
+	if params.TransactionType != nil {
+		t.Fatalf("iterator wrote TransactionType=%q back into the caller's params", *params.TransactionType)
+	}
+	if params.StartingAfter != nil {
+		t.Fatalf("iterator wrote StartingAfter back into the caller's params")
+	}
+	if params.CustomerId != &customer {
+		t.Fatal("iterator replaced the caller's CustomerId pointer")
+	}
+}
