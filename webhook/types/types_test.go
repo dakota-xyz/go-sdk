@@ -179,6 +179,107 @@ func TestEventDataAs_KYBStatusData_Created(t *testing.T) {
 	}
 }
 
+func TestEventDataAs_KYBLinkData_Created(t *testing.T) {
+	payload := `{
+		"customer_id":"zHSlUmFvtibdInTWpolNHbV3lx4",
+		"link_type":"hosted",
+		"url":"https://example.test/kyb",
+		"status":"active",
+		"expires_at":1767225600
+	}`
+
+	event := webhook.Event{
+		ID:   "evt_1",
+		Type: webhook.EventCustomerKYBLinkCreated,
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	}
+
+	data, err := webhook.EventDataAs[types.KYBLinkData](event)
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.CustomerID != "zHSlUmFvtibdInTWpolNHbV3lx4" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "zHSlUmFvtibdInTWpolNHbV3lx4")
+	}
+	if data.LinkType != "hosted" {
+		t.Errorf("LinkType = %q, want %q", data.LinkType, "hosted")
+	}
+	if data.URL != "https://example.test/kyb" {
+		t.Errorf("URL = %q, want %q", data.URL, "https://example.test/kyb")
+	}
+	if data.Status != "active" {
+		t.Errorf("Status = %q, want %q", data.Status, "active")
+	}
+	if data.ExpiresAt == nil {
+		t.Fatal("expected non-nil ExpiresAt")
+	}
+	if *data.ExpiresAt != 1767225600 {
+		t.Errorf("ExpiresAt = %d, want %d", *data.ExpiresAt, 1767225600)
+	}
+}
+
+// TOS links and links from a Persona inquiry with no expired_at omit
+// expires_at entirely, so it must decode to nil rather than a silent zero.
+func TestEventDataAs_KYBLinkData_Updated(t *testing.T) {
+	payload := `{
+		"customer_id":"WGZBrOpaYvtu1pZx5QqPmvl4yk4",
+		"link_type":"tos",
+		"url":"https://example.test/tos",
+		"status":"expired"
+	}`
+
+	event := webhook.Event{
+		ID:   "evt_2",
+		Type: webhook.EventCustomerKYBLinkUpdated,
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	}
+
+	data, err := webhook.EventDataAs[types.KYBLinkData](event)
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.CustomerID != "WGZBrOpaYvtu1pZx5QqPmvl4yk4" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "WGZBrOpaYvtu1pZx5QqPmvl4yk4")
+	}
+	if data.LinkType != "tos" {
+		t.Errorf("LinkType = %q, want %q", data.LinkType, "tos")
+	}
+	if data.Status != "expired" {
+		t.Errorf("Status = %q, want %q", data.Status, "expired")
+	}
+	if data.ExpiresAt != nil {
+		t.Errorf("ExpiresAt = %v, want nil", *data.ExpiresAt)
+	}
+}
+
+func TestEventDataAs_KYBApplicationSubmittedData(t *testing.T) {
+	payload := `{
+		"customer_id":"b1h8iYu3xdBGEet3zfHKz2NLGAo",
+		"application_id":"3g1JFoSSwionnaiWMNEBjP3qqTV",
+		"application_type":"business"
+	}`
+
+	event := webhook.Event{
+		ID:   "evt_1",
+		Type: webhook.EventCustomerKYBApplicationSubmitted,
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	}
+
+	data, err := webhook.EventDataAs[types.KYBApplicationSubmittedData](event)
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.CustomerID != "b1h8iYu3xdBGEet3zfHKz2NLGAo" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "b1h8iYu3xdBGEet3zfHKz2NLGAo")
+	}
+	if data.ApplicationID != "3g1JFoSSwionnaiWMNEBjP3qqTV" {
+		t.Errorf("ApplicationID = %q, want %q", data.ApplicationID, "3g1JFoSSwionnaiWMNEBjP3qqTV")
+	}
+	if data.ApplicationType != "business" {
+		t.Errorf("ApplicationType = %q, want %q", data.ApplicationType, "business")
+	}
+}
+
 func TestEventDataAs_AutoAccountData(t *testing.T) {
 	payload := `{
 		"id":"aa_1",
@@ -232,9 +333,6 @@ func TestEventDataAs_AutoTransactionData(t *testing.T) {
 		"auto_account_id":"aa_1",
 		"destination_id":"dest_1",
 		"type":"inbound",
-		"provider_id":"prov_1",
-		"provider_external_id":"ext_1",
-		"provider_status":"completed",
 		"status":"completed",
 		"created_at":1700000000,
 		"updated_at":1700001000,
@@ -285,9 +383,6 @@ func TestEventDataAs_OneOffTransactionData(t *testing.T) {
 		"id":"txn_2",
 		"customer_id":"cust_1",
 		"destination_id":"dest_1",
-		"provider_id":"prov_1",
-		"provider_external_id":"ext_2",
-		"provider_status":"pending",
 		"source_asset":"USDC",
 		"source_network_id":"ethereum",
 		"destination_amount":"500.00",
@@ -445,22 +540,21 @@ func TestEventDataAs_ExceptionClearedData(t *testing.T) {
 	}
 }
 
+// bvnk.onboarding.* has no platform emitter today; this pins the one shape
+// the published public spec documents for it.
 func TestEventDataAs_BVNKOnboardingData(t *testing.T) {
 	event := webhook.Event{
 		ID:   "evt_1",
 		Type: webhook.EventBVNKOnboardingCreated,
-		Data: webhook.EventData{Object: json.RawMessage(`{"id":"bvnk_1","customer_id":"cust_1","status":"pending"}`)},
+		Data: webhook.EventData{Object: json.RawMessage(`{"customer_id":"mh4981Rh0eiHymFzltxUJjS7aNP"}`)},
 	}
 
 	data, err := webhook.EventDataAs[types.BVNKOnboardingData](event)
 	if err != nil {
 		t.Fatalf("EventDataAs error: %v", err)
 	}
-	if data.ID != "bvnk_1" {
-		t.Errorf("ID = %q, want %q", data.ID, "bvnk_1")
-	}
-	if data.Status != "pending" {
-		t.Errorf("Status = %q, want %q", data.Status, "pending")
+	if data.CustomerID != "mh4981Rh0eiHymFzltxUJjS7aNP" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "mh4981Rh0eiHymFzltxUJjS7aNP")
 	}
 }
 
@@ -658,9 +752,6 @@ func TestEventDataAs_CryptoDetails(t *testing.T) {
 		"auto_account_id":"aa_1",
 		"destination_id":"dest_1",
 		"type":"inbound",
-		"provider_id":"prov_1",
-		"provider_external_id":"ext_1",
-		"provider_status":"completed",
 		"status":"completed",
 		"created_at":1700000000,
 		"updated_at":1700001000,
@@ -700,9 +791,6 @@ func TestEventDataAs_SenderDetails(t *testing.T) {
 		"auto_account_id":"aa_1",
 		"destination_id":"dest_1",
 		"type":"inbound",
-		"provider_id":"prov_1",
-		"provider_external_id":"ext_1",
-		"provider_status":"completed",
 		"status":"completed",
 		"created_at":1700000000,
 		"updated_at":1700001000,
