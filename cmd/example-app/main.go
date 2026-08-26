@@ -175,7 +175,6 @@ func parseAndLogPlatformEvent(
 			slog.String("transaction_id", payload.ID),
 			slog.String("auto_account_id", payload.AutoAccountID),
 			slog.String("status", payload.Status),
-			slog.String("provider_status", payload.ProviderStatus),
 		)
 
 	case webhook.EventTransactionOneOffUpdated:
@@ -192,7 +191,6 @@ func parseAndLogPlatformEvent(
 			slog.String("transaction_id", payload.ID),
 			slog.String("customer_id", payload.CustomerID),
 			slog.String("status", payload.Status),
-			slog.String("provider_status", payload.ProviderStatus),
 		)
 
 	default:

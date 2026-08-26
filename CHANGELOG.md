@@ -94,6 +94,41 @@ hand-written surface.
   `Reason` is renamed to `ReasonCode` (tag `reason_code`). The rename is
   source-breaking for anything that referenced `.Reason`, but that field never
   held a value on any released version, so no working code can regress.
+- **`types.KYBLinkData` now matches the payload the platform actually sends.**
+  The struct decoded a single `link` string and a required `expires_at`, but
+  `customer.kyb_link.created` and `customer.kyb_link.updated` carry
+  `link_type`, `url`, and `status`, with `expires_at` present only when the
+  link actually expires. Every real KYB link webhook therefore unmarshalled
+  into an empty `Link` and a zero `ExpiresAt` indistinguishable from "expires
+  at the Unix epoch". `Link` is removed in favor of `LinkType`, `URL`, and
+  `Status`, and `ExpiresAt` becomes `*int64` so a genuinely absent expiry
+  decodes to `nil` instead of `0`. The removal of `Link` is source-breaking,
+  but that field never held a value on any released version, so no working
+  code can regress.
+- **`types.KYBApplicationSubmittedData` now matches the payload the platform
+  actually sends.** The struct decoded a bare `type` string, but
+  `customer.kyb_application.submitted` carries `application_id` and
+  `application_type` — there is no `type` key. `Type` is removed in favor of
+  `ApplicationID` and `ApplicationType`. The removal of `Type` is
+  source-breaking, but that field never held a value on any released
+  version, so no working code can regress.
+- **The six `Provider*` fields on `types.AutoTransactionData` and
+  `types.OneOffTransactionData` are removed.** The platform's outbound
+  webhook sanitizer strips every `provider_`-prefixed key before a webhook
+  is ever delivered, so `ProviderID`, `ProviderExternalID`, and
+  `ProviderStatus` on both structs could never be populated by a real
+  payload. Removing them is source-breaking for anything that referenced
+  those fields, but they never held a value on any released version, so no
+  working code can regress.
+- **`types.BVNKOnboardingData` is reduced to its one documented field.** The
+  struct declared `id`, `status`, and `reason`, but the platform has no
+  emitter for `bvnk.onboarding.created` or `bvnk.onboarding.updated` today —
+  those event types exist only in the published public event-type enum,
+  with a documented example payload of `{customer_id}`. The struct now
+  matches that example and is retained (rather than removed) because the
+  event type remains part of the public contract. `ID`, `Status`, and
+  `Reason` never held a value on any released version, so no working code
+  can regress.
 
 ## [0.4.0] - 2026-06-17
 
