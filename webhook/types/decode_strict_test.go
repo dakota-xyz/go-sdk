@@ -191,15 +191,18 @@ func deref(t reflect.Type) reflect.Type {
 
 // jsonKey returns the wire name for a field, whether it is optional, and
 // whether it is serialized at all.
+//
+// This must mirror encoding/json's own binding rules, not a convenient subset
+// of them: any field the guard skips but encoding/json still binds is a field
+// the guard silently stops protecting. encoding/json falls back to the Go field
+// name when a field has no json tag or a tag that supplies only options
+// ("`json:\",omitempty\"`"), so this does too. Only an explicit "-" means the
+// field is genuinely not serialized.
 func jsonKey(field reflect.StructField) (name string, optional, ok bool) {
-	tag, tagged := field.Tag.Lookup("json")
-	if !tagged {
-		return "", false, false
-	}
+	parts := strings.Split(field.Tag.Get("json"), ",")
 
-	parts := strings.Split(tag, ",")
 	name = parts[0]
-	if name == "-" || name == "" {
+	if name == "-" && len(parts) == 1 {
 		return "", false, false
 	}
 
@@ -209,5 +212,63 @@ func jsonKey(field reflect.StructField) (name string, optional, ok bool) {
 		}
 	}
 
+	if name == "" {
+		name = field.Name
+	}
+
 	return name, optional, true
+}
+
+// TestJSONKey pins jsonKey to encoding/json's binding rules. The untagged and
+// options-only cases are the ones that matter: no type in this package has such
+// a field today, and this test is what keeps the guard correct if one appears.
+func TestJSONKey(t *testing.T) {
+	type sample struct {
+		Tagged     string `json:"tagged"`
+		Optional   string `json:"optional,omitempty"`
+		Untagged   string
+		OnlyOption string `json:",omitempty"`
+		Skipped    string `json:"-"`
+	}
+
+	tests := []struct {
+		field    string
+		wantName string
+		wantOpt  bool
+		wantOK   bool
+	}{
+		{field: "Tagged", wantName: "tagged", wantOK: true},
+		{field: "Optional", wantName: "optional", wantOpt: true, wantOK: true},
+		{field: "Untagged", wantName: "Untagged", wantOK: true},
+		{
+			field:    "OnlyOption",
+			wantName: "OnlyOption",
+			wantOpt:  true,
+			wantOK:   true,
+		},
+		{field: "Skipped"},
+	}
+
+	typ := reflect.TypeOf(sample{})
+	for _, tt := range tests {
+		t.Run(
+			tt.field, func(t *testing.T) {
+				field, found := typ.FieldByName(tt.field)
+				if !found {
+					t.Fatalf("no field %q on sample", tt.field)
+				}
+
+				name, optional, ok := jsonKey(field)
+				if ok != tt.wantOK {
+					t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+				}
+				if name != tt.wantName {
+					t.Errorf("name = %q, want %q", name, tt.wantName)
+				}
+				if optional != tt.wantOpt {
+					t.Errorf("optional = %v, want %v", optional, tt.wantOpt)
+				}
+			},
+		)
+	}
 }

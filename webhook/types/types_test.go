@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/dakota-xyz/go-sdk/webhook"
@@ -1085,47 +1084,13 @@ func TestEventDataAs_OptionalFieldsOmitted(t *testing.T) {
 	}
 }
 
-func TestEventDataAs_JSONRoundTrip(t *testing.T) {
-	tests := []struct {
-		name    string
-		payload string
-	}{
-		{
-			name:    "user data",
-			payload: `{"user_id":"usr_1","email":"a@b.com"}`,
-		},
-		{
-			name:    "api key deleted",
-			payload: `{"id":"key_1"}`,
-		},
-		{
-			name:    "bvnk onboarding",
-			payload: `{"customer_id":"mh4981Rh0eiHymFzltxUJjS7aNP"}`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(
-			tt.name, func(t *testing.T) {
-				var raw json.RawMessage
-				if err := json.Unmarshal([]byte(tt.payload), &raw); err != nil {
-					t.Fatalf("Unmarshal error: %v", err)
-				}
-
-				marshaled, err := json.Marshal(raw)
-				if err != nil {
-					t.Fatalf("Marshal error: %v", err)
-				}
-
-				if string(marshaled) != tt.payload {
-					t.Errorf(
-						"round-trip mismatch:\n  got:  %s\n  want: %s",
-						marshaled,
-						tt.payload,
-					)
-				}
-			},
-		)
+func TestEventDataAs_APIKeyDeletedData(t *testing.T) {
+	data := decodeEvent[types.APIKeyDeletedData](
+		t, "evt_api_key_deleted_data", webhook.EventAPIKeyDeleted,
+		`{"id":"key_1"}`,
+	)
+	if data.ID != "key_1" {
+		t.Errorf("ID = %q, want %q", data.ID, "key_1")
 	}
 }
 
