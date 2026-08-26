@@ -77,7 +77,7 @@ func ExampleNewHandler_callbacks() {
 				fmt.Printf(
 					"New customer: %s (%s)\n",
 					customer.Name,
-					customer.ID,
+					customer.CustomerID,
 				)
 				return nil
 			},

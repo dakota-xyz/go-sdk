@@ -26,16 +26,9 @@ func TestEventDataAs_UserData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				event := webhook.Event{
-					ID:   "evt_1",
-					Type: webhook.EventUserCreated,
-					Data: webhook.EventData{Object: json.RawMessage(tt.payload)},
-				}
-
-				data, err := webhook.EventDataAs[types.UserData](event)
-				if err != nil {
-					t.Fatalf("EventDataAs error: %v", err)
-				}
+				data := decodeEvent[types.UserData](
+					t, "evt_user_created", webhook.EventUserCreated, tt.payload,
+				)
 				if data.UserID != tt.wantUserID {
 					t.Errorf("UserID = %q, want %q", data.UserID, tt.wantUserID)
 				}
@@ -48,74 +41,95 @@ func TestEventDataAs_UserData(t *testing.T) {
 }
 
 func TestEventDataAs_UserDeletedData(t *testing.T) {
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventUserDeleted,
-		Data: webhook.EventData{Object: json.RawMessage(`{"user_id":"usr_1"}`)},
-	}
-
-	data, err := webhook.EventDataAs[types.UserDeletedData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.UserDeletedData](
+		t, "evt_user_deleted_data", webhook.EventUserDeleted, `{"user_id":"usr_1"}`,
+	)
 	if data.UserID != "usr_1" {
 		t.Errorf("UserID = %q, want %q", data.UserID, "usr_1")
 	}
 }
 
+// api_key.created carries the key id and its last 6 characters. The emitter
+// also sends `hash`; the SDK deliberately does not surface it.
 func TestEventDataAs_APIKeyData(t *testing.T) {
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventAPIKeyCreated,
-		Data: webhook.EventData{Object: json.RawMessage(`{"id":"key_1","user_id":"usr_1","name":"My Key"}`)},
-	}
-
-	data, err := webhook.EventDataAs[types.APIKeyData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEventIgnoring[types.APIKeyData](
+		t, "evt_api_key_data", webhook.EventAPIKeyCreated,
+		`{"id":"key_1","last_6":"a1b2c3","hash":"e3b0c44298fc1c14"}`,
+		"hash",
+	)
 	if data.ID != "key_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "key_1")
 	}
-	if data.UserID != "usr_1" {
-		t.Errorf("UserID = %q, want %q", data.UserID, "usr_1")
-	}
-	if data.Name != "My Key" {
-		t.Errorf("Name = %q, want %q", data.Name, "My Key")
+	if data.Last6 != "a1b2c3" {
+		t.Errorf("Last6 = %q, want %q", data.Last6, "a1b2c3")
 	}
 }
 
+// customer.created carries the customer id under `customer_id`, plus name and
+// type; external_id and import_reference appear only when set.
 func TestEventDataAs_CustomerData(t *testing.T) {
 	payload := `{
-		"id":"cust_1",
+		"customer_id":"cust_1",
 		"name":"Acme Corp",
-		"email":"admin@acme.com",
-		"status":"active",
 		"type":"business",
-		"address":{"street1":"123 Main St","city":"New York","country":"US"}
+		"external_id":"acme-erp-4471",
+		"import_reference":{"source":"persona","reference":"cnst_9xKq2"}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventCustomerCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.CustomerData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
-	if data.ID != "cust_1" {
-		t.Errorf("ID = %q, want %q", data.ID, "cust_1")
+	data := decodeEvent[types.CustomerData](
+		t, "evt_customer_data", webhook.EventCustomerCreated, payload,
+	)
+	if data.CustomerID != "cust_1" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "cust_1")
 	}
 	if data.Name != "Acme Corp" {
 		t.Errorf("Name = %q, want %q", data.Name, "Acme Corp")
 	}
-	if data.Address == nil {
-		t.Fatal("expected non-nil Address")
+	if data.Type != "business" {
+		t.Errorf("Type = %q, want %q", data.Type, "business")
 	}
-	if data.Address.City != "New York" {
-		t.Errorf("Address.City = %q, want %q", data.Address.City, "New York")
+	if data.ExternalID == nil || *data.ExternalID != "acme-erp-4471" {
+		t.Errorf("ExternalID = %v, want %q", data.ExternalID, "acme-erp-4471")
+	}
+	if data.ImportReference == nil {
+		t.Fatal("expected non-nil ImportReference")
+	}
+	if data.ImportReference.Source != "persona" {
+		t.Errorf(
+			"ImportReference.Source = %q, want %q",
+			data.ImportReference.Source,
+			"persona",
+		)
+	}
+	if data.ImportReference.Reference != "cnst_9xKq2" {
+		t.Errorf(
+			"ImportReference.Reference = %q, want %q",
+			data.ImportReference.Reference,
+			"cnst_9xKq2",
+		)
+	}
+}
+
+// customer.updated never carries import_reference, and omits external_id when
+// the customer has none — both must decode to nil, not to a zero value.
+func TestEventDataAs_CustomerData_Updated(t *testing.T) {
+	payload := `{
+		"customer_id":"cust_2",
+		"name":"Acme Corp",
+		"type":"business"
+	}`
+
+	data := decodeEvent[types.CustomerData](
+		t, "evt_customer_data_updated", webhook.EventCustomerUpdated, payload,
+	)
+	if data.CustomerID != "cust_2" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "cust_2")
+	}
+	if data.ExternalID != nil {
+		t.Errorf("ExternalID = %v, want nil", *data.ExternalID)
+	}
+	if data.ImportReference != nil {
+		t.Errorf("ImportReference = %+v, want nil", *data.ImportReference)
 	}
 }
 
@@ -126,16 +140,9 @@ func TestEventDataAs_KYBStatusData_Updated(t *testing.T) {
 		"reason_code":"pending_proof_of_address"
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventCustomerKYBStatusUpdated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.KYBStatusData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.KYBStatusData](
+		t, "evt_kyb_status_data_updated", webhook.EventCustomerKYBStatusUpdated, payload,
+	)
 	if data.CustomerID != "1NFHrqBHb3cTfLVkFSGmHZqdDPw" {
 		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "1NFHrqBHb3cTfLVkFSGmHZqdDPw")
 	}
@@ -158,16 +165,9 @@ func TestEventDataAs_KYBStatusData_Created(t *testing.T) {
 		"kyb_status":"in_review"
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_2",
-		Type: webhook.EventCustomerKYBStatusCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.KYBStatusData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.KYBStatusData](
+		t, "evt_kyb_status_data_created", webhook.EventCustomerKYBStatusCreated, payload,
+	)
 	if data.CustomerID != "1NFHrqBHb3cTfLVkFSGmHZqdDPw" {
 		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "1NFHrqBHb3cTfLVkFSGmHZqdDPw")
 	}
@@ -182,27 +182,20 @@ func TestEventDataAs_KYBStatusData_Created(t *testing.T) {
 func TestEventDataAs_KYBLinkData_Created(t *testing.T) {
 	payload := `{
 		"customer_id":"zHSlUmFvtibdInTWpolNHbV3lx4",
-		"link_type":"hosted",
+		"link_type":"persona",
 		"url":"https://example.test/kyb",
 		"status":"active",
 		"expires_at":1767225600
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventCustomerKYBLinkCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.KYBLinkData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.KYBLinkData](
+		t, "evt_kyb_link_data_created", webhook.EventCustomerKYBLinkCreated, payload,
+	)
 	if data.CustomerID != "zHSlUmFvtibdInTWpolNHbV3lx4" {
 		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "zHSlUmFvtibdInTWpolNHbV3lx4")
 	}
-	if data.LinkType != "hosted" {
-		t.Errorf("LinkType = %q, want %q", data.LinkType, "hosted")
+	if data.LinkType != "persona" {
+		t.Errorf("LinkType = %q, want %q", data.LinkType, "persona")
 	}
 	if data.URL != "https://example.test/kyb" {
 		t.Errorf("URL = %q, want %q", data.URL, "https://example.test/kyb")
@@ -228,16 +221,9 @@ func TestEventDataAs_KYBLinkData_Updated(t *testing.T) {
 		"status":"expired"
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_2",
-		Type: webhook.EventCustomerKYBLinkUpdated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.KYBLinkData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.KYBLinkData](
+		t, "evt_kyb_link_data_updated", webhook.EventCustomerKYBLinkUpdated, payload,
+	)
 	if data.CustomerID != "WGZBrOpaYvtu1pZx5QqPmvl4yk4" {
 		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "WGZBrOpaYvtu1pZx5QqPmvl4yk4")
 	}
@@ -259,16 +245,9 @@ func TestEventDataAs_KYBApplicationSubmittedData(t *testing.T) {
 		"application_type":"business"
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventCustomerKYBApplicationSubmitted,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.KYBApplicationSubmittedData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.KYBApplicationSubmittedData](
+		t, "evt_kyb_application_submitted_data", webhook.EventCustomerKYBApplicationSubmitted, payload,
+	)
 	if data.CustomerID != "b1h8iYu3xdBGEet3zfHKz2NLGAo" {
 		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "b1h8iYu3xdBGEet3zfHKz2NLGAo")
 	}
@@ -286,6 +265,7 @@ func TestEventDataAs_AutoAccountData(t *testing.T) {
 		"customer_id":"cust_1",
 		"enabled":true,
 		"account_type":"bank",
+		"developer_fee_bps":25,
 		"bank_account":{
 			"account_holder_name":"Acme Corp",
 			"us_details":{
@@ -296,16 +276,10 @@ func TestEventDataAs_AutoAccountData(t *testing.T) {
 		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventAutoAccountCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.AutoAccountData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEventIgnoring[types.AutoAccountData](
+		t, "evt_auto_account_data", webhook.EventAutoAccountCreated, payload,
+		"developer_fee_bps",
+	)
 	if data.ID != "aa_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "aa_1")
 	}
@@ -350,16 +324,9 @@ func TestEventDataAs_AutoTransactionData(t *testing.T) {
 		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventTransactionAutoUpdated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.AutoTransactionData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.AutoTransactionData](
+		t, "evt_auto_transaction_data", webhook.EventTransactionAutoUpdated, payload,
+	)
 	if data.ID != "txn_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "txn_1")
 	}
@@ -390,19 +357,16 @@ func TestEventDataAs_OneOffTransactionData(t *testing.T) {
 		"status":"pending",
 		"created_at":1700000000,
 		"updated_at":1700000000,
-		"send_amount":{"amount":"501.50","currency":"USDC"}
+		"send_amount":{"amount":"501.50","currency":"USDC"},
+		"sender_details":{
+			"sender_wallet_address":"0xsender",
+			"sender_network":"ethereum"
+		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventTransactionOneOffCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.OneOffTransactionData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.OneOffTransactionData](
+		t, "evt_one_off_transaction_data", webhook.EventTransactionOneOffCreated, payload,
+	)
 	if data.ID != "txn_2" {
 		t.Errorf("ID = %q, want %q", data.ID, "txn_2")
 	}
@@ -416,6 +380,27 @@ func TestEventDataAs_OneOffTransactionData(t *testing.T) {
 			"501.50",
 		)
 	}
+	// One-off transactions carry only the crypto subset of sender_details;
+	// the bank fields are never stored for them.
+	if data.SenderDetails == nil {
+		t.Fatal("expected non-nil SenderDetails")
+	}
+	if data.SenderDetails.SenderWalletAddress == nil ||
+		*data.SenderDetails.SenderWalletAddress != "0xsender" {
+		t.Errorf(
+			"SenderWalletAddress = %v, want %q",
+			data.SenderDetails.SenderWalletAddress,
+			"0xsender",
+		)
+	}
+	if data.SenderDetails.SenderNetwork == nil ||
+		*data.SenderDetails.SenderNetwork != "ethereum" {
+		t.Errorf(
+			"SenderNetwork = %v, want %q",
+			data.SenderDetails.SenderNetwork,
+			"ethereum",
+		)
+	}
 }
 
 func TestEventDataAs_RecipientData(t *testing.T) {
@@ -423,136 +408,289 @@ func TestEventDataAs_RecipientData(t *testing.T) {
 		"id":"rcpt_1",
 		"customer_id":"cust_1",
 		"name":"Bob Smith",
-		"type":"individual"
+		"status":"active",
+		"address":{"street1":"123 Main St","city":"New York","country":"US"}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventRecipientCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.RecipientData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.RecipientData](
+		t, "evt_recipient_data", webhook.EventRecipientCreated, payload,
+	)
 	if data.ID != "rcpt_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "rcpt_1")
 	}
+	if data.CustomerID != "cust_1" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "cust_1")
+	}
 	if data.Name != "Bob Smith" {
 		t.Errorf("Name = %q, want %q", data.Name, "Bob Smith")
+	}
+	if data.Status != "active" {
+		t.Errorf("Status = %q, want %q", data.Status, "active")
+	}
+	if data.Address == nil {
+		t.Fatal("expected non-nil Address")
+	}
+	if data.Address.City != "New York" {
+		t.Errorf("Address.City = %q, want %q", data.Address.City, "New York")
+	}
+}
+
+// recipient.updated carries no customer_id at all — the emitter simply does not
+// send it. Modeling one here would hand every consumer a silent "".
+func TestEventDataAs_RecipientUpdatedData(t *testing.T) {
+	payload := `{
+		"id":"rcpt_1",
+		"name":"Bob Smith",
+		"status":"active"
+	}`
+
+	data := decodeEvent[types.RecipientUpdatedData](
+		t, "evt_recipient_updated_data", webhook.EventRecipientUpdated, payload,
+	)
+	if data.ID != "rcpt_1" {
+		t.Errorf("ID = %q, want %q", data.ID, "rcpt_1")
+	}
+	if data.Status != "active" {
+		t.Errorf("Status = %q, want %q", data.Status, "active")
+	}
+	if data.Address != nil {
+		t.Errorf("Address = %+v, want nil", *data.Address)
+	}
+}
+
+func TestEventDataAs_RecipientDeletedData(t *testing.T) {
+	data := decodeEvent[types.RecipientDeletedData](
+		t, "evt_recipient_deleted_data", webhook.EventRecipientDeleted,
+		`{"id":"rcpt_1","customer_id":"cust_1"}`,
+	)
+	if data.ID != "rcpt_1" {
+		t.Errorf("ID = %q, want %q", data.ID, "rcpt_1")
+	}
+	if data.CustomerID != "cust_1" {
+		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "cust_1")
 	}
 }
 
 func TestEventDataAs_DestinationData(t *testing.T) {
 	payload := `{
 		"id":"dest_1",
-		"customer_id":"cust_1",
 		"recipient_id":"rcpt_1",
-		"currency":"USD"
+		"name":"Bob Smith Checking",
+		"type":"bank_account",
+		"bank_account":{
+			"account_holder_name":"Bob Smith",
+			"us_details":{
+				"account_type":"checking",
+				"account_number":"1234567890",
+				"routing_number":"021000021"
+			}
+		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventDestinationCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.DestinationData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.DestinationData](
+		t, "evt_destination_data", webhook.EventDestinationCreated, payload,
+	)
 	if data.ID != "dest_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "dest_1")
 	}
-	if data.Currency != "USD" {
-		t.Errorf("Currency = %q, want %q", data.Currency, "USD")
+	if data.RecipientID != "rcpt_1" {
+		t.Errorf("RecipientID = %q, want %q", data.RecipientID, "rcpt_1")
+	}
+	if data.Name != "Bob Smith Checking" {
+		t.Errorf("Name = %q, want %q", data.Name, "Bob Smith Checking")
+	}
+	if data.Type != "bank_account" {
+		t.Errorf("Type = %q, want %q", data.Type, "bank_account")
+	}
+	if data.BankAccount == nil {
+		t.Fatal("expected non-nil BankAccount")
+	}
+	if data.Crypto != nil {
+		t.Errorf("Crypto = %+v, want nil", *data.Crypto)
 	}
 }
 
+// A crypto destination carries `crypto` in place of `bank_account`.
+func TestEventDataAs_DestinationData_Crypto(t *testing.T) {
+	payload := `{
+		"id":"dest_2",
+		"recipient_id":"rcpt_1",
+		"name":"Bob Smith USDC",
+		"type":"crypto",
+		"crypto":{"network_id":"ethereum","address":"0xdest"}
+	}`
+
+	data := decodeEvent[types.DestinationData](
+		t, "evt_destination_data_crypto", webhook.EventDestinationCreated, payload,
+	)
+	if data.Crypto == nil {
+		t.Fatal("expected non-nil Crypto")
+	}
+	if data.Crypto.NetworkID != "ethereum" {
+		t.Errorf("Crypto.NetworkID = %q, want %q", data.Crypto.NetworkID, "ethereum")
+	}
+	if data.BankAccount != nil {
+		t.Errorf("BankAccount = %+v, want nil", *data.BankAccount)
+	}
+}
+
+func TestEventDataAs_DestinationDeletedData(t *testing.T) {
+	data := decodeEvent[types.DestinationDeletedData](
+		t, "evt_destination_deleted_data", webhook.EventDestinationDeleted,
+		`{"id":"dest_1","recipient_id":"rcpt_1"}`,
+	)
+	if data.ID != "dest_1" {
+		t.Errorf("ID = %q, want %q", data.ID, "dest_1")
+	}
+	if data.RecipientID != "rcpt_1" {
+		t.Errorf("RecipientID = %q, want %q", data.RecipientID, "rcpt_1")
+	}
+}
+
+// A "target" is a webhook endpoint registration, not a savings or payout
+// target. target.created names the endpoint URL `url`; the updated and deleted
+// events both name it `target_url`.
 func TestEventDataAs_TargetCreatedData(t *testing.T) {
 	payload := `{
-		"id":"tgt_1",
-		"auto_account_id":"aa_1",
-		"amount":"1000.00",
-		"currency":"USD",
-		"frequency":"monthly"
+		"target_id":"tgt_1",
+		"url":"https://example.test/hooks/dakota",
+		"global":false,
+		"event_types":["customer.created","transaction.one_off.updated"]
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventTargetCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	data := decodeEvent[types.TargetCreatedData](
+		t, "evt_target_created_data", webhook.EventTargetCreated, payload,
+	)
+	if data.TargetID != "tgt_1" {
+		t.Errorf("TargetID = %q, want %q", data.TargetID, "tgt_1")
 	}
-
-	data, err := webhook.EventDataAs[types.TargetCreatedData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
+	if data.URL != "https://example.test/hooks/dakota" {
+		t.Errorf("URL = %q, want %q", data.URL, "https://example.test/hooks/dakota")
 	}
-	if data.ID != "tgt_1" {
-		t.Errorf("ID = %q, want %q", data.ID, "tgt_1")
+	if data.Global {
+		t.Error("expected Global to be false")
 	}
-	if data.Frequency != "monthly" {
-		t.Errorf("Frequency = %q, want %q", data.Frequency, "monthly")
+	if len(data.EventTypes) != 2 {
+		t.Fatalf("len(EventTypes) = %d, want 2", len(data.EventTypes))
+	}
+	if data.EventTypes[0] != "customer.created" {
+		t.Errorf("EventTypes[0] = %q, want %q", data.EventTypes[0], "customer.created")
 	}
 }
 
-func TestEventDataAs_ExceptionData(t *testing.T) {
+// A global target subscribes to everything, so the emitter omits event_types
+// entirely rather than sending the full enum.
+func TestEventDataAs_TargetUpdatedData(t *testing.T) {
 	payload := `{
-		"id":"exc_1",
-		"auto_account_id":"aa_1",
-		"type":"balance_too_low",
-		"message":"Insufficient balance",
-		"created_at":1700000000
+		"target_id":"tgt_1",
+		"target_url":"https://example.test/hooks/dakota",
+		"global":true
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventExceptionCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	data := decodeEvent[types.TargetUpdatedData](
+		t, "evt_target_updated_data", webhook.EventTargetUpdated, payload,
+	)
+	if data.TargetID != "tgt_1" {
+		t.Errorf("TargetID = %q, want %q", data.TargetID, "tgt_1")
 	}
+	if data.TargetURL != "https://example.test/hooks/dakota" {
+		t.Errorf(
+			"TargetURL = %q, want %q",
+			data.TargetURL,
+			"https://example.test/hooks/dakota",
+		)
+	}
+	if !data.Global {
+		t.Error("expected Global to be true")
+	}
+	if data.EventTypes != nil {
+		t.Errorf("EventTypes = %v, want nil", data.EventTypes)
+	}
+}
 
-	data, err := webhook.EventDataAs[types.ExceptionData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
+func TestEventDataAs_TargetDeletedData(t *testing.T) {
+	data := decodeEvent[types.TargetDeletedData](
+		t, "evt_target_deleted_data", webhook.EventTargetDeleted,
+		`{"target_id":"tgt_1","target_url":"https://example.test/hooks/dakota"}`,
+	)
+	if data.TargetID != "tgt_1" {
+		t.Errorf("TargetID = %q, want %q", data.TargetID, "tgt_1")
 	}
-	if data.ID != "exc_1" {
-		t.Errorf("ID = %q, want %q", data.ID, "exc_1")
+	if data.TargetURL != "https://example.test/hooks/dakota" {
+		t.Errorf(
+			"TargetURL = %q, want %q",
+			data.TargetURL,
+			"https://example.test/hooks/dakota",
+		)
+	}
+}
+
+// exception.created identifies the exception as `exception_id` and carries an
+// open-ended `exception_content` blob. customer_id is present only for
+// exceptions that belong to a customer.
+func TestEventDataAs_ExceptionData(t *testing.T) {
+	payload := `{
+		"exception_id":"exc_1",
+		"type":"balance_too_low",
+		"customer_id":"cust_1",
+		"exception_content":{"available":"12.00","required":"250.00"}
+	}`
+
+	data := decodeEvent[types.ExceptionData](
+		t, "evt_exception_data", webhook.EventExceptionCreated, payload,
+	)
+	if data.ExceptionID != "exc_1" {
+		t.Errorf("ExceptionID = %q, want %q", data.ExceptionID, "exc_1")
 	}
 	if data.Type != "balance_too_low" {
 		t.Errorf("Type = %q, want %q", data.Type, "balance_too_low")
 	}
+	if data.CustomerID == nil || *data.CustomerID != "cust_1" {
+		t.Errorf("CustomerID = %v, want %q", data.CustomerID, "cust_1")
+	}
+	if data.Content["required"] != "250.00" {
+		t.Errorf("Content[required] = %v, want %q", data.Content["required"], "250.00")
+	}
 }
 
-func TestEventDataAs_ExceptionClearedData(t *testing.T) {
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventExceptionCleared,
-		Data: webhook.EventData{Object: json.RawMessage(`{"id":"exc_1","auto_account_id":"aa_1","cleared_at":1700002000}`)},
+// A client-level exception carries neither customer_id nor exception_content.
+func TestEventDataAs_ExceptionData_Minimal(t *testing.T) {
+	data := decodeEvent[types.ExceptionData](
+		t, "evt_exception_data_minimal", webhook.EventExceptionCreated,
+		`{"exception_id":"exc_2","type":"balance_too_low"}`,
+	)
+	if data.CustomerID != nil {
+		t.Errorf("CustomerID = %v, want nil", *data.CustomerID)
 	}
+	if data.Content != nil {
+		t.Errorf("Content = %v, want nil", data.Content)
+	}
+}
 
-	data, err := webhook.EventDataAs[types.ExceptionClearedData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
+// exception.cleared repeats the exception id and type, and carries no
+// timestamp of its own — the envelope's `created` is the clearing time.
+func TestEventDataAs_ExceptionClearedData(t *testing.T) {
+	data := decodeEvent[types.ExceptionClearedData](
+		t, "evt_exception_cleared_data", webhook.EventExceptionCleared,
+		`{"exception_id":"exc_1","type":"balance_too_low","customer_id":"cust_1"}`,
+	)
+	if data.ExceptionID != "exc_1" {
+		t.Errorf("ExceptionID = %q, want %q", data.ExceptionID, "exc_1")
 	}
-	if data.ClearedAt != 1700002000 {
-		t.Errorf("ClearedAt = %d, want %d", data.ClearedAt, 1700002000)
+	if data.Type != "balance_too_low" {
+		t.Errorf("Type = %q, want %q", data.Type, "balance_too_low")
+	}
+	if data.CustomerID == nil || *data.CustomerID != "cust_1" {
+		t.Errorf("CustomerID = %v, want %q", data.CustomerID, "cust_1")
 	}
 }
 
 // bvnk.onboarding.* has no platform emitter today; this pins the one shape
 // the published public spec documents for it.
 func TestEventDataAs_BVNKOnboardingData(t *testing.T) {
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventBVNKOnboardingCreated,
-		Data: webhook.EventData{Object: json.RawMessage(`{"customer_id":"mh4981Rh0eiHymFzltxUJjS7aNP"}`)},
-	}
-
-	data, err := webhook.EventDataAs[types.BVNKOnboardingData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.BVNKOnboardingData](
+		t, "evt_bvnk_onboarding_data", webhook.EventBVNKOnboardingCreated, `{"customer_id":"mh4981Rh0eiHymFzltxUJjS7aNP"}`,
+	)
 	if data.CustomerID != "mh4981Rh0eiHymFzltxUJjS7aNP" {
 		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "mh4981Rh0eiHymFzltxUJjS7aNP")
 	}
@@ -598,16 +736,9 @@ func TestEventDataAs_WalletEventData(t *testing.T) {
 		}]
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventWalletCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.WalletEventData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.WalletEventData](
+		t, "evt_wallet_event_data", webhook.EventWalletCreated, payload,
+	)
 	if data.Wallet.ID != "w_1" {
 		t.Errorf("Wallet.ID = %q, want %q", data.Wallet.ID, "w_1")
 	}
@@ -669,16 +800,9 @@ func TestEventDataAs_WalletDepositData(t *testing.T) {
 		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventWalletDeposit,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.WalletDepositData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.WalletDepositData](
+		t, "evt_wallet_deposit_data", webhook.EventWalletDeposit, payload,
+	)
 	if data.WalletID != "w_1" {
 		t.Errorf("WalletID = %q, want %q", data.WalletID, "w_1")
 	}
@@ -708,27 +832,20 @@ func TestEventDataAs_WalletTransactionData(t *testing.T) {
 		"intent":{
 			"wallet_id":"w_1",
 			"caip2":"eip155:1",
-			"sponsor":false,
 			"idempotency_key":"idem_1",
 			"operation":{
 				"kind":"transfer",
 				"from":"0xfrom",
 				"to":"0xto",
-				"amount":"100"
+				"amount":"100",
+				"asset_id":"usdc"
 			}
 		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventWalletTransactionCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.WalletTransactionData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.WalletTransactionData](
+		t, "evt_wallet_transaction_data", webhook.EventWalletTransactionCreated, payload,
+	)
 	if data.ID != "wtxn_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "wtxn_1")
 	}
@@ -740,6 +857,13 @@ func TestEventDataAs_WalletTransactionData(t *testing.T) {
 			"Operation.Kind = %q, want %q",
 			data.Intent.Operation.Kind,
 			"transfer",
+		)
+	}
+	if data.Intent.Operation.AssetID != "usdc" {
+		t.Errorf(
+			"Operation.AssetID = %q, want %q",
+			data.Intent.Operation.AssetID,
+			"usdc",
 		)
 	}
 }
@@ -763,16 +887,9 @@ func TestEventDataAs_CryptoDetails(t *testing.T) {
 		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventTransactionAutoUpdated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.AutoTransactionData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.AutoTransactionData](
+		t, "evt_crypto_details", webhook.EventTransactionAutoUpdated, payload,
+	)
 	if data.CryptoDetails == nil {
 		t.Fatal("expected non-nil CryptoDetails")
 	}
@@ -801,16 +918,9 @@ func TestEventDataAs_SenderDetails(t *testing.T) {
 		}
 	}`
 
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventTransactionAutoCreated,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.AutoTransactionData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.AutoTransactionData](
+		t, "evt_sender_details", webhook.EventTransactionAutoCreated, payload,
+	)
 	if data.SenderDetails == nil {
 		t.Fatal("expected non-nil SenderDetails")
 	}
@@ -824,16 +934,9 @@ func TestEventDataAs_SenderDetails(t *testing.T) {
 }
 
 func TestEventDataAs_OptionalFieldsOmitted(t *testing.T) {
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventAutoAccountCreated,
-		Data: webhook.EventData{Object: json.RawMessage(`{"id":"aa_1","customer_id":"cust_1","enabled":false,"account_type":"crypto"}`)},
-	}
-
-	data, err := webhook.EventDataAs[types.AutoAccountData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.AutoAccountData](
+		t, "evt_optional_fields_omitted", webhook.EventAutoAccountCreated, `{"id":"aa_1","customer_id":"cust_1","enabled":false,"account_type":"crypto"}`,
+	)
 	if data.BankAccount != nil {
 		t.Error("expected nil BankAccount when not provided")
 	}
@@ -860,7 +963,7 @@ func TestEventDataAs_JSONRoundTrip(t *testing.T) {
 		},
 		{
 			name:    "bvnk onboarding",
-			payload: `{"id":"bvnk_1","customer_id":"cust_1","status":"approved"}`,
+			payload: `{"customer_id":"mh4981Rh0eiHymFzltxUJjS7aNP"}`,
 		},
 	}
 
@@ -895,16 +998,9 @@ func TestEventDataAs_ScheduledPaymentFailedData(t *testing.T) {
 		`"address":"0xabc","amount":"100","asset":"USDC","network_id":"base-sepolia",` +
 		`"scheduled_at":1705315500,"failure_code":"mandate_denied","failure_reason":"no active mandate",` +
 		`"payment_agent_id":"agt_1","recipient_id":"rcp_1","destination_id":"dst_1"}`
-	event := webhook.Event{
-		ID:   "evt_1",
-		Type: webhook.EventScheduledPaymentFailed,
-		Data: webhook.EventData{Object: json.RawMessage(payload)},
-	}
-
-	data, err := webhook.EventDataAs[types.ScheduledPaymentFailedData](event)
-	if err != nil {
-		t.Fatalf("EventDataAs error: %v", err)
-	}
+	data := decodeEvent[types.ScheduledPaymentFailedData](
+		t, "evt_scheduled_payment_failed_data", webhook.EventScheduledPaymentFailed, payload,
+	)
 	if data.ScheduledPaymentID != "sp_1" || data.FailureCode != "mandate_denied" ||
 		data.PaymentAgentID != "agt_1" || data.ScheduledAt != 1705315500 {
 		t.Fatalf("unexpected decode: %+v", data)
@@ -915,14 +1011,10 @@ func TestEventDataAs_ScheduledPaymentFailedData(t *testing.T) {
 	bare := `{"scheduled_payment_id":"sp_2","signer_id":"sgn_1","wallet_id":"wal_1",` +
 		`"address":"0xdef","amount":"5","asset":"USDC","network_id":"base-sepolia",` +
 		`"scheduled_at":1705315600,"failure_code":"send_error","failure_reason":"rpc timeout"}`
-	bareData, err := webhook.EventDataAs[types.ScheduledPaymentFailedData](webhook.Event{
-		ID:   "evt_2",
-		Type: webhook.EventScheduledPaymentFailed,
-		Data: webhook.EventData{Object: json.RawMessage(bare)},
-	})
-	if err != nil {
-		t.Fatalf("EventDataAs (bare) error: %v", err)
-	}
+	bareData := decodeEvent[types.ScheduledPaymentFailedData](
+		t, "evt_scheduled_payment_failed_bare",
+		webhook.EventScheduledPaymentFailed, bare,
+	)
 	if bareData.PaymentAgentID != "" || bareData.RecipientID != "" || bareData.DestinationID != "" {
 		t.Errorf("expected empty linkage keys, got %+v", bareData)
 	}

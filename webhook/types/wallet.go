@@ -119,7 +119,6 @@ type WalletTransactionData struct {
 type WalletTransactionIntent struct {
 	WalletID       string                     `json:"wallet_id"`
 	Caip2          string                     `json:"caip2"`
-	Sponsor        bool                       `json:"sponsor"`
 	IdempotencyKey string                     `json:"idempotency_key"`
 	Operation      WalletTransactionOperation `json:"operation"`
 }
@@ -127,9 +126,10 @@ type WalletTransactionIntent struct {
 // WalletTransactionOperation describes a single operation within a wallet
 // transaction.
 type WalletTransactionOperation struct {
-	Kind   string  `json:"kind"`
-	From   string  `json:"from"`
-	To     string  `json:"to"`
-	Amount string  `json:"amount"`
-	Data   *string `json:"data,omitempty"`
+	Kind    string  `json:"kind"`
+	From    string  `json:"from"`
+	To      string  `json:"to"`
+	Amount  string  `json:"amount"`
+	AssetID string  `json:"asset_id"`
+	Data    *string `json:"data,omitempty"`
 }
