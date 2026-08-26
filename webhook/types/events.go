@@ -70,17 +70,23 @@ type KYBStatusData struct {
 
 // KYBLinkData is the event payload for customer.kyb_link.created and
 // customer.kyb_link.updated events.
+//
+// ExpiresAt is nil for TOS links and for links from a Persona inquiry that
+// carries no expiry; it is set on every other link.
 type KYBLinkData struct {
 	CustomerID string `json:"customer_id"`
-	Link       string `json:"link"`
-	ExpiresAt  int64  `json:"expires_at"`
+	LinkType   string `json:"link_type"`
+	URL        string `json:"url"`
+	Status     string `json:"status"`
+	ExpiresAt  *int64 `json:"expires_at,omitempty"`
 }
 
 // KYBApplicationSubmittedData is the event payload for
 // customer.kyb_application.submitted events.
 type KYBApplicationSubmittedData struct {
-	CustomerID string `json:"customer_id"`
-	Type       string `json:"type"`
+	CustomerID      string `json:"customer_id"`
+	ApplicationID   string `json:"application_id"`
+	ApplicationType string `json:"application_type"`
 }
 
 // ---------------------------------------------------------------------------
@@ -113,21 +119,18 @@ type AutoAccountDeletedData struct {
 // AutoTransactionData is the event payload for transaction.auto.created and
 // transaction.auto.updated events.
 type AutoTransactionData struct {
-	ID                 string         `json:"id"`
-	AutoAccountID      string         `json:"auto_account_id"`
-	DestinationID      string         `json:"destination_id"`
-	Type               string         `json:"type"`
-	ProviderID         string         `json:"provider_id"`
-	ProviderExternalID string         `json:"provider_external_id"`
-	ProviderStatus     string         `json:"provider_status"`
-	Status             string         `json:"status"`
-	CreatedAt          int64          `json:"created_at"`
-	UpdatedAt          int64          `json:"updated_at"`
-	FailureReason      *string        `json:"failure_reason,omitempty"`
-	CompletedAt        *int64         `json:"completed_at,omitempty"`
-	Receipt            *Receipt       `json:"receipt,omitempty"`
-	CryptoDetails      *CryptoDetails `json:"crypto_details,omitempty"`
-	SenderDetails      *SenderDetails `json:"sender_details,omitempty"`
+	ID            string         `json:"id"`
+	AutoAccountID string         `json:"auto_account_id"`
+	DestinationID string         `json:"destination_id"`
+	Type          string         `json:"type"`
+	Status        string         `json:"status"`
+	CreatedAt     int64          `json:"created_at"`
+	UpdatedAt     int64          `json:"updated_at"`
+	FailureReason *string        `json:"failure_reason,omitempty"`
+	CompletedAt   *int64         `json:"completed_at,omitempty"`
+	Receipt       *Receipt       `json:"receipt,omitempty"`
+	CryptoDetails *CryptoDetails `json:"crypto_details,omitempty"`
+	SenderDetails *SenderDetails `json:"sender_details,omitempty"`
 }
 
 // OneOffTransactionData is the event payload for transaction.one_off.created
@@ -136,9 +139,6 @@ type OneOffTransactionData struct {
 	ID                  string         `json:"id"`
 	CustomerID          string         `json:"customer_id"`
 	DestinationID       string         `json:"destination_id"`
-	ProviderID          string         `json:"provider_id"`
-	ProviderExternalID  string         `json:"provider_external_id"`
-	ProviderStatus      string         `json:"provider_status"`
 	SourceAsset         string         `json:"source_asset"`
 	SourceNetworkID     string         `json:"source_network_id"`
 	DestinationAmount   string         `json:"destination_amount"`
@@ -260,9 +260,11 @@ type ExceptionClearedData struct {
 
 // BVNKOnboardingData is the event payload for bvnk.onboarding.created and
 // bvnk.onboarding.updated events.
+//
+// The platform has no emitter for these event types today — the type is
+// retained only because the event type remains in the published public
+// event-type enum. Its shape follows the one example the public spec
+// documents; if a real emitter appears, extend it then.
 type BVNKOnboardingData struct {
-	ID         string  `json:"id"`
-	CustomerID string  `json:"customer_id"`
-	Status     string  `json:"status"`
-	Reason     *string `json:"reason,omitempty"`
+	CustomerID string `json:"customer_id"`
 }
