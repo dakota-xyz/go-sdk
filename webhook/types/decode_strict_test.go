@@ -192,12 +192,22 @@ func deref(t reflect.Type) reflect.Type {
 // jsonKey returns the wire name for a field, whether it is optional, and
 // whether it is serialized at all.
 //
-// This must mirror encoding/json's own binding rules, not a convenient subset
-// of them: any field the guard skips but encoding/json still binds is a field
-// the guard silently stops protecting. encoding/json falls back to the Go field
-// name when a field has no json tag or a tag that supplies only options
-// ("`json:\",omitempty\"`"), so this does too. Only an explicit "-" means the
-// field is genuinely not serialized.
+// This aims to mirror encoding/json's own binding rules, not a convenient
+// subset of them: any field the guard skips but encoding/json still binds is
+// a field the guard silently stops protecting. encoding/json falls back to
+// the Go field name when a field has no json tag or a tag that supplies only
+// options ("`json:\",omitempty\"`"), so this does too. Only an explicit "-"
+// means the field is genuinely not serialized.
+//
+// Known divergences from encoding/json, none reachable by any type in this
+// package today, and all failing loud (a spurious test failure) rather than
+// silently under-protecting a field:
+//   - Key lookup against the decoded payload is case-sensitive; encoding/json
+//     falls back to a case-insensitive match.
+//   - There is no isValidTag fallback: encoding/json ignores a malformed tag
+//     name and binds by field name, this does not.
+//   - Embedded/anonymous struct fields are treated as one key named after the
+//     type, rather than having their fields promoted.
 func jsonKey(field reflect.StructField) (name string, optional, ok bool) {
 	parts := strings.Split(field.Tag.Get("json"), ",")
 
