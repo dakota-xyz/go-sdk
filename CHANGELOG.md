@@ -86,6 +86,18 @@ hand-written surface.
 
 ### Fixed
 
+- **`types.AmountThreshold.MinAmount` is now `int64`, not `string`.** The
+  platform emits a policy rule's `min_amount` as a whole number of the
+  asset's smallest currency unit — a JSON number, as the bundled OpenAPI
+  spec already documents. Because `webhook.EventDataAs` is a strict
+  `json.Unmarshal`, a `string` field here did not decode to an empty value
+  the way the rest of this sweep did: it failed the *entire* event. Any
+  `wallet.created`, `wallet.updated`, `wallet.policy.created`, or
+  `wallet.policy.updated` carrying an `amount_threshold` rule returned
+  `MALFORMED_PAYLOAD` and delivered nothing to the consumer. The type change
+  is source-breaking for anything that referenced `.MinAmount` as a string,
+  but no such reference can have been reading a real value, because no event
+  containing the field ever decoded.
 - **`types.KYBStatusData` now matches the payload the platform actually sends.**
   The struct decoded `status` and `reason`, but `customer.kyb_status.created`
   and `customer.kyb_status.updated` carry `kyb_status` and an optional
@@ -122,11 +134,9 @@ hand-written surface.
   webhook sanitizer strips every `provider_`-prefixed key before a webhook
   is ever delivered, so `ProviderID`, `ProviderExternalID`, and
   `ProviderStatus` on both structs could never be populated by a *delivered
-  webhook payload* — the only thing these structs are for. (The platform's
-  delivery-history API returns the raw stored content, where those keys do
-  still appear; that surface is separately ticketed and is not modeled by
-  this package.) Removing them is source-breaking for anything that
-  referenced those fields, but they never held a value on any released
+  webhook payload* — the only thing these structs are for, and the only
+  thing this package models. Removing them is source-breaking for anything
+  that referenced those fields, but they never held a value on any released
   version, so no working code can regress.
 - **`types.BVNKOnboardingData` is reduced to its one documented field.** The
   struct declared `id`, `status`, and `reason`, but the platform has no
@@ -214,9 +224,10 @@ hand-written surface.
 
 ### Deliberately deferred
 
-The sweep above corrects every field that could never populate. These
-emitted keys are knowingly *not* modeled yet, and are additive whenever they
-land — no struct below decodes incorrectly without them:
+The sweep above corrects the field-level mismatches found against the
+platform emitters. These emitted keys are knowingly *not* modeled yet, and
+are additive whenever they land — no struct below decodes incorrectly
+without them:
 
 - `fiat_rail`, `return_code`, `return_reason`, `return_initiated_at`,
   `return_deadline`, `net_recovered_amount`, `reversal_reason`, and
