@@ -797,7 +797,7 @@ func TestEventDataAs_WalletEventDataAmountThresholdRule(t *testing.T) {
 			"created_at":1700000000,
 			"updated_at":1700001000
 		},
-		"signer_groups":[],
+		"signer_groups":null,
 		"policies":[{
 			"id":"pol_1",
 			"client_id":"cli_1",
@@ -870,7 +870,7 @@ func TestEventDataAs_WalletEventDataAddressListRule(t *testing.T) {
 			"created_at":1700000000,
 			"updated_at":1700001000
 		},
-		"signer_groups":[],
+		"signer_groups":null,
 		"policies":[{
 			"id":"pol_1",
 			"client_id":"cli_1",
