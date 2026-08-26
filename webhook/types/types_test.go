@@ -783,6 +783,143 @@ func TestEventDataAs_WalletEventData(t *testing.T) {
 	}
 }
 
+// A policy rule definition is a tagged union: the platform emits exactly one of
+// approval_threshold, amount_threshold, or address_list per rule, selected by
+// rule_type. Each arm needs its own fixture, because an arm no fixture reaches
+// is an arm whose field types nothing checks.
+func TestEventDataAs_WalletEventDataAmountThresholdRule(t *testing.T) {
+	payload := `{
+		"wallet":{
+			"id":"w_1",
+			"client_id":"cli_1",
+			"family":"evm",
+			"address":"0xabc123",
+			"name":"Treasury",
+			"created_at":1700000000,
+			"updated_at":1700001000
+		},
+		"signer_groups":[],
+		"policies":[{
+			"id":"pol_1",
+			"client_id":"cli_1",
+			"signer_group_id":"sg_1",
+			"name":"High Value Policy",
+			"rules":[{
+				"id":"rule_2",
+				"policy_id":"pol_1",
+				"rule_type":"amount_threshold",
+				"action":"deny",
+				"created_at":1700000000,
+				"definition":{
+					"amount_threshold":{
+						"min_amount":1000000,
+						"threshold":2,
+						"asset":{"id":"USDC","name":"USD Coin"}
+					}
+				}
+			}]
+		}]
+	}`
+
+	data := decodeEvent[types.WalletEventData](
+		t, "evt_wallet_amount_threshold", webhook.EventWalletCreated, payload,
+	)
+	if len(data.Policies) != 1 {
+		t.Fatalf("len(Policies) = %d, want 1", len(data.Policies))
+	}
+	if len(data.Policies[0].Rules) != 1 {
+		t.Fatalf("len(Rules) = %d, want 1", len(data.Policies[0].Rules))
+	}
+	rule := data.Policies[0].Rules[0]
+	if rule.RuleType != "amount_threshold" {
+		t.Errorf("RuleType = %q, want %q", rule.RuleType, "amount_threshold")
+	}
+	if rule.Definition == nil || rule.Definition.AmountThreshold == nil {
+		t.Fatal("expected non-nil AmountThreshold definition")
+	}
+	amount := rule.Definition.AmountThreshold
+	// min_amount is a JSON number of minor units, not a decimal string: a
+	// string field here fails the whole event, not just this one key.
+	if amount.MinAmount != 1000000 {
+		t.Errorf("MinAmount = %d, want 1000000", amount.MinAmount)
+	}
+	if amount.Threshold != 2 {
+		t.Errorf("Threshold = %d, want 2", amount.Threshold)
+	}
+	if amount.Asset.ID != "USDC" {
+		t.Errorf("Asset.ID = %q, want %q", amount.Asset.ID, "USDC")
+	}
+	if amount.Asset.Name != "USD Coin" {
+		t.Errorf("Asset.Name = %q, want %q", amount.Asset.Name, "USD Coin")
+	}
+	if rule.Definition.ApprovalThreshold != nil {
+		t.Error("expected nil ApprovalThreshold on an amount_threshold rule")
+	}
+	if rule.Definition.AddressList != nil {
+		t.Error("expected nil AddressList on an amount_threshold rule")
+	}
+}
+
+func TestEventDataAs_WalletEventDataAddressListRule(t *testing.T) {
+	payload := `{
+		"wallet":{
+			"id":"w_1",
+			"client_id":"cli_1",
+			"family":"evm",
+			"address":"0xabc123",
+			"name":"Treasury",
+			"created_at":1700000000,
+			"updated_at":1700001000
+		},
+		"signer_groups":[],
+		"policies":[{
+			"id":"pol_1",
+			"client_id":"cli_1",
+			"signer_group_id":"sg_1",
+			"name":"Allowlist Policy",
+			"rules":[{
+				"id":"rule_3",
+				"policy_id":"pol_1",
+				"rule_type":"address_list",
+				"action":"approve",
+				"created_at":1700000000,
+				"definition":{
+					"address_list":{
+						"addresses":["0xaaa","0xbbb"]
+					}
+				}
+			}]
+		}]
+	}`
+
+	data := decodeEvent[types.WalletEventData](
+		t, "evt_wallet_address_list", webhook.EventWalletCreated, payload,
+	)
+	if len(data.Policies) != 1 {
+		t.Fatalf("len(Policies) = %d, want 1", len(data.Policies))
+	}
+	if len(data.Policies[0].Rules) != 1 {
+		t.Fatalf("len(Rules) = %d, want 1", len(data.Policies[0].Rules))
+	}
+	rule := data.Policies[0].Rules[0]
+	if rule.RuleType != "address_list" {
+		t.Errorf("RuleType = %q, want %q", rule.RuleType, "address_list")
+	}
+	if rule.Definition == nil || rule.Definition.AddressList == nil {
+		t.Fatal("expected non-nil AddressList definition")
+	}
+	got := rule.Definition.AddressList.Addresses
+	if len(got) != 2 || got[0] != "0xaaa" || got[1] != "0xbbb" {
+		t.Errorf("Addresses = %v, want [0xaaa 0xbbb]", got)
+	}
+	if rule.Definition.ApprovalThreshold != nil {
+		t.Error("expected nil ApprovalThreshold on an address_list rule")
+	}
+	if rule.Definition.AmountThreshold != nil {
+		t.Error("expected nil AmountThreshold on an address_list rule")
+	}
+}
+
 func TestEventDataAs_WalletDepositData(t *testing.T) {
 	payload := `{
 		"wallet_id":"w_1",

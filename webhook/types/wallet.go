@@ -71,10 +71,14 @@ type ApprovalThreshold struct {
 }
 
 // AmountThreshold defines an amount-based approval rule.
+//
+// MinAmount is a whole number of the asset's smallest currency unit, sent as a
+// JSON number rather than a decimal string. Divide by the asset's scale before
+// displaying it.
 type AmountThreshold struct {
-	MinAmount string `json:"min_amount"`
-	Threshold int    `json:"threshold"`
-	Asset     Asset  `json:"asset"`
+	MinAmount int64 `json:"min_amount"`
+	Threshold int   `json:"threshold"`
+	Asset     Asset `json:"asset"`
 }
 
 // AddressList defines an address allowlist rule.
