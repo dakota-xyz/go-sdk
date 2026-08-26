@@ -42,11 +42,10 @@ type Attachment struct {
 // For a stateless backend (one HTTP request per chat message), persist
 // Messages() between requests and rebuild with Client.ResumeAgentConversation.
 type AgentConversation struct {
-	client       *Client
-	agentID      string
-	history      []ChatMessage
-	timezone     string
-	clientPolicy *gen.AgenticClientPolicy
+	client   *Client
+	agentID  string
+	history  []ChatMessage
+	timezone string
 }
 
 // ConversationOption configures an AgentConversation.
@@ -67,21 +66,6 @@ func WithTimezone(tz string) ConversationOption {
 	return func(cv *AgentConversation) { cv.timezone = tz }
 }
 
-// WithClientPolicy sets a per-turn client_policy override — the vocabulary and
-// payout constraints the agent drafts under.
-//
-// This is a DEVELOPMENT override. It wins for this conversation's turns and the
-// server logs that it did. For production, register the policy once with
-// PUT /agentic-policy (Raw().UpdateClientAgenticPolicyWithResponse) instead:
-// forgetting to pass it here fails SILENTLY — the agent simply narrates in the
-// platform's nouns again ("destination", "mandate"), with no error anywhere.
-//
-// Resolution per request is: a non-empty policy here, else the client's
-// registration, else platform defaults.
-func WithClientPolicy(p gen.AgenticClientPolicy) ConversationOption {
-	return func(cv *AgentConversation) { cv.clientPolicy = &p }
-}
-
 // NewAgentConversation starts a fresh conversation with the agent.
 //
 // Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
@@ -98,7 +82,7 @@ func (c *Client) NewAgentConversation(agentID string, opts ...ConversationOption
 // (oldest first) — for backends that store the history between requests.
 //
 // A stateless backend must pass its options again here: the transcript carries
-// the messages, not the timezone or the policy override.
+// the messages, not the timezone.
 func (c *Client) ResumeAgentConversation(agentID string, history []ChatMessage, opts ...ConversationOption) *AgentConversation {
 	h := make([]ChatMessage, len(history))
 	copy(h, history)
@@ -206,15 +190,12 @@ func (cv *AgentConversation) SendWithAttachments(ctx context.Context, userMessag
 		cv.history[len(cv.history)-1].Attachments = nil
 	}
 
-	// Timezone and the policy override are resent on EVERY turn — the endpoint
-	// is stateless, so either one given once would be forgotten on the next.
+	// Timezone is resent on EVERY turn — the endpoint is stateless, so a value
+	// given once would be forgotten on the next.
 	body := gen.CreateProposalsRequest{Messages: &msgs}
 	if cv.timezone != "" {
 		tz := cv.timezone
 		body.Timezone = &tz
-	}
-	if cv.clientPolicy != nil {
-		body.ClientPolicy = cv.clientPolicy
 	}
 
 	resp, err := CheckResponse(cv.client.Raw().CreatePaymentAgentProposalsWithResponse(ctx, cv.agentID, body))

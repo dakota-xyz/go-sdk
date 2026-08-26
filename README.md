@@ -380,7 +380,7 @@ _, err := c.Raw().UpdateClientAgenticPolicyWithResponse(ctx, nil, gen.AgenticCli
 })
 ```
 
-Registration is a **full replace**, not a merge — `{}` clears it. You can also pass `WithClientPolicy(...)` per conversation, but that is a development override: forgetting it fails *silently* and the agent quietly reverts to platform nouns.
+Registration is a **full replace**, not a merge — `{}` clears it, and a change takes effect on the next turn. The policy belongs to the client rather than to a request, so a drafting turn and the accept that follows it are always judged by the same rules.
 
 ### Timezones
 
@@ -472,8 +472,11 @@ for {
     fmt.Printf("%s: %s\n", customer.Id, customer.Name)
 }
 
-// Iterate transactions with filters
-txIt := c.OneOffTransactionsIterator(&gen.ListOneOffTransactionsParams{
+// Iterate transactions with filters. The iterator always requests the
+// one_off family, so filtering by customer alone is safe here — a raw
+// GET /transactions with customer_id and no transaction_type would return
+// that customer's auto-account transactions instead.
+txIt := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{
     CustomerId: &customerID,
 })
 ```

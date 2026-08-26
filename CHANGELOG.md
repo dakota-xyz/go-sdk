@@ -38,16 +38,15 @@ hand-written surface.
   that point on. `warned` and `blocked` are unaffected: those turns
   happened and stay in the transcript.
 - **Conversation options.** `WithTimezone` resolves "tomorrow" and "10 am" in
-  the customer's IANA zone instead of UTC. `WithClientPolicy` sets the
-  per-turn vocabulary override. Both are resent on every turn, since the
-  endpoint is stateless — and both must be passed again to
+  the customer's IANA zone instead of UTC. It is resent on every turn, since
+  the endpoint is stateless — and must be passed again to
   `ResumeAgentConversation`, which restores the transcript, not the options.
 - **Client policy registration.** `GET`/`PUT /agentic-policy` via
   `c.Raw().GetClientAgenticPolicyWithResponse` /
-  `UpdateClientAgenticPolicyWithResponse`. Prefer registering once over the
-  per-turn override: forgetting the override fails SILENTLY, with the agent
-  narrating in platform nouns again and nothing erroring. Registration is a
-  full replace; `{}` clears it.
+  `UpdateClientAgenticPolicyWithResponse`. This is the ONLY way to set a
+  policy: it belongs to the client, not to a request, so a drafting turn and
+  the accept that follows it cannot be judged by different rules. Registration
+  is a full replace; `{}` clears it.
 - **Developer fee per payout type.** `CreateInstructionsRequest.DeveloperFee`
   declares `swap_bps` and `offramp_bps` independently.
 - Also generated: proposals progress, per-payment network selection,
@@ -94,6 +93,118 @@ hand-written surface.
   `Reason` is renamed to `ReasonCode` (tag `reason_code`). The rename is
   source-breaking for anything that referenced `.Reason`, but that field never
   held a value on any released version, so no working code can regress.
+
+### Changed
+
+- **A second regeneration of `client/gen`**, on top of the one described at the
+  top of this section: the vendored spec was last synced 2026-08-04, and this
+  brings it level with platform main again. `c.Raw()` and the `gen.` types are
+  a documented part of this SDK's surface, so it carries source-breaking
+  changes for code using them directly:
+  - `PaginatedOneOffTransactionResponse.Meta`,
+    `PaginatedWalletTransactionResponse.Meta` and
+    `PaginatedCustomerTransactionResponse.Meta` are now
+    `gen.TransactionListMeta` (was `gen.Meta`) — the same three pagination
+    fields plus a required `transaction_type` naming the family the page
+    lists. A whole-struct assignment between the two no longer compiles.
+  - `ApplicationDocumentUploadUrlRequest.Country` is now `*string` (was
+    `string`): some supporting documents, such as the generic `other` type,
+    have no issuing country.
+  - `gen.CreateProposalsRequest.ClientPolicy` and
+    `gen.CreateInstructionsRequest.ClientPolicy` are gone — see **Removed**.
+- **`OneOffTransactionsIterator` now rejects an explicit `TransactionType`
+  other than `one_off`**, where it previously honored it silently. The iterator
+  yields `gen.OneOffTransaction`, so asking it for the wallet or auto-account
+  family was always incoherent — it just failed quietly, unmarshalling foreign
+  rows into zeroed structs. The error surfaces from the first `Next` call.
+  Reach the other families through `Raw().ListTransactionsWithResponse`. See
+  **Fixed** for the silent-substitution half of this.
+- **Five operations added**, reachable via `c.Raw()`:
+  `GetLegalAcceptanceContextWithResponse`, `ListLegalDocumentsWithResponse`,
+  `GetLegalDocumentWithResponse`, `ListRDMarketingFeeStatementsWithResponse`,
+  `GetRDMarketingFeeStatementWithResponse`.
+
+  These five also join `gen.ClientInterface` and
+  `gen.ClientWithResponsesInterface` (185 methods each, now 190). `c.Raw()`
+  returns the concrete `*gen.ClientWithResponses`, so most code is unaffected —
+  but if you implement either interface, typically a generated mock, regenerate
+  it or add the five methods.
+
+### Fixed
+
+- **`OneOffTransactionsIterator` could return another family's transactions.**
+  `GET /transactions` serves three resource families from one path, and when
+  `transaction_type` is omitted the server infers the family from the other
+  filters — `customer_id` alone infers `auto_account`. The iterator did not
+  name a family, so the obvious spelling of "this customer's one-off
+  transactions":
+
+  ```go
+  c.OneOffTransactionsIterator(&gen.ListTransactionsParams{CustomerId: &id})
+  ```
+
+  returned that customer's **auto-account** transactions, which unmarshal into
+  `gen.OneOffTransaction` with zeroed fields rather than erroring. Nothing
+  surfaced the substitution, so a caller could not tell.
+
+  The iterator now always sends `transaction_type=one_off`, and additionally
+  verifies the family the response reports before yielding a page — a positive
+  mismatch only, since an absent `transaction_type` means the response did not
+  say rather than that it served the wrong family.
+
+  **What changes for you:** if you filter by `customer_id` without naming a
+  family, you were receiving auto-account rows and will now receive one-off
+  rows. That is the correction, but it *is* a change in the data you get back.
+  See also the related breaking change under **Changed**.
+
+  This was live before the regen; the newly-synced spec is what made it
+  visible, since responses now name the family they served.
+
+  The README example at the "Iterate transactions with filters" heading taught
+  exactly this trap, and additionally named a `gen.ListOneOffTransactionsParams`
+  type that the generated client had already dropped by the time that example
+  was written — so it never compiled as printed. Both corrected.
+
+### Removed
+
+- **`WithClientPolicy` — added and removed within this same unreleased cycle.**
+  No tagged release ever carried it, so no released version can regress. It is
+  called out only for anyone tracking an unreleased commit; if that is you, see
+  the migration below.
+
+  The platform removed `client_policy` from the
+  `POST /payment-agents/{id}/proposals` and `POST /instructions` bodies
+  deliberately — dropping the field from both
+  `gen.CreateProposalsRequest` and `gen.CreateInstructionsRequest`: a policy is a
+  property of the CLIENT, not of a request, and carrying one per request let a
+  two-call conversation disagree with itself — a proposal drafted under one
+  policy and accepted without it is judged by different rules, so a legal draft
+  could be refused at the customer's approval click. The field is gone from the
+  request schema, so the option could no longer do anything, and it failed
+  *silently*: the agent simply narrated in platform's nouns again, with no
+  error anywhere.
+
+  If you are pinned to an unreleased commit that used it, register the policy
+  once instead of passing it per conversation:
+
+  ```go
+  // before
+  conv := c.NewAgentConversation(agentID, client.WithClientPolicy(policy))
+
+  // after — once per client, at startup
+  _, err := c.Raw().UpdateClientAgenticPolicyWithResponse(ctx, nil, policy)
+  conv := c.NewAgentConversation(agentID)
+  ```
+
+  See `ExampleClient_Raw_registerAgenticPolicy`.
+
+### Internal
+
+- `OneOffTransactionsIterator` now copies the transactions page `Meta` field-by-field
+  instead of by whole-struct assignment. Transaction list responses now carry their
+  own `TransactionListMeta`, which is not assignable to `gen.Meta`; the keyed copy
+  is what keeps the regeneration above compiling. Its `transaction_type` field is
+  not surfaced on `Page` — see the comment at the assignment site. No behavior change.
 
 ## [0.4.0] - 2026-06-17
 

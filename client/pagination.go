@@ -341,6 +341,21 @@ func (c *Client) CustomersIterator(
 }
 
 // OneOffTransactionsIterator returns a cursor iterator over one-off transactions.
+//
+// The iterator always requests the one_off resource family. GET /transactions
+// serves three families from one path and, when transaction_type is absent,
+// infers the family from the other filters — customer_id alone infers
+// auto_account. Naming the family is therefore what keeps the rows matching
+// this iterator's type, and it makes filtering by customer safe here:
+//
+//	it := c.OneOffTransactionsIterator(&gen.ListTransactionsParams{CustomerId: &id})
+//
+// Setting params.TransactionType to anything other than one_off is an error,
+// surfaced from the first Next call, since this iterator yields
+// gen.OneOffTransaction. Reach the other families through
+// Raw().ListTransactionsWithResponse.
+//
+// The caller's params are never modified.
 func (c *Client) OneOffTransactionsIterator(
 	params *gen.ListTransactionsParams,
 ) *Iterator[gen.OneOffTransaction] {
@@ -354,6 +369,29 @@ func (c *Client) OneOffTransactionsIterator(
 			p := baseParams
 			p.StartingAfter = cloneStartingAfter(cursor)
 			p.Limit = cloneLimit(limit)
+
+			// GET /transactions serves three resource families from one path.
+			// With transaction_type omitted the server INFERS the family from
+			// the other filters, and customer_id alone infers auto_account —
+			// so the obvious call for "this customer's one-off transactions"
+			// would come back as their AUTO-ACCOUNT transactions, unmarshalled
+			// into OneOffTransaction without complaint. This iterator is typed
+			// to one family, so it always names that family rather than
+			// letting the request be inferred into a different one.
+			switch {
+			case p.TransactionType == nil:
+				oneOff := gen.TransactionResourceTypeOneOff
+				p.TransactionType = &oneOff
+			case *p.TransactionType != gen.TransactionResourceTypeOneOff:
+				return Page[gen.OneOffTransaction]{}, sdkerrors.New(
+					sdkerrors.CodeInvalidConfig,
+					fmt.Sprintf(
+						"list transactions: OneOffTransactionsIterator yields one-off transactions, but TransactionType is %q; "+
+							"reach that family through Raw().ListTransactionsWithResponse",
+						*p.TransactionType,
+					),
+				)
+			}
 
 			resp, err := CheckResponse(
 				c.api.ListTransactionsWithResponse(ctx, &p),
@@ -376,9 +414,54 @@ func (c *Client) OneOffTransactionsIterator(
 					err,
 				)
 			}
+			// The response names the family it actually served. Pinning the
+			// request above should make a mismatch unreachable; check it
+			// anyway, because the failure it guards is silent — rows of another
+			// family unmarshal into OneOffTransaction with zeroed fields rather
+			// than erroring, and a caller cannot tell from the result.
+			//
+			// Only a POSITIVE mismatch is an error. An empty value means the
+			// response did not say, which is not evidence of the wrong family.
+			//
+			// This is not mere caution: the transaction_type QUERY PARAM has
+			// existed since the first generated client, so pinning the request
+			// works against every deployment — but meta.transaction_type
+			// arrives only with the 2026-08 spec sync (63beb0b), so any
+			// platform older than that omits the field entirely. Erroring on
+			// empty would break the SDK against every one of them, to guard a
+			// case the request pinning already closed.
+			if oneOffResp.Meta.TransactionType != "" &&
+				oneOffResp.Meta.TransactionType != gen.TransactionResourceTypeOneOff {
+				return Page[gen.OneOffTransaction]{}, sdkerrors.New(
+					sdkerrors.CodeInternal,
+					fmt.Sprintf(
+						"list transactions: requested the one_off family but the response reports %q",
+						oneOffResp.Meta.TransactionType,
+					),
+				)
+			}
+
+			// Field-by-field, not whole-struct: transaction lists carry their
+			// own gen.TransactionListMeta, which shares these three fields with
+			// gen.Meta but is a distinct type and assignable to neither.
+			//
+			// TransactionType is consumed by the check above rather than
+			// forwarded. Page is generic over five iterators — applications,
+			// customers, transactions, recipients, events — and a transaction
+			// family means nothing to the other four, so putting it on Page
+			// needs a decision about how a caller reaches page metadata at
+			// all: Iterator exposes only Next and Stream and never hands back
+			// a Page.
+			//
+			// See TestPaginationMetaFieldGuard, which fails loudly if gen.Meta
+			// grows a field this copy would silently drop.
 			return Page[gen.OneOffTransaction]{
 				Items: oneOffResp.Data,
-				Meta:  oneOffResp.Meta,
+				Meta: gen.Meta{
+					TotalCount:    oneOffResp.Meta.TotalCount,
+					HasMoreAfter:  oneOffResp.Meta.HasMoreAfter,
+					HasMoreBefore: oneOffResp.Meta.HasMoreBefore,
+				},
 			}, nil
 		},
 		cloneStartingAfter(baseParams.StartingAfter),

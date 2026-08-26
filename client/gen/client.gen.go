@@ -178,6 +178,7 @@ const (
 	ApplicationDocumentTypeMarketingMaterial          ApplicationDocumentType = "marketing_material"
 	ApplicationDocumentTypeMemorandum                 ApplicationDocumentType = "memorandum"
 	ApplicationDocumentTypeOperatingAgreement         ApplicationDocumentType = "operating_agreement"
+	ApplicationDocumentTypeOther                      ApplicationDocumentType = "other"
 	ApplicationDocumentTypePayslip                    ApplicationDocumentType = "payslip"
 	ApplicationDocumentTypePitchDeck                  ApplicationDocumentType = "pitch_deck"
 	ApplicationDocumentTypePromissoryNote             ApplicationDocumentType = "promissory_note"
@@ -493,6 +494,17 @@ const (
 	CustomerCreateRequestCustomerTypeIndividual CustomerCreateRequestCustomerType = "individual"
 )
 
+// Defines values for CustomerStatus.
+const (
+	CustomerStatusApproved      CustomerStatus = "approved"
+	CustomerStatusDeclined      CustomerStatus = "declined"
+	CustomerStatusFrozen        CustomerStatus = "frozen"
+	CustomerStatusInfoRequested CustomerStatus = "info_requested"
+	CustomerStatusPending       CustomerStatus = "pending"
+	CustomerStatusSubmitted     CustomerStatus = "submitted"
+	CustomerStatusWithdrawn     CustomerStatus = "withdrawn"
+)
+
 // Defines values for DeletePolicyIntentType.
 const (
 	DeletePolicyIntentTypeDeletePolicy DeletePolicyIntentType = "delete_policy"
@@ -527,6 +539,11 @@ const (
 	EDDWithApplicationIDApplicationDecisionApproved  EDDWithApplicationIDApplicationDecision = "approved"
 	EDDWithApplicationIDApplicationDecisionDeclined  EDDWithApplicationIDApplicationDecision = "declined"
 	EDDWithApplicationIDApplicationDecisionWithdrawn EDDWithApplicationIDApplicationDecision = "withdrawn"
+)
+
+// Defines values for EnableCardSettlementIntentType.
+const (
+	EnableCardSettlementIntentTypeEnableCardSettlement EnableCardSettlementIntentType = "enable_card_settlement"
 )
 
 // Defines values for EventType.
@@ -811,6 +828,12 @@ const (
 	KybStatusRejected      KybStatus = "rejected"
 )
 
+// Defines values for LegalAcceptanceContextApplicationType.
+const (
+	LegalAcceptanceContextApplicationTypeBusiness   LegalAcceptanceContextApplicationType = "business"
+	LegalAcceptanceContextApplicationTypeIndividual LegalAcceptanceContextApplicationType = "individual"
+)
+
 // Defines values for MandateStatus.
 const (
 	MandateStatusActive   MandateStatus = "active"
@@ -979,6 +1002,13 @@ const (
 	ProviderKybStatusStatusRequiresInfo ProviderKybStatusStatus = "requires_info"
 )
 
+// Defines values for RFIRequestedItemsDocumentsCategory.
+const (
+	RFIRequestedItemsDocumentsCategoryBusiness   RFIRequestedItemsDocumentsCategory = "business"
+	RFIRequestedItemsDocumentsCategoryEdd        RFIRequestedItemsDocumentsCategory = "edd"
+	RFIRequestedItemsDocumentsCategoryIndividual RFIRequestedItemsDocumentsCategory = "individual"
+)
+
 // Defines values for RecipientResponseStatus.
 const (
 	RecipientResponseStatusActive RecipientResponseStatus = "active"
@@ -1026,9 +1056,18 @@ const (
 	ScheduledPaymentResponseStatusScheduled ScheduledPaymentResponseStatus = "scheduled"
 )
 
+// Defines values for SelfServeCreditsBalanceResponseHealth.
+const (
+	SelfServeCreditsBalanceResponseHealthCritical SelfServeCreditsBalanceResponseHealth = "critical"
+	SelfServeCreditsBalanceResponseHealthEmpty    SelfServeCreditsBalanceResponseHealth = "empty"
+	SelfServeCreditsBalanceResponseHealthHealthy  SelfServeCreditsBalanceResponseHealth = "healthy"
+	SelfServeCreditsBalanceResponseHealthLow      SelfServeCreditsBalanceResponseHealth = "low"
+)
+
 // Defines values for SelfServeCreditsLedgerEntryCategory.
 const (
 	SelfServeCreditsLedgerEntryCategoryAdjustment        SelfServeCreditsLedgerEntryCategory = "adjustment"
+	SelfServeCreditsLedgerEntryCategoryBonus             SelfServeCreditsLedgerEntryCategory = "bonus"
 	SelfServeCreditsLedgerEntryCategoryComplianceFee     SelfServeCreditsLedgerEntryCategory = "compliance_fee"
 	SelfServeCreditsLedgerEntryCategoryComplianceRefund  SelfServeCreditsLedgerEntryCategory = "compliance_refund"
 	SelfServeCreditsLedgerEntryCategoryPurchase          SelfServeCreditsLedgerEntryCategory = "purchase"
@@ -1039,9 +1078,11 @@ const (
 
 // Defines values for SelfServeCreditsLedgerEntryEntryType.
 const (
-	SelfServeCreditsLedgerEntryEntryTypeDeduction SelfServeCreditsLedgerEntryEntryType = "deduction"
-	SelfServeCreditsLedgerEntryEntryTypePurchase  SelfServeCreditsLedgerEntryEntryType = "purchase"
-	SelfServeCreditsLedgerEntryEntryTypeRefund    SelfServeCreditsLedgerEntryEntryType = "refund"
+	SelfServeCreditsLedgerEntryEntryTypeAdjustment SelfServeCreditsLedgerEntryEntryType = "adjustment"
+	SelfServeCreditsLedgerEntryEntryTypeBonus      SelfServeCreditsLedgerEntryEntryType = "bonus"
+	SelfServeCreditsLedgerEntryEntryTypeDeduction  SelfServeCreditsLedgerEntryEntryType = "deduction"
+	SelfServeCreditsLedgerEntryEntryTypePurchase   SelfServeCreditsLedgerEntryEntryType = "purchase"
+	SelfServeCreditsLedgerEntryEntryTypeRefund     SelfServeCreditsLedgerEntryEntryType = "refund"
 )
 
 // Defines values for SignerKeyType.
@@ -1309,6 +1350,7 @@ const (
 	ListCustomersParamsSortByKybStatus         ListCustomersParamsSortBy = "kyb_status"
 	ListCustomersParamsSortByKycStatus         ListCustomersParamsSortBy = "kyc_status"
 	ListCustomersParamsSortByName              ListCustomersParamsSortBy = "name"
+	ListCustomersParamsSortByStatus            ListCustomersParamsSortBy = "status"
 )
 
 // Defines values for ListCustomersParamsSortDir.
@@ -1452,9 +1494,11 @@ const (
 
 // Defines values for ListSelfServeCreditsLedgerParamsType.
 const (
-	ListSelfServeCreditsLedgerParamsTypeDeduction ListSelfServeCreditsLedgerParamsType = "deduction"
-	ListSelfServeCreditsLedgerParamsTypePurchase  ListSelfServeCreditsLedgerParamsType = "purchase"
-	ListSelfServeCreditsLedgerParamsTypeRefund    ListSelfServeCreditsLedgerParamsType = "refund"
+	ListSelfServeCreditsLedgerParamsTypeAdjustment ListSelfServeCreditsLedgerParamsType = "adjustment"
+	ListSelfServeCreditsLedgerParamsTypeBonus      ListSelfServeCreditsLedgerParamsType = "bonus"
+	ListSelfServeCreditsLedgerParamsTypeDeduction  ListSelfServeCreditsLedgerParamsType = "deduction"
+	ListSelfServeCreditsLedgerParamsTypePurchase   ListSelfServeCreditsLedgerParamsType = "purchase"
+	ListSelfServeCreditsLedgerParamsTypeRefund     ListSelfServeCreditsLedgerParamsType = "refund"
 )
 
 // Defines values for ListTransactionsParamsDirection.
@@ -1558,12 +1602,63 @@ const (
 	ListWebhookHistoryParamsStatusPending   ListWebhookHistoryParamsStatus = "pending"
 )
 
+// AcceptedAgreement defines model for AcceptedAgreement.
+type AcceptedAgreement struct {
+	// AttestationType The attestation type this acceptance was recorded under.
+	AttestationType string `json:"attestation_type"`
+
+	// Version The revision accepted. Empty for an acceptance predating the registry,
+	// whose revision is derived from its timestamp rather than stored.
+	Version *string `json:"version,omitempty"`
+}
+
 // AccountCreateRequest Unified account create request for onramp/offramp/swap.
+//
+// One schema serves all three account types, so its properties are the
+// UNION of the three shapes: `account_type` decides which of them are
+// read. `account_type` is therefore the only field this schema can mark
+// required — everything else is required *per type*, and that contract is
+// this table:
+//
+// | Field | `onramp` | `offramp` | `swap` |
+// | --- | --- | --- | --- |
+// | `capabilities` | **required** | ignored | ignored |
+// | `rail` | optional | **required** | ignored |
+// | `crypto_destination_id` | **required** | ignored | **required** |
+// | `fiat_destination_id` | ignored | **required** | ignored |
+// | `destination_network_id` | **required** | ignored | **required** |
+// | `source_network_id` | ignored | **required** | **required** |
+// | `source_asset` | **required** | **required** | **required** |
+// | `destination_asset` | **required** | **required** | **required** |
+// | `payment_reference` | rejected | optional | rejected |
+// | `return_address` | ignored | optional | ignored |
+// | `return_crypto_address` | ignored | ignored | optional |
+//
+// "Ignored" means the field is accepted and has no effect — sending it
+// does not create the routing it names, so do not rely on it. The one
+// exception is `payment_reference`, which is REJECTED rather than ignored
+// on the types that cannot deliver it (see that field).
+//
+// `rail` on an `onramp` is optional because the account's inbound rails
+// come from `capabilities`. `swift` and `sepa` must appear in
+// `capabilities` and narrow the account to that rail. `ach`, `fedwire`
+// and `fednow` must also appear in `capabilities`, but all resolve to
+// `us_bank_account` — the same result as omitting `rail` when the
+// capabilities include a US rail. `us_bank_account` itself is accepted
+// as `rail` regardless of the capabilities list.
+//
+// A required field that you omit returns `400` (`invalid-request` or
+// `invalid-identifier`, depending on the field), with a `detail` that
+// identifies the problem.
 type AccountCreateRequest struct {
 	// AccountType Unified account family for account resources.
 	AccountType AccountType `json:"account_type"`
 
-	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
+	// Capabilities List of payment capabilities supported by a rail. Multiple values may
+	// be supplied; the list is not limited to one entry. Which values are
+	// valid depends on the resource: on-ramp accounts accept any rail and
+	// expand `us_bank_account` to `ach` and `fedwire`; IBAN destinations
+	// accept `swift` and `sepa` only.
 	Capabilities *Capabilities `json:"capabilities,omitempty"`
 
 	// CryptoDestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -1743,7 +1838,30 @@ type AddPolicyRuleIntent struct {
 	// Action Action to take when rule matches
 	Action AddPolicyRuleIntentAction `json:"action"`
 
-	// Definition Rule-specific configuration. Structure depends on rule_type
+	// Definition Rule-specific configuration. When a policy is created or a rule is
+	// added, the accepted keys depend on `rule_type`. A key that is not
+	// listed below is rejected with `400`, and the response names it.
+	// - `amount_threshold`: `min_amount` (integer, 0 or greater,
+	//   required), `threshold` (integer, 1 or greater, required), and
+	//   `asset` (object, required) with `id` - the asset symbol, one of
+	//   `USDC`, `USDT`, or `RD`, stored upper case; optionally
+	//   `name`, a display label that plays no part in matching. Any other
+	//   key inside `asset` is rejected. There is no way to omit the
+	//   asset: a missing asset, or an `asset.id` that is empty or `any`,
+	//   is rejected with `400`. The rule governs transactions in that
+	//   asset on every network, unless the stored asset names one.
+	//   `min_amount` is an amount of that asset in its smallest unit -
+	//   USDC has 6 decimals, so 10000000000 is 10,000 USDC - and
+	//   `threshold` is the number of authorized endorsements required
+	//   once a transaction reaches `min_amount`.
+	// - `approval_threshold`: `threshold` (integer, 1 or greater,
+	//   required), `description` (string, optional).
+	// - `address_list`: `addresses` (array of one or more strings,
+	//   required).
+	// Every integer must be whole. The server rejects a fractional value
+	// instead of truncating it.
+	// Updating an existing rule is validated more strictly - see
+	// `updated_definition`.
 	Definition map[string]interface{} `json:"definition"`
 
 	// IdempotencyKey A unique key to ensure idempotency of the request
@@ -2175,6 +2293,12 @@ type Application struct {
 	//   remains subject to the transaction limit and may re-upload a new document.
 	PoaStatus *ApplicationPoaStatus `json:"poa_status,omitempty"`
 
+	// RfiRequestedItems Reviewer-selected resubmission scope for an RFI.
+	RfiRequestedItems *RFIRequestedItems `json:"rfi_requested_items,omitempty"`
+
+	// RfiResubmitted Whether the applicant has already submitted in response to the latest scoped RFI (drives the resubmit page's "already submitted" state).
+	RfiResubmitted *bool `json:"rfi_resubmitted,omitempty"`
+
 	// RiskRating Risk rating assessment for an application
 	RiskRating *RiskRating `json:"risk_rating,omitempty"`
 
@@ -2237,8 +2361,10 @@ type ApplicationDocumentUploadRequest struct {
 
 // ApplicationDocumentUploadUrlRequest Request to create a presigned upload session for an application-level document
 type ApplicationDocumentUploadUrlRequest struct {
-	// Country ISO 3166-1 alpha-2 country code for the document
-	Country string `json:"country"`
+	// Country ISO 3166-1 alpha-2 country code for the document. Optional: some
+	// supporting documents (e.g. the generic `other` type) have no issuing
+	// country.
+	Country *string `json:"country,omitempty"`
 
 	// DocumentType Type of application-level document (business or EDD)
 	DocumentType ApplicationDocumentType `json:"document_type"`
@@ -2618,6 +2744,13 @@ type AttestationData struct {
 
 		// AttestedBy Name of person who made the attestation
 		AttestedBy string `json:"attested_by"`
+
+		// Title Title of the legal document that was accepted
+		Title *string `json:"title,omitempty"`
+
+		// Version Version of the legal document that was accepted. Absent for
+		// attestations recorded before documents were versioned.
+		Version *string `json:"version,omitempty"`
 	} `json:"e_sign,omitempty"`
 
 	// FundsTransferAgreement Funds transfer agreement attestation (if completed)
@@ -2627,6 +2760,13 @@ type AttestationData struct {
 
 		// AttestedBy Name of person who made the attestation
 		AttestedBy string `json:"attested_by"`
+
+		// Title Title of the legal document that was accepted
+		Title *string `json:"title,omitempty"`
+
+		// Version Version of the legal document that was accepted. Absent for
+		// attestations recorded before documents were versioned.
+		Version *string `json:"version,omitempty"`
 	} `json:"funds_transfer_agreement,omitempty"`
 
 	// InformationAccuracy Information accuracy attestation (if completed)
@@ -2636,6 +2776,13 @@ type AttestationData struct {
 
 		// AttestedBy Name of person who made the attestation
 		AttestedBy string `json:"attested_by"`
+
+		// Title Title of the legal document that was accepted
+		Title *string `json:"title,omitempty"`
+
+		// Version Version of the legal document that was accepted. Absent for
+		// attestations recorded before documents were versioned.
+		Version *string `json:"version,omitempty"`
 	} `json:"information_accuracy,omitempty"`
 
 	// LeadBankPrivacyPolicy Lead Bank privacy policy attestation (if completed)
@@ -2645,7 +2792,21 @@ type AttestationData struct {
 
 		// AttestedBy Name of person who made the attestation
 		AttestedBy string `json:"attested_by"`
+
+		// Title Title of the legal document that was accepted
+		Title *string `json:"title,omitempty"`
+
+		// Version Version of the legal document that was accepted. Absent for
+		// attestations recorded before documents were versioned.
+		Version *string `json:"version,omitempty"`
 	} `json:"lead_bank_privacy_policy,omitempty"`
+
+	// MissingDocuments Legal documents the customer has never accepted. Fetch the text to
+	// display with `GET /legal/documents/{document_key}`. Accepting any
+	// revision clears a document from this list. Informational: this does
+	// NOT affect `validation.ready` or whether an application can be
+	// submitted.
+	MissingDocuments *[]OutstandingLegalDocument `json:"missing_documents,omitempty"`
 
 	// PrivacyPolicy Privacy policy attestation (if completed)
 	PrivacyPolicy *struct {
@@ -2654,6 +2815,13 @@ type AttestationData struct {
 
 		// AttestedBy Name of person who made the attestation
 		AttestedBy string `json:"attested_by"`
+
+		// Title Title of the legal document that was accepted
+		Title *string `json:"title,omitempty"`
+
+		// Version Version of the legal document that was accepted. Absent for
+		// attestations recorded before documents were versioned.
+		Version *string `json:"version,omitempty"`
 	} `json:"privacy_policy,omitempty"`
 
 	// TermsOfService Terms of service attestation (if completed)
@@ -2663,6 +2831,13 @@ type AttestationData struct {
 
 		// AttestedBy Name of person who made the attestation
 		AttestedBy string `json:"attested_by"`
+
+		// Title Title of the legal document that was accepted
+		Title *string `json:"title,omitempty"`
+
+		// Version Version of the legal document that was accepted. Absent for
+		// attestations recorded before documents were versioned.
+		Version *string `json:"version,omitempty"`
 	} `json:"terms_of_service,omitempty"`
 }
 
@@ -2696,6 +2871,22 @@ type AttestationSubmitRequest struct {
 	// (e.g. `2026-06`). Required when `disclosure_id` is present.
 	DisclosureVersion *string `json:"disclosure_version,omitempty"`
 
+	// LegalDocumentVersion Optional. The version of the Dakota-published document the customer
+	// was actually shown, as returned by
+	// `GET /legal/documents/{document_key}`.
+	//
+	// Pass it whenever you render the text yourself. Without it the
+	// acceptance is pinned to whichever revision is in force when the
+	// request arrives — which is not necessarily the one on the
+	// customer's screen, if a new revision went live between render and
+	// submit. Rejected with 400 if that version is not currently in force,
+	// so a stale page fails loudly instead of recording consent to text
+	// nobody read.
+	//
+	// Ignored when `disclosure_id` is present; use `disclosure_version`
+	// for partner disclosures.
+	LegalDocumentVersion *string `json:"legal_document_version,omitempty"`
+
 	// Timestamp Unix epoch timestamp (in seconds) when the attestation was made
 	Timestamp int64 `json:"timestamp"`
 }
@@ -2710,6 +2901,23 @@ type AttestationValidation struct {
 
 	// Missing Attestation types that are still missing
 	Missing []AttestationType `json:"missing"`
+
+	// MissingDocuments Legal documents the customer has never accepted. Fetch the text to
+	// display with `GET /legal/documents/{document_key}`.
+	//
+	// Accepting any revision clears a document from this list — having
+	// signed an older revision than the one in force does not put it
+	// back. Informational only: this does not affect `ready`, and note
+	// that a customer absent from this list may still be refused a
+	// capability that requires a later revision.
+	MissingDocuments *[]OutstandingLegalDocument `json:"missing_documents,omitempty"`
+
+	// Ready Whether every required attestation has been collected, in a valid
+	// order, by an applicant whose name still matches the application.
+	//
+	// Unaffected by `missing_documents`, which reports documents never
+	// accepted at all.
+	Ready bool `json:"ready"`
 }
 
 // AutoAccountTransaction A transaction relating to an auto account
@@ -2737,6 +2945,9 @@ type AutoAccountTransaction struct {
 
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
+
+	// NetRecoveredAmount Decimal amount actually recovered when a returned transaction settled short, denominated in the transaction's own currency (the same basis as its face amount), so face amount minus this value is exactly what the bank withheld. Present only when a return came back short — absent when the full amount was recovered, or when the rail reports no net figure at all (ACH never does). Absent means the face amount is authoritative; it never means zero.
+	NetRecoveredAmount *string `json:"net_recovered_amount"`
 
 	// ProviderExternalId Provider external transaction identifier
 	ProviderExternalId string `json:"provider_external_id"`
@@ -2816,7 +3027,11 @@ type BankAccount struct {
 	// Bic BIC/SWIFT code for the international bank account.
 	Bic *string `json:"bic,omitempty"`
 
-	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
+	// Capabilities List of payment capabilities supported by a rail. Multiple values may
+	// be supplied; the list is not limited to one entry. Which values are
+	// valid depends on the resource: on-ramp accounts accept any rail and
+	// expand `us_bank_account` to `ach` and `fedwire`; IBAN destinations
+	// accept `swift` and `sepa` only.
 	Capabilities Capabilities `json:"capabilities"`
 
 	// Iban IBAN for the international bank account.
@@ -2824,6 +3039,9 @@ type BankAccount struct {
 
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
+
+	// PaymentReference Deposit attribution reference. When present, include it in the reference/memo field of any payment sent to this account, so the arriving funds can be matched to it. It is required whenever the deposit instructions above point at an account shared with other customers, where the account number alone does not identify the depositor. Null when the provider does not require one — the funds are then attributed by the account details alone. This is inbound and provider-issued, unlike the account-level `payment_reference` on an account create request, which is a memo carried on the payments this account sends OUT.
+	PaymentReference *string `json:"payment_reference"`
 }
 
 // BankAccountAccountType Type of bank account (for US accounts).
@@ -3059,7 +3277,11 @@ type CancelMandateRequest struct {
 	SignerPublicKey string `json:"signer_public_key"`
 }
 
-// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
+// Capabilities List of payment capabilities supported by a rail. Multiple values may
+// be supplied; the list is not limited to one entry. Which values are
+// valid depends on the resource: on-ramp accounts accept any rail and
+// expand `us_bank_account` to `ach` and `fedwire`; IBAN destinations
+// accept `swift` and `sepa` only.
 type Capabilities = []PaymentCapability
 
 // Capability A rail/capability and what the customer must do to unlock it. Never exposes partner identities.
@@ -3137,6 +3359,11 @@ type ClientPricingConfig struct {
 	// TransferFeeBps Transfer fee in basis points (0-10000, representing 0% to 100%)
 	TransferFeeBps float32 `json:"transferFeeBps"`
 
+	// TransferFeeOverrides Per-asset-pair transfer fee exceptions. Always present; empty
+	// when the client has none, in which case transferFeeBps applies
+	// to every pair.
+	TransferFeeOverrides []TransferFeeOverride `json:"transferFeeOverrides"`
+
 	// UpdatedAt When this pricing configuration was last updated
 	UpdatedAt time.Time `json:"updatedAt"`
 
@@ -3185,8 +3412,15 @@ type CompletedAttestation struct {
 	// AttestedBy Name of person who made the attestation
 	AttestedBy string `json:"attested_by"`
 
+	// Title Title of the legal document that was accepted
+	Title *string `json:"title,omitempty"`
+
 	// Type Type of attestation being submitted
 	Type AttestationType `json:"type"`
+
+	// Version Version of the legal document that was accepted. Absent for
+	// attestations recorded before documents were versioned.
+	Version *string `json:"version,omitempty"`
 }
 
 // ComplianceReviewer A compliance reviewer who can own (be assigned) applications.
@@ -3282,15 +3516,6 @@ type CreateCryptoDestinationAction struct {
 
 // CreateInstructionsRequest defines model for CreateInstructionsRequest.
 type CreateInstructionsRequest struct {
-	// ClientPolicy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
-	//
-	// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
-	//
-	// DELIVERY: registration only. A request body never carries this object — a conversation is two calls (draft, then accept) judged independently, and a per-request policy let them disagree, so a draft that was legal under one could be refused at the customer's approval click.
-	//
-	// STRICT: an unknown key, an unknown value, or a label for a concept the server does not implement is a 400 — "accepted" always means "enforced". Absent (or every field empty) ⇒ platform defaults, byte-for-byte the behaviour of a request that never mentioned it.
-	ClientPolicy *AgenticClientPolicy `json:"client_policy,omitempty"`
-
 	// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
 	//
 	// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
@@ -3350,7 +3575,30 @@ type CreatePolicyRuleRequest struct {
 	// Action Action to take when rule matches
 	Action CreatePolicyRuleRequestAction `json:"action"`
 
-	// Definition Rule-specific configuration as JSON
+	// Definition Rule-specific configuration. When a policy is created or a rule is
+	// added, the accepted keys depend on `rule_type`. A key that is not
+	// listed below is rejected with `400`, and the response names it.
+	// - `amount_threshold`: `min_amount` (integer, 0 or greater,
+	//   required), `threshold` (integer, 1 or greater, required), and
+	//   `asset` (object, required) with `id` - the asset symbol, one of
+	//   `USDC`, `USDT`, or `RD`, stored upper case; optionally
+	//   `name`, a display label that plays no part in matching. Any other
+	//   key inside `asset` is rejected. There is no way to omit the
+	//   asset: a missing asset, or an `asset.id` that is empty or `any`,
+	//   is rejected with `400`. The rule governs transactions in that
+	//   asset on every network, unless the stored asset names one.
+	//   `min_amount` is an amount of that asset in its smallest unit -
+	//   USDC has 6 decimals, so 10000000000 is 10,000 USDC - and
+	//   `threshold` is the number of authorized endorsements required
+	//   once a transaction reaches `min_amount`.
+	// - `approval_threshold`: `threshold` (integer, 1 or greater,
+	//   required), `description` (string, optional).
+	// - `address_list`: `addresses` (array of one or more strings,
+	//   required).
+	// Every integer must be whole. The server rejects a fractional value
+	// instead of truncating it.
+	// Updating an existing rule is validated more strictly - see
+	// `updated_definition`.
 	Definition map[string]interface{} `json:"definition"`
 
 	// RuleType Type of rule
@@ -3365,14 +3613,10 @@ type CreatePolicyRuleRequestRuleType string
 
 // CreateProposalsRequest A freeform proposals conversation. The server is stateless — send the whole history in `messages` on each call. `prompt` is a convenience for a single-shot turn (or the latest user message); it is appended after `messages`. At least one of `prompt` or `messages` must be non-empty. Supplying both is valid only when `messages` does not already end with a user turn; otherwise the request is rejected with 400 (two consecutive user turns are not allowed).
 type CreateProposalsRequest struct {
-	// ClientPolicy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+	// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
 	//
-	// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
-	//
-	// DELIVERY: registration only. A request body never carries this object — a conversation is two calls (draft, then accept) judged independently, and a per-request policy let them disagree, so a draft that was legal under one could be refused at the customer's approval click.
-	//
-	// STRICT: an unknown key, an unknown value, or a label for a concept the server does not implement is a 400 — "accepted" always means "enforced". Absent (or every field empty) ⇒ platform defaults, byte-for-byte the behaviour of a request that never mentioned it.
-	ClientPolicy *AgenticClientPolicy `json:"client_policy,omitempty"`
+	// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
+	DeveloperFee *DeveloperFee `json:"developer_fee,omitempty"`
 
 	// Messages The conversation so far, oldest first.
 	Messages *[]AgenticChatMessage `json:"messages,omitempty"`
@@ -3420,12 +3664,22 @@ type CreateScheduledPaymentRequest struct {
 
 // CreateScheduledPaymentsAction defines model for CreateScheduledPaymentsAction.
 type CreateScheduledPaymentsAction struct {
-	Amount          string   `json:"amount"`
-	Asset           string   `json:"asset"`
-	Count           *int     `json:"count,omitempty"`
-	Dates           *[]int64 `json:"dates,omitempty"`
-	DestinationId   *string  `json:"destination_id,omitempty"`
-	IntervalSeconds *int64   `json:"interval_seconds,omitempty"`
+	// Amount Decimal string. What this MEANS depends on `amount_includes_fee` below: by default it is what the PAYEE RECEIVES, and the server grosses it up so the fee comes out on top.
+	Amount string `json:"amount"`
+
+	// AmountIncludesFee Whose side of the conversion fee `amount` is on.
+	//
+	// Absent or `false` (the DEFAULT): `amount` is what the payee RECEIVES. The server adds the fee on top, so slightly more leaves the funding wallet. This is what "pay Bruno 10 USDC" means to a person, and it matches the same payment made through a client's own form.
+	//
+	// `true`: `amount` is what LEAVES the wallet, and the payee receives less the fee. Use it only when the customer says so — "send 10 in total", "including the fee".
+	//
+	// The gross-up is done SERVER-SIDE from the fee on the request; the agent never computes it, so it can neither get the arithmetic wrong nor be talked out of the fee. With no fee configured the two are identical.
+	AmountIncludesFee *bool    `json:"amount_includes_fee,omitempty"`
+	Asset             string   `json:"asset"`
+	Count             *int     `json:"count,omitempty"`
+	Dates             *[]int64 `json:"dates,omitempty"`
+	DestinationId     *string  `json:"destination_id,omitempty"`
+	IntervalSeconds   *int64   `json:"interval_seconds,omitempty"`
 
 	// LocalTime The FIRST entry of `dates` as the customer-local wall clock it is meant to fire at, "2006-01-02 15:04". When present together with `local_zone`, the server recomputes the epoch from the pair and rejects the action if it disagrees with `dates[0]` — a deterministic check under timezone arithmetic. Optional.
 	LocalTime *string `json:"local_time,omitempty"`
@@ -3500,7 +3754,11 @@ type Customer struct {
 	// `kyc_status` respectively.
 	ApplicationStatus *ApplicationStatus `json:"application_status,omitempty"`
 
-	// ApplicationUrl URL for accessing the onboarding application
+	// ApplicationUrl URL for accessing the onboarding application. Always present when the
+	// customer has an onboarding application, including during an open RFI
+	// loop. In an RFI loop the additive `resubmit_url` is returned as well,
+	// and the dashboard links to that resubmission page rather than this
+	// plain application view.
 	ApplicationUrl *string `json:"application_url,omitempty"`
 
 	// CreatedAt Timestamp of when the link was created
@@ -3511,6 +3769,12 @@ type Customer struct {
 
 	// Decision Application decision status
 	Decision *CustomerDecision `json:"decision,omitempty"`
+
+	// DecisionReason Why the application was decided. Populated for withdrawn/declined
+	// applications — for example, the fixed reason recorded when an
+	// applicant withdraws from an RFI resubmission email. Omitted when there
+	// is no decision or no reason was recorded.
+	DecisionReason *string `json:"decision_reason,omitempty"`
 
 	// DeletedAt Timestamp of when the link was deleted
 	DeletedAt *int `json:"deleted_at,omitempty"`
@@ -3577,6 +3841,35 @@ type Customer struct {
 	// blocklist.
 	RdAllowed *bool `json:"rd_allowed,omitempty"`
 
+	// ResubmitUrl The resubmission link for a customer in an open RFI loop — the exact
+	// `/applications/{id}/resubmit?token=…` URL the applicant receives in
+	// the RFI email, built from the customer's existing onboarding token
+	// (no new token is minted on read). Present only when `status` is
+	// `info_requested`, and returned alongside `application_url` rather than
+	// in place of it.
+	ResubmitUrl *string `json:"resubmit_url,omitempty"`
+
+	// Status The single client-facing status for this customer, derived
+	// server-side. It collapses three signals into one badge so a client
+	// never has to reconcile `kyb_status`, `kyc_status`, and
+	// `application_status` by hand.
+	//
+	// **Precedence (first match wins):**
+	// 1. `frozen` — the customer has an open freeze; surfaced over a stale
+	//    approval so an actionable freeze is never masked.
+	// 2. the most-recent application's decision — `approved`, `declined`
+	//    (declined or auto_declined), or `withdrawn`.
+	// 3. the most-recent application's lifecycle — `info_requested` when a
+	//    request for information is open (the customer owes a response);
+	//    the internal in-review states collapse to `submitted`; `pending`
+	//    otherwise.
+	// 4. `pending` when the customer has no application yet.
+	//
+	// Once a customer is `approved` / `declined` / `withdrawn`, that is the
+	// final answer and `kyb_status` / `kyc_status` do not change it. Use
+	// those fields only for the underlying breakdown.
+	Status *CustomerStatus `json:"status,omitempty"`
+
 	// SubClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	SubClientId *KSUID `json:"sub_client_id,omitempty"`
 
@@ -3621,7 +3914,7 @@ type CustomerCreateRequestCustomerType string
 
 // CustomerCreateResponse Response returned when a customer creation process is successfully initiated.
 type CustomerCreateResponse struct {
-	// ApplicationExpiresAt Unix timestamp (nanoseconds) when the application token expires (30 days from creation)
+	// ApplicationExpiresAt Unix timestamp (nanoseconds) when the application token expires (90 days from creation)
 	ApplicationExpiresAt int64 `json:"application_expires_at"`
 
 	// ApplicationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -3649,6 +3942,25 @@ type CustomerReEngagementResponse struct {
 
 	// ApplicationUrl Public URL for re-engaging the customer via the web form (includes the freshly minted embedded token)
 	ApplicationUrl string `json:"application_url"`
+}
+
+// CustomerStatus The single client-facing customer status. One value collapses the
+// frozen state, the application decision, and the application lifecycle,
+// so the dashboard shows, filters, and counts by one status. See the
+// `status` field on `Customer` for the derivation precedence.
+type CustomerStatus string
+
+// CustomerStatusCounts Count of customers per unified `CustomerStatus`, for the dashboard's
+// status header. Every field is optional; a status absent from the object
+// has a count of zero.
+type CustomerStatusCounts struct {
+	Approved      *int `json:"approved,omitempty"`
+	Declined      *int `json:"declined,omitempty"`
+	Frozen        *int `json:"frozen,omitempty"`
+	InfoRequested *int `json:"info_requested,omitempty"`
+	Pending       *int `json:"pending,omitempty"`
+	Submitted     *int `json:"submitted,omitempty"`
+	Withdrawn     *int `json:"withdrawn,omitempty"`
 }
 
 // DeletePolicyIntent defines model for DeletePolicyIntent.
@@ -3964,6 +4276,29 @@ type EDDWithApplicationID struct {
 // EDDWithApplicationIDApplicationDecision Decision outcome (if any)
 type EDDWithApplicationIDApplicationDecision string
 
+// EnableCardSettlementIntent Intent to enable card settlement on a wallet. It grants the client's
+// settlement signer the ability to pull funds from the wallet to exactly
+// `settlement_destination` — and nothing else. The intent is semantic
+// and client-constructible; it never names internal policy or group ids.
+type EnableCardSettlementIntent struct {
+	// IdempotencyKey A unique key to ensure idempotency of the request. Must be a UUID:
+	// this key is part of the endorsed intent and the policy engine
+	// requires that form, so anything else is rejected with a 400.
+	IdempotencyKey string `json:"idempotency_key"`
+
+	// SettlementDestination The only address the settlement signer may pull funds to. Must
+	// match the platform-configured settlement destination returned by
+	// the card-enablement discovery endpoint.
+	SettlementDestination string                         `json:"settlement_destination"`
+	Type                  EnableCardSettlementIntentType `json:"type"`
+
+	// WalletId The wallet to enable card settlement on
+	WalletId string `json:"wallet_id"`
+}
+
+// EnableCardSettlementIntentType defines model for EnableCardSettlementIntent.Type.
+type EnableCardSettlementIntentType string
+
 // EndorsedRequest defines model for EndorsedRequest.
 type EndorsedRequest struct {
 	// Intent The intent being endorsed
@@ -4070,7 +4405,11 @@ type FiatIBANDestinationRequest struct {
 	// Bic BIC/SWIFT code for the international bank account (optional for SEPA, required for SWIFT).
 	Bic *string `json:"bic,omitempty"`
 
-	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
+	// Capabilities List of payment capabilities supported by a rail. Multiple values may
+	// be supplied; the list is not limited to one entry. Which values are
+	// valid depends on the resource: on-ramp accounts accept any rail and
+	// expand `us_bank_account` to `ach` and `fedwire`; IBAN destinations
+	// accept `swift` and `sepa` only.
 	Capabilities    Capabilities                              `json:"capabilities"`
 	DestinationType FiatIBANDestinationRequestDestinationType `json:"destination_type"`
 
@@ -4107,7 +4446,11 @@ type FiatIBANDestinationResponse struct {
 	// Bic BIC/SWIFT code for the international bank account (optional for SEPA, required for SWIFT).
 	Bic *string `json:"bic,omitempty"`
 
-	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
+	// Capabilities List of payment capabilities supported by a rail. Multiple values may
+	// be supplied; the list is not limited to one entry. Which values are
+	// valid depends on the resource: on-ramp accounts accept any rail and
+	// expand `us_bank_account` to `ach` and `fedwire`; IBAN destinations
+	// accept `swift` and `sepa` only.
 	Capabilities Capabilities `json:"capabilities"`
 
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -4202,7 +4545,11 @@ type FiatUSDestinationResponse struct {
 	// BankPhone Phone number of the bank.
 	BankPhone *string `json:"bank_phone,omitempty"`
 
-	// Capabilities List of payment capabilities supported by a rail. Currently, as input, you can only request one in this list. This constraint will be loosened in the future.
+	// Capabilities List of payment capabilities supported by a rail. Multiple values may
+	// be supplied; the list is not limited to one entry. Which values are
+	// valid depends on the resource: on-ramp accounts accept any rail and
+	// expand `us_bank_account` to `ach` and `fedwire`; IBAN destinations
+	// accept `swift` and `sepa` only.
 	Capabilities Capabilities `json:"capabilities"`
 
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
@@ -4636,6 +4983,99 @@ type KybLinkType string
 // KybStatus Overall status of the KYB verification process (e.g., pending, active, restricted).
 type KybStatus string
 
+// LegalAcceptanceAttestor defines model for LegalAcceptanceAttestor.
+type LegalAcceptanceAttestor struct {
+	// Id The applicant id to submit as `applicant_id`. This is the
+	// application-individual link, not the individual — the same value the
+	// attestation endpoint validates against.
+	Id KSUID `json:"id"`
+
+	// Name Display name. NOTHING else about the person is returned: this page
+	// shows a name in a picker, and date of birth, nationality and email
+	// are exactly the fields the scoped credential exists to keep out of an
+	// emailed link.
+	Name string `json:"name"`
+}
+
+// LegalAcceptanceContext The minimum an acceptance page needs: what is still owed, and who may
+// sign it. Deliberately NOT the application — see the endpoint description.
+type LegalAcceptanceContext struct {
+	// AcceptedAgreements What is already on file, per attestation type. The page compares each
+	// against the revision now in force to decide whether an agreement is
+	// genuinely outstanding — having signed an OLDER revision is not the
+	// same as never having signed, and the two need different copy.
+	//
+	// Separate from `outstanding_documents`, which reports only documents
+	// never accepted at all. A customer on a superseded revision appears
+	// here and not there.
+	AcceptedAgreements *[]AcceptedAgreement `json:"accepted_agreements,omitempty"`
+
+	// ApplicationType Decides whether a signer is chosen or stated. A business may have
+	// several control persons; an individual application has exactly one
+	// permissible attestor, so asking them to pick themselves from a list
+	// of one is a step with no purpose.
+	ApplicationType LegalAcceptanceContextApplicationType `json:"application_type"`
+
+	// Attestors People permitted to record an acceptance for this application. For a
+	// business this is its control persons; the API enforces the same rule
+	// on submission, so offering anyone else would only produce a 400.
+	Attestors []LegalAcceptanceAttestor `json:"attestors"`
+
+	// OutstandingDocuments Agreements this application has not accepted at the revision now in
+	// force. Identity only — no document text. The bodies are served by
+	// `GET /legal/documents/{document_key}`, which is cacheable and shared
+	// with the published pages, and are ~120KB of markdown that would
+	// otherwise ride this response.
+	OutstandingDocuments []OutstandingLegalDocument `json:"outstanding_documents"`
+}
+
+// LegalAcceptanceContextApplicationType Decides whether a signer is chosen or stated. A business may have
+// several control persons; an individual application has exactly one
+// permissible attestor, so asking them to pick themselves from a list
+// of one is a step with no purpose.
+type LegalAcceptanceContextApplicationType string
+
+// LegalDocument One published revision of a legal document.
+//
+// A revision is IMMUTABLE: `version` identifies an exact text, and that
+// text never changes once published. Correcting a document produces a new
+// revision rather than editing an existing one, so an acceptance recorded
+// against a version always refers to the same words.
+type LegalDocument struct {
+	// Content The document text, in `content_type` format. Render this to your
+	// customer before capturing acceptance.
+	//
+	// Present when a single document is fetched by key. OMITTED from the
+	// `GET /legal/documents` index, which carries identity and revision
+	// only — fetch the document you intend to display.
+	Content *string `json:"content,omitempty"`
+
+	// ContentType Media type of `content`.
+	ContentType string `json:"content_type"`
+
+	// ContentUrl Where the document is published for humans to read.
+	ContentUrl *string `json:"content_url,omitempty"`
+
+	// EffectiveDate The date printed inside the document — what the customer reads as
+	// "Last Updated". Show this alongside the text.
+	//
+	// Absent for imported historical revisions whose stated date could not
+	// be established.
+	EffectiveDate *string `json:"effective_date,omitempty"`
+
+	// Key Stable identifier for the document across all its revisions.
+	Key string `json:"key"`
+
+	// Revision Monotonic ordinal within `key`. Unlike `version`, this is ordered:
+	// a higher number is a later revision.
+	Revision int     `json:"revision"`
+	Title    *string `json:"title,omitempty"`
+
+	// Version The published revision identifier, taken from the document itself.
+	// Treat it as opaque — do not parse or compare it for ordering.
+	Version string `json:"version"`
+}
+
 // Mandate defines model for Mandate.
 type Mandate struct {
 	// ApprovedAt Unix time of the §8 approval; absent until approved.
@@ -4918,6 +5358,9 @@ type OneOffTransaction struct {
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
+	// NetRecoveredAmount Decimal amount actually recovered when a returned transaction settled short, denominated in the transaction's own currency (the same basis as its face amount), so face amount minus this value is exactly what the bank withheld. Present only when a return came back short — absent when the full amount was recovered, or when the rail reports no net figure at all (ACH never does). Absent means the face amount is authoritative; it never means zero.
+	NetRecoveredAmount *string `json:"net_recovered_amount"`
+
 	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT or SEPA reference)
 	PaymentReference *string `json:"payment_reference"`
 
@@ -5020,6 +5463,29 @@ type OneOffTransactionStatus string
 // OneOffTransactionType Transaction type for one-off transaction creation.
 type OneOffTransactionType string
 
+// OutstandingLegalDocument A legal document the customer has never accepted.
+//
+// The revision named is the one currently in force. Fetch its text with
+// `GET /legal/documents/{document_key}` — it is deliberately not inlined
+// here, because these documents run to tens of kilobytes each and this
+// field rides on every application read.
+type OutstandingLegalDocument struct {
+	// AttestationType Type of attestation being submitted
+	AttestationType *AttestationType `json:"attestation_type,omitempty"`
+
+	// Key Stable identifier of the document
+	Key string `json:"key"`
+
+	// Revision Monotonic ordinal of the revision within this document
+	Revision int `json:"revision"`
+
+	// Title Human-readable title
+	Title string `json:"title"`
+
+	// Version Version of the revision that needs accepting
+	Version string `json:"version"`
+}
+
 // PaginatedAccountResponse defines model for PaginatedAccountResponse.
 type PaginatedAccountResponse struct {
 	Data []AccountResponse `json:"data"`
@@ -5036,12 +5502,12 @@ type PaginatedAutoTransactionResponse struct {
 	Meta Meta `json:"meta"`
 }
 
-// PaginatedCustomerTransactionResponse defines model for PaginatedCustomerTransactionResponse.
+// PaginatedCustomerTransactionResponse Wrapper for a paginated list of auto-account transactions.
 type PaginatedCustomerTransactionResponse struct {
 	Data []Transaction `json:"data"`
 
-	// Meta Meta information about the response
-	Meta Meta `json:"meta"`
+	// Meta Meta information about a transaction list response. Extends the shared pagination meta with the transaction resource family the request resolved to, so an empty page is self-explaining.
+	Meta TransactionListMeta `json:"meta"`
 }
 
 // PaginatedEventResponse defines model for PaginatedEventResponse.
@@ -5061,12 +5527,12 @@ type PaginatedListResponse struct {
 	Meta Meta `json:"meta"`
 }
 
-// PaginatedOneOffTransactionResponse defines model for PaginatedOneOffTransactionResponse.
+// PaginatedOneOffTransactionResponse Wrapper for a paginated list of one-off transactions.
 type PaginatedOneOffTransactionResponse struct {
 	Data []OneOffTransaction `json:"data"`
 
-	// Meta Meta information about the response
-	Meta Meta `json:"meta"`
+	// Meta Meta information about a transaction list response. Extends the shared pagination meta with the transaction resource family the request resolved to, so an empty page is self-explaining.
+	Meta TransactionListMeta `json:"meta"`
 }
 
 // PaginatedTransactionResourceResponse defines model for PaginatedTransactionResourceResponse.
@@ -5074,12 +5540,12 @@ type PaginatedTransactionResourceResponse struct {
 	union json.RawMessage
 }
 
-// PaginatedWalletTransactionResponse defines model for PaginatedWalletTransactionResponse.
+// PaginatedWalletTransactionResponse Wrapper for a paginated list of wallet transactions.
 type PaginatedWalletTransactionResponse struct {
 	Data []WalletTransaction `json:"data"`
 
-	// Meta Meta information about the response
-	Meta Meta `json:"meta"`
+	// Meta Meta information about a transaction list response. Extends the shared pagination meta with the transaction resource family the request resolved to, so an empty page is self-explaining.
+	Meta TransactionListMeta `json:"meta"`
 }
 
 // PartnerAttestationRequirement A single outstanding partner disclosure the customer must accept online,
@@ -5217,7 +5683,15 @@ type PolicyRule struct {
 	// CreatedAt Unix timestamp when the rule was created
 	CreatedAt int `json:"created_at"`
 
-	// Definition Rule-specific configuration as JSON
+	// Definition Rule-specific configuration. The keys present depend on `rule_type`.
+	// - `amount_threshold`: `min_amount` (integer), `threshold` (integer),
+	//   and `asset` (object) carrying `id`, the asset symbol, stored
+	//   upper case; `name` appears only when the rule was created with
+	//   one. `min_amount` is in the asset's smallest unit, and
+	//   `threshold` is the number of authorized endorsements required.
+	// - `approval_threshold`: `threshold` (integer) and, when one was set,
+	//   `description` (string).
+	// - `address_list`: `addresses` (array of strings).
 	Definition map[string]interface{} `json:"definition"`
 
 	// Id Unique identifier for the rule (stable within the policy)
@@ -5251,6 +5725,16 @@ type ProblemDetails struct {
 	// RequestId Unique request identifier. Include when contacting support.
 	RequestId *string `json:"request_id,omitempty"`
 
+	// ResolutionUrl A link the customer can follow to CLEAR this error, present only on
+	// problems with a concrete self-service remedy.
+	//
+	// Today this is returned by
+	// `#terms-not-accepted`, where it points at the hosted flow in which
+	// the outstanding agreement can be signed. The link is token-gated and
+	// usable as-is — send the customer to it directly rather than parsing
+	// it out of `detail`.
+	ResolutionUrl *string `json:"resolution_url,omitempty"`
+
 	// Status HTTP status code for this occurrence.
 	Status int `json:"status"`
 
@@ -5260,6 +5744,15 @@ type ProblemDetails struct {
 	// Type URI reference identifying the problem type.
 	// Resolves to human-readable documentation.
 	Type string `json:"type"`
+
+	// UserMessage A plain-language rendition of `detail` written for the end
+	// customer, present when one exists for this error. `detail` names
+	// request fields and actions so a machine caller (such as a payment
+	// agent drafting proposals) can self-correct; `user_message` says the
+	// same thing without API vocabulary. Clients that relay errors into a
+	// human surface (chat, email, UI) should show `user_message` when
+	// present and fall back to `detail`.
+	UserMessage *string `json:"user_message,omitempty"`
 }
 
 // ProviderKybStatus defines model for ProviderKybStatus.
@@ -5285,6 +5778,99 @@ type PutFeePayoutDestinationRequest struct {
 
 // PutFeePayoutDestinationRequest0 defines model for .
 type PutFeePayoutDestinationRequest0 = interface{}
+
+// RDMarketingFeeDailyRow defines model for RDMarketingFeeDailyRow.
+type RDMarketingFeeDailyRow struct {
+	// BalanceMinor The client's stored daily principal for that day, minor units, as a
+	// decimal string. This is read, never recomputed: it is the same
+	// figure the month was priced on, so what is shown and what was paid
+	// cannot drift.
+	//
+	// Every calendar day of the month gets a row. ABSENT means the day is
+	// not stamped yet — a repairable gap, resolved by the derivation on
+	// its own. A present "0" means the client genuinely held no RD that
+	// day. The two are different facts and must not render alike.
+	BalanceMinor *string            `json:"balance_minor,omitempty"`
+	Date         openapi_types.Date `json:"date"`
+
+	// FeeMinor That day's share of the month's fee, minor units, as a decimal
+	// string. These decompose the snapshot's owed proportionally by
+	// balance and sum to exactly that total.
+	//
+	// ABSENT for every day of a month that has not been priced. The fee
+	// is a property of the month, not of the day, so it is unknown for
+	// all days at once until the month's Dakota rate is derived. A zero
+	// here would state that nothing is owed, which is a different claim
+	// from "not yet known".
+	FeeMinor *string `json:"fee_minor,omitempty"`
+}
+
+// RDMarketingFeeStatement defines model for RDMarketingFeeStatement.
+type RDMarketingFeeStatement struct {
+	// AvgDailyBalanceMinor The mean of the month's stored daily principals. Absent while the month is incomplete.
+	AvgDailyBalanceMinor *string                  `json:"avg_daily_balance_minor,omitempty"`
+	Daily                []RDMarketingFeeDailyRow `json:"daily"`
+
+	// DaysInMonth Calendar days in the month — the divisor, never the number of rows stored.
+	DaysInMonth int `json:"days_in_month"`
+
+	// DaysStamped Days whose principal is stored. Lower than days_in_month while the
+	// month is still being derived or still running, which is how a
+	// partial month is shown as partial rather than as a complete small
+	// one.
+	DaysStamped int                `json:"days_stamped"`
+	Month       openapi_types.Date `json:"month"`
+
+	// OwedMinor What the month owes this client, RD minor units. ABSENT until the
+	// month is priced — never zero, which would state that nothing is
+	// owed.
+	OwedMinor *string `json:"owed_minor,omitempty"`
+
+	// YBpsMonthly The rate in force for THIS month, in monthly basis points. A later rate change does not rewrite it.
+	YBpsMonthly float64 `json:"y_bps_monthly"`
+}
+
+// RDMarketingFeeStatementList defines model for RDMarketingFeeStatementList.
+type RDMarketingFeeStatementList struct {
+	// Months Newest first. EMPTY means the client's contract is real but no
+	// month has started yet (it starts next month or later) — the page
+	// says "starting soon" rather than denying the contract. A client
+	// who has never had a contract gets 404 instead, and the portal
+	// hides the section entirely. The two are different answers.
+	Months []openapi_types.Date `json:"months"`
+}
+
+// RFIRequestedItems Reviewer-selected resubmission scope for an RFI.
+type RFIRequestedItems struct {
+	// BusinessDescription Whether the applicant may edit the business description on the resubmit page.
+	BusinessDescription *bool `json:"business_description,omitempty"`
+	Documents           *[]struct {
+		Category RFIRequestedItemsDocumentsCategory `json:"category"`
+
+		// IndividualId Entity id for individual docs; empty for business/edd.
+		IndividualId *string `json:"individual_id,omitempty"`
+
+		// Ref document_id|document_type for an on-file doc, or purpose for a missing doc.
+		Ref string `json:"ref"`
+	} `json:"documents,omitempty"`
+
+	// Questions Free-text compliance questions the reviewer is asking. Rendered on
+	// the resubmit page as required answer fields, tracked separately from
+	// the standard application questions.
+	Questions *[]struct {
+		// Key Stable identifier for this question; generated if omitted. Used to store the applicant's answer.
+		Key *string `json:"key,omitempty"`
+
+		// Prompt The free-text question the reviewer is asking the applicant.
+		Prompt string `json:"prompt"`
+
+		// RequireDocument Whether the applicant must also attach a document when answering this question.
+		RequireDocument *bool `json:"require_document,omitempty"`
+	} `json:"questions,omitempty"`
+}
+
+// RFIRequestedItemsDocumentsCategory defines model for RFIRequestedItems.Documents.Category.
+type RFIRequestedItemsDocumentsCategory string
 
 // RecipientRequest Request for creating or updating a recipient entity.
 //
@@ -5468,8 +6054,12 @@ type ScheduledPaymentList struct {
 // ScheduledPaymentResponse defines model for ScheduledPaymentResponse.
 type ScheduledPaymentResponse struct {
 	Address *string `json:"address,omitempty"`
-	Amount  *string `json:"amount,omitempty"`
-	Asset   *string `json:"asset,omitempty"`
+
+	// Amount What LEAVES the funding wallet, denominated in `asset` on `network_id`. For a DIRECT payment that is also what the payee receives. For a CONVERTED payment (the payee settles on a different asset or chain) it is the DEPOSIT into the conversion account, grossed up so the payee nets the requested figure — so it is LARGER than the payout and in a DIFFERENT asset. Never render it against `output_asset`.
+	Amount *string `json:"amount,omitempty"`
+
+	// Asset The asset `amount` is denominated in — the asset that LEAVES the wallet. For a converted payment this is the deposit asset, not the one the payee receives (see `output_asset`).
+	Asset *string `json:"asset,omitempty"`
 
 	// DestinationId The REAL destination this payment settles to — a bank (for an offramp) or a crypto destination. For an auto-account (convert-and-forward) payment, `address` is the crypto DEPOSIT actually paid while this names the bank/crypto target, so a client can show which account the scheduled payment is for. Absent for a direct-address payment.
 	DestinationId *string `json:"destination_id,omitempty"`
@@ -5495,7 +6085,7 @@ type ScheduledPaymentResponse struct {
 	MandateVersion *int    `json:"mandate_version,omitempty"`
 	NetworkId      *string `json:"network_id,omitempty"`
 
-	// OutputAsset The asset the recipient ULTIMATELY receives. For an offramp this is the fiat currency (e.g. USD) the deposit converts to; for a direct crypto payment it equals `asset`. Stablecoin conversion is 1:1, so the output AMOUNT equals `amount`.
+	// OutputAsset The asset the recipient ULTIMATELY receives. For an offramp this is the fiat currency (e.g. USD) the deposit converts to; for a direct crypto payment it equals `asset`. DO NOT PAIR THIS WITH `amount`: for a converted payment `amount` is the DEPOSIT — what leaves the wallet, in the deposit's own asset — and it is grossed up so the payee nets the requested figure, so a real payment reads amount 0.211112 and pays out 0.19. The rate is 1:1; the fee is not. This response carries no output amount, so a converted payment's payout figure is not available here.
 	OutputAsset *string `json:"output_asset,omitempty"`
 
 	// OutputNetwork For a crypto destination, the network the recipient ULTIMATELY receives on — for a cross-family swap this differs from `network_id` (the DEPOSIT network the wallet pays), e.g. output_network solana-devnet while network_id is base-sepolia. Equals `network_id` for a direct crypto payment; absent for a bank offramp (fiat has no network).
@@ -5524,7 +6114,26 @@ type ScheduledPaymentResponseStatus string
 
 // SelfServeCreditTier defines model for SelfServeCreditTier.
 type SelfServeCreditTier struct {
-	PriceCents            int64 `json:"price_cents"`
+	// BonusCents Promotional credit granted on top of `price_cents`, i.e.
+	// `credit_cents - price_cents`. `0` for standard tiers.
+	BonusCents *int64 `json:"bonus_cents,omitempty"`
+
+	// CreditCents Total credit balance granted for this tier, in USD cents of transfer
+	// fee. Equal to `price_cents` for standard tiers; larger for bulk
+	// tiers, where the difference is `bonus_cents`.
+	CreditCents *int64 `json:"credit_cents,omitempty"`
+
+	// EffectiveFeeBps Blended rate this tier delivers, rounded to two decimals:
+	// `transfer_fee_bps * price_cents / credit_cents`. Credits are still
+	// consumed at the client's `transfer_fee_bps`; the discount is
+	// delivered entirely as `bonus_cents` at purchase time.
+	EffectiveFeeBps *float32 `json:"effective_fee_bps,omitempty"`
+
+	// PriceCents Amount charged via Stripe Checkout, in USD cents.
+	PriceCents int64 `json:"price_cents"`
+
+	// TransferCapacityCents Transfer volume `credit_cents` buys at the client's `transfer_fee_bps`,
+	// floored. Banking and compliance fees are charged on top and reduce it.
 	TransferCapacityCents int64 `json:"transfer_capacity_cents"`
 }
 
@@ -5535,9 +6144,41 @@ type SelfServeCreditTiersResponse struct {
 
 // SelfServeCreditsBalanceResponse defines model for SelfServeCreditsBalanceResponse.
 type SelfServeCreditsBalanceResponse struct {
-	BalanceCents          int64 `json:"balance_cents"`
+	// BalanceBaselineCents Denominator for `percent_remaining`: the balance at the client's most
+	// recent deliberate top-up, ratcheted upward by any incidental credit
+	// since. `0` means *no baseline* and must never be used as a divisor.
+	BalanceBaselineCents *int64 `json:"balance_baseline_cents,omitempty"`
+	BalanceCents         int64  `json:"balance_cents"`
+
+	// Health Server-owned balance health. Computed live from the same snapshot as
+	// `percent_remaining`, so the two can never disagree. Clients MUST
+	// render this rather than deriving bands themselves; treat an
+	// unrecognised value as `healthy`.
+	Health *SelfServeCreditsBalanceResponseHealth `json:"health,omitempty"`
+
+	// LowAtTransferCapacityCents Transfer volume at which health becomes `low` — the capacity of the
+	// largest balance that still classifies `low`. Omitted when
+	// `balance_baseline_cents` is 0.
+	LowAtTransferCapacityCents *int64 `json:"low_at_transfer_capacity_cents,omitempty"`
+
+	// MinNextTransferFeeCents Cheapest total fee any configured rail can charge. Below this, rail
+	// transfers are held.
+	MinNextTransferFeeCents *int64 `json:"min_next_transfer_fee_cents,omitempty"`
+
+	// PercentRemaining `balance_cents` as a whole percentage of `balance_baseline_cents`,
+	// floored. Omitted when `balance_baseline_cents` is 0.
+	PercentRemaining      *int  `json:"percent_remaining,omitempty"`
 	TransferCapacityCents int64 `json:"transfer_capacity_cents"`
+
+	// TransferFeeBps The client's transfer fee rate, so callers stop hardcoding 0.25%.
+	TransferFeeBps *float32 `json:"transfer_fee_bps,omitempty"`
 }
+
+// SelfServeCreditsBalanceResponseHealth Server-owned balance health. Computed live from the same snapshot as
+// `percent_remaining`, so the two can never disagree. Clients MUST
+// render this rather than deriving bands themselves; treat an
+// unrecognised value as `healthy`.
+type SelfServeCreditsBalanceResponseHealth string
 
 // SelfServeCreditsLedgerEntry defines model for SelfServeCreditsLedgerEntry.
 type SelfServeCreditsLedgerEntry struct {
@@ -5547,11 +6188,17 @@ type SelfServeCreditsLedgerEntry struct {
 	// Category Sub-category that distinguishes transaction fees from compliance
 	// fees and similar for refunds. `unknown` indicates a legacy row
 	// written before this column existed.
-	Category    SelfServeCreditsLedgerEntryCategory  `json:"category"`
-	CreatedAt   time.Time                            `json:"created_at"`
-	Description string                               `json:"description"`
-	EntryType   SelfServeCreditsLedgerEntryEntryType `json:"entry_type"`
-	Id          string                               `json:"id"`
+	Category    SelfServeCreditsLedgerEntryCategory `json:"category"`
+	CreatedAt   time.Time                           `json:"created_at"`
+	Description string                              `json:"description"`
+
+	// EntryType `bonus` is a promotional grant written alongside a bulk-tier
+	// `purchase` row in the same transaction; its `amount_cents` is the
+	// bonus only and it carries no Stripe session id. `adjustment` has been
+	// emitted since the adjustment entry type shipped and was missing from
+	// this enum.
+	EntryType SelfServeCreditsLedgerEntryEntryType `json:"entry_type"`
+	Id        string                               `json:"id"`
 
 	// StripePaymentIntentId Stripe PaymentIntent ID (pi_...) for purchase entries — paste into the Stripe dashboard search to look up the underlying payment.
 	StripePaymentIntentId *string `json:"stripe_payment_intent_id"`
@@ -5563,7 +6210,11 @@ type SelfServeCreditsLedgerEntry struct {
 // written before this column existed.
 type SelfServeCreditsLedgerEntryCategory string
 
-// SelfServeCreditsLedgerEntryEntryType defines model for SelfServeCreditsLedgerEntry.EntryType.
+// SelfServeCreditsLedgerEntryEntryType `bonus` is a promotional grant written alongside a bulk-tier
+// `purchase` row in the same transaction; its `amount_cents` is the
+// bonus only and it carries no Stripe session id. `adjustment` has been
+// emitted since the adjustment entry type shipped and was missing from
+// this enum.
 type SelfServeCreditsLedgerEntryEntryType string
 
 // SelfServeCreditsLedgerResponse defines model for SelfServeCreditsLedgerResponse.
@@ -5726,7 +6377,10 @@ type SignerGroup struct {
 
 // SignerGroupCreateRequest Request to create a new signer group
 type SignerGroupCreateRequest struct {
-	// MemberKeys Public keys of the members that make up the signer group
+	// MemberKeys Public keys of the members that make up the signer group. At most
+	// 64 keys: each key is parsed and checked against the platform's
+	// managed signing identities before the group is created, so an
+	// unbounded list would let one request drive unbounded work.
 	MemberKeys []string `json:"member_keys"`
 
 	// Name Name of the signer group
@@ -6021,6 +6675,21 @@ type TransactionCryptoDetails struct {
 	TransactionHash *string `json:"transaction_hash,omitempty"`
 }
 
+// TransactionListMeta defines model for TransactionListMeta.
+type TransactionListMeta struct {
+	// HasMoreAfter Indicates whether there are more items that follow this set.
+	HasMoreAfter bool `json:"has_more_after"`
+
+	// HasMoreBefore Indicates whether there are more items that precede this set.
+	HasMoreBefore bool `json:"has_more_before"`
+
+	// TotalCount Total number of items available
+	TotalCount int `json:"total_count"`
+
+	// TransactionType The transaction resource family this response lists. Either the `transaction_type` that was requested, or the family inferred from the other query parameters. `total_count` counts only this family.
+	TransactionType TransactionResourceType `json:"transaction_type"`
+}
+
 // TransactionOperation defines model for TransactionOperation.
 type TransactionOperation struct {
 	// Amount Amount to be transferred as a non-negative decimal string. Required for
@@ -6116,6 +6785,20 @@ type TransactionStatus string
 // TransactionType Type of transaction.
 type TransactionType string
 
+// TransferFeeOverride Overrides transferFeeBps for exactly one (sourceAsset,
+// destinationAsset) pair. Assets are network-agnostic symbols: USDC on
+// any chain is the same key.
+type TransferFeeOverride struct {
+	// DestinationAsset Asset symbol the transfer moves to, network-agnostic.
+	DestinationAsset string `json:"destinationAsset"`
+
+	// FeeBps Transfer fee in basis points for this pair. Whole numbers only.
+	FeeBps float32 `json:"feeBps"`
+
+	// SourceAsset Asset symbol the transfer moves from, network-agnostic.
+	SourceAsset string `json:"sourceAsset"`
+}
+
 // UpdateClientUserRequest Request body for updating a client user
 type UpdateClientUserRequest struct {
 	// FirstName Given name of the user
@@ -6146,7 +6829,7 @@ type UpdatePolicyRuleIntent struct {
 	RuleId string                     `json:"rule_id"`
 	Type   UpdatePolicyRuleIntentType `json:"type"`
 
-	// UpdatedDefinition The updated rule definition as JSON string
+	// UpdatedDefinition The updated rule definition as a JSON string. It replaces the existing definition, so it must be complete and must match the schema of the rule's type; any key outside that schema is rejected. An `amount_threshold` definition requires `asset.id`, a `threshold` greater than zero and a `min_amount` of zero or more. The remaining asset fields are optional — whatever the stored rule already records for the same asset is kept.
 	UpdatedDefinition string `json:"updated_definition"`
 }
 
@@ -6826,6 +7509,17 @@ type ListCustomersParams struct {
 	// application are excluded when this filter is set.
 	ApplicationStatuses *string `form:"application_statuses,omitempty" json:"application_statuses,omitempty"`
 
+	// Status Filter customers by one or more unified customer statuses.
+	// Comma-separated list (e.g. `frozen,info_requested`). Values mirror
+	// the `CustomerStatus` enum (`frozen`, `declined`, `withdrawn`,
+	// `approved`, `info_requested`, `submitted`, `pending`).
+	//
+	// This is the single client-facing status that the dashboard shows,
+	// filters, and counts by. It collapses the frozen state, the
+	// application decision, and the application lifecycle into one value
+	// (see the `status` field on `Customer` for the precedence).
+	Status *string `form:"status,omitempty" json:"status,omitempty"`
+
 	// SubClientId Filter customers by sub-client association. Returns only customers associated with the specified sub-client.
 	SubClientId *KSUID `form:"sub_client_id,omitempty" json:"sub_client_id,omitempty"`
 
@@ -6963,6 +7657,12 @@ type ListEventsParams struct {
 type PutFeePayoutDestinationParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// GetLegalDocumentParams defines parameters for GetLegalDocument.
+type GetLegalDocumentParams struct {
+	// Version A specific published revision. Omit for the revision in force now.
+	Version *string `form:"version,omitempty" json:"version,omitempty"`
 }
 
 // ListMandatesParams defines parameters for ListMandates.
@@ -7261,6 +7961,14 @@ type ListSelfServeCreditsLedgerParams struct {
 	// Cursor Return entries created before this timestamp.
 	Cursor *time.Time `form:"cursor,omitempty" json:"cursor,omitempty"`
 
+	// CursorId Tiebreaker for `cursor`. Entries written in the same transaction share
+	// an identical `created_at`, so ordering by timestamp alone is not total
+	// and a page boundary that splits them can drop a row. When supplied
+	// alongside `cursor`, entries are returned strictly before
+	// `(cursor, cursor_id)` in `(created_at, id)` order. Pass the `id` of the
+	// last entry on the previous page. Ignored unless `cursor` is also present.
+	CursorId *string `form:"cursor_id,omitempty" json:"cursor_id,omitempty"`
+
 	// Limit Maximum number of entries to return.
 	Limit *int32 `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -7326,10 +8034,10 @@ type ListTransactionsParams struct {
 	// Limit A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 20.
 	Limit *LimitParam `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// TransactionType Filter by transaction resource family.
+	// TransactionType Select the transaction resource family (`one_off`, `auto_account`, or `wallet`) to return. When omitted, the family is inferred from the other parameters (see the endpoint description).
 	TransactionType *TransactionResourceType `form:"transaction_type,omitempty" json:"transaction_type,omitempty"`
 
-	// CustomerId Filter transactions by customer ID.
+	// CustomerId Filter transactions by customer ID, within the selected resource family. Note: when `transaction_type` is omitted, supplying `customer_id` alone selects the `auto_account` family, so the result is that customer's auto-account transactions. To filter one-off transactions by customer, also send `transaction_type=one_off`.
 	CustomerId *KSUID `form:"customer_id,omitempty" json:"customer_id,omitempty"`
 
 	// WalletId Filter wallet transactions by wallet ID. Only valid with `transaction_type=wallet`.
@@ -8332,6 +9040,32 @@ func (t *EndorsedRequest_Intent) MergeDeletePolicyIntent(v DeletePolicyIntent) e
 	return err
 }
 
+// AsEnableCardSettlementIntent returns the union data inside the EndorsedRequest_Intent as a EnableCardSettlementIntent
+func (t EndorsedRequest_Intent) AsEnableCardSettlementIntent() (EnableCardSettlementIntent, error) {
+	var body EnableCardSettlementIntent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEnableCardSettlementIntent overwrites any union data inside the EndorsedRequest_Intent as the provided EnableCardSettlementIntent
+func (t *EndorsedRequest_Intent) FromEnableCardSettlementIntent(v EnableCardSettlementIntent) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEnableCardSettlementIntent performs a merge with any union data inside the EndorsedRequest_Intent, using the provided EnableCardSettlementIntent
+func (t *EndorsedRequest_Intent) MergeEnableCardSettlementIntent(v EnableCardSettlementIntent) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t EndorsedRequest_Intent) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	return b, err
@@ -8810,6 +9544,9 @@ type ClientInterface interface {
 
 	UpdateIndividualApplicationDetails(ctx context.Context, applicationId KSUID, params *UpdateIndividualApplicationDetailsParams, body UpdateIndividualApplicationDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetLegalAcceptanceContext request
+	GetLegalAcceptanceContext(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateApplicationSubmission request
 	CreateApplicationSubmission(ctx context.Context, applicationId KSUID, params *CreateApplicationSubmissionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -8907,6 +9644,12 @@ type ClientInterface interface {
 	// GetInstruction request
 	GetInstruction(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListLegalDocuments request
+	ListLegalDocuments(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLegalDocument request
+	GetLegalDocument(ctx context.Context, documentKey string, params *GetLegalDocumentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListMandates request
 	ListMandates(ctx context.Context, params *ListMandatesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -9001,6 +9744,12 @@ type ClientInterface interface {
 	UpsertPolicyWalletRelationshipWithBody(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpsertPolicyWalletRelationship(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListRDMarketingFeeStatements request
+	ListRDMarketingFeeStatements(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRDMarketingFeeStatement request
+	GetRDMarketingFeeStatement(ctx context.Context, month openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteRecipient request
 	DeleteRecipient(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -9722,6 +10471,18 @@ func (c *APIClient) UpdateIndividualApplicationDetails(ctx context.Context, appl
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) GetLegalAcceptanceContext(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLegalAcceptanceContextRequest(c.Server, applicationId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) CreateApplicationSubmission(ctx context.Context, applicationId KSUID, params *CreateApplicationSubmissionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateApplicationSubmissionRequest(c.Server, applicationId, params)
 	if err != nil {
@@ -10132,6 +10893,30 @@ func (c *APIClient) CreateInstructions(ctx context.Context, body CreateInstructi
 
 func (c *APIClient) GetInstruction(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetInstructionRequest(c.Server, instructionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListLegalDocuments(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListLegalDocumentsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetLegalDocument(ctx context.Context, documentKey string, params *GetLegalDocumentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLegalDocumentRequest(c.Server, documentKey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -10564,6 +11349,30 @@ func (c *APIClient) UpsertPolicyWalletRelationshipWithBody(ctx context.Context, 
 
 func (c *APIClient) UpsertPolicyWalletRelationship(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpsertPolicyWalletRelationshipRequest(c.Server, policyId, walletId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) ListRDMarketingFeeStatements(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRDMarketingFeeStatementsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetRDMarketingFeeStatement(ctx context.Context, month openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRDMarketingFeeStatementRequest(c.Server, month)
 	if err != nil {
 		return nil, err
 	}
@@ -13328,6 +14137,40 @@ func NewUpdateIndividualApplicationDetailsRequestWithBody(server string, applica
 	return req, nil
 }
 
+// NewGetLegalAcceptanceContextRequest generates requests for GetLegalAcceptanceContext
+func NewGetLegalAcceptanceContextRequest(server string, applicationId KSUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "application_id", runtime.ParamLocationPath, applicationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/applications/%s/legal-acceptance", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreateApplicationSubmissionRequest generates requests for CreateApplicationSubmission
 func NewCreateApplicationSubmissionRequest(server string, applicationId KSUID, params *CreateApplicationSubmissionParams) (*http.Request, error) {
 	var err error
@@ -14017,6 +14860,22 @@ func NewListCustomersRequest(server string, params *ListCustomersParams) (*http.
 		if params.ApplicationStatuses != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "application_statuses", runtime.ParamLocationQuery, *params.ApplicationStatuses); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "status", runtime.ParamLocationQuery, *params.Status); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -15202,6 +16061,89 @@ func NewGetInstructionRequest(server string, instructionId string) (*http.Reques
 	return req, nil
 }
 
+// NewListLegalDocumentsRequest generates requests for ListLegalDocuments
+func NewListLegalDocumentsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/legal/documents")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLegalDocumentRequest generates requests for GetLegalDocument
+func NewGetLegalDocumentRequest(server string, documentKey string, params *GetLegalDocumentParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "document_key", runtime.ParamLocationPath, documentKey)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/legal/documents/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Version != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "version", runtime.ParamLocationQuery, *params.Version); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListMandatesRequest generates requests for ListMandates
 func NewListMandatesRequest(server string, params *ListMandatesParams) (*http.Request, error) {
 	var err error
@@ -16345,6 +17287,67 @@ func NewUpsertPolicyWalletRelationshipRequestWithBody(server string, policyId st
 	return req, nil
 }
 
+// NewListRDMarketingFeeStatementsRequest generates requests for ListRDMarketingFeeStatements
+func NewListRDMarketingFeeStatementsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/rd-marketing-fee/statements")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetRDMarketingFeeStatementRequest generates requests for GetRDMarketingFeeStatement
+func NewGetRDMarketingFeeStatementRequest(server string, month openapi_types.Date) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "month", runtime.ParamLocationPath, month)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/rd-marketing-fee/statements/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDeleteRecipientRequest generates requests for DeleteRecipient
 func NewDeleteRecipientRequest(server string, recipientId KSUID) (*http.Request, error) {
 	var err error
@@ -17313,6 +18316,22 @@ func NewListSelfServeCreditsLedgerRequest(server string, params *ListSelfServeCr
 		if params.Cursor != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "cursor", runtime.ParamLocationQuery, *params.Cursor); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CursorId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "cursor_id", runtime.ParamLocationQuery, *params.CursorId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -19817,6 +20836,9 @@ type ClientWithResponsesInterface interface {
 
 	UpdateIndividualApplicationDetailsWithResponse(ctx context.Context, applicationId KSUID, params *UpdateIndividualApplicationDetailsParams, body UpdateIndividualApplicationDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateIndividualApplicationDetailsResponse, error)
 
+	// GetLegalAcceptanceContextWithResponse request
+	GetLegalAcceptanceContextWithResponse(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*GetLegalAcceptanceContextResponse, error)
+
 	// CreateApplicationSubmissionWithResponse request
 	CreateApplicationSubmissionWithResponse(ctx context.Context, applicationId KSUID, params *CreateApplicationSubmissionParams, reqEditors ...RequestEditorFn) (*CreateApplicationSubmissionResponse, error)
 
@@ -19914,6 +20936,12 @@ type ClientWithResponsesInterface interface {
 	// GetInstructionWithResponse request
 	GetInstructionWithResponse(ctx context.Context, instructionId string, reqEditors ...RequestEditorFn) (*GetInstructionResponse, error)
 
+	// ListLegalDocumentsWithResponse request
+	ListLegalDocumentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListLegalDocumentsResponse, error)
+
+	// GetLegalDocumentWithResponse request
+	GetLegalDocumentWithResponse(ctx context.Context, documentKey string, params *GetLegalDocumentParams, reqEditors ...RequestEditorFn) (*GetLegalDocumentResponse, error)
+
 	// ListMandatesWithResponse request
 	ListMandatesWithResponse(ctx context.Context, params *ListMandatesParams, reqEditors ...RequestEditorFn) (*ListMandatesResponse, error)
 
@@ -20008,6 +21036,12 @@ type ClientWithResponsesInterface interface {
 	UpsertPolicyWalletRelationshipWithBodyWithResponse(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpsertPolicyWalletRelationshipResponse, error)
 
 	UpsertPolicyWalletRelationshipWithResponse(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertPolicyWalletRelationshipResponse, error)
+
+	// ListRDMarketingFeeStatementsWithResponse request
+	ListRDMarketingFeeStatementsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListRDMarketingFeeStatementsResponse, error)
+
+	// GetRDMarketingFeeStatementWithResponse request
+	GetRDMarketingFeeStatementWithResponse(ctx context.Context, month openapi_types.Date, reqEditors ...RequestEditorFn) (*GetRDMarketingFeeStatementResponse, error)
 
 	// DeleteRecipientWithResponse request
 	DeleteRecipientWithResponse(ctx context.Context, recipientId KSUID, reqEditors ...RequestEditorFn) (*DeleteRecipientResponse, error)
@@ -21013,6 +22047,30 @@ func (r UpdateIndividualApplicationDetailsResponse) StatusCode() int {
 	return 0
 }
 
+type GetLegalAcceptanceContextResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LegalAcceptanceContext
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLegalAcceptanceContextResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLegalAcceptanceContextResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreateApplicationSubmissionResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
@@ -21146,6 +22204,12 @@ type ListCustomersResponse struct {
 
 		// Meta Meta information about the response
 		Meta Meta `json:"meta"`
+
+		// StatusCounts How many customers hold each unified status, across the
+		// same filters (search, date, sub-client) but ignoring the
+		// `status` selection itself, so the dashboard can render a
+		// count per status chip while a status filter is active.
+		StatusCounts *CustomerStatusCounts `json:"status_counts,omitempty"`
 	}
 	ApplicationproblemJSON400 *ProblemDetails
 	ApplicationproblemJSON401 *ProblemDetails
@@ -21750,6 +22814,55 @@ func (r GetInstructionResponse) StatusCode() int {
 	return 0
 }
 
+type ListLegalDocumentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Data []LegalDocument `json:"data"`
+	}
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListLegalDocumentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListLegalDocumentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetLegalDocumentResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LegalDocument
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLegalDocumentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLegalDocumentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListMandatesResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -22340,6 +23453,57 @@ func (r UpsertPolicyWalletRelationshipResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpsertPolicyWalletRelationshipResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListRDMarketingFeeStatementsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RDMarketingFeeStatementList
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRDMarketingFeeStatementsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRDMarketingFeeStatementsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetRDMarketingFeeStatementResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RDMarketingFeeStatement
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRDMarketingFeeStatementResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRDMarketingFeeStatementResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -23016,6 +24180,7 @@ func (r GetWalletsForSignerGroupResponse) StatusCode() int {
 type CreateSignerResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
+	JSON200                   *Signer
 	JSON201                   *Signer
 	ApplicationproblemJSON400 *ProblemDetails
 	ApplicationproblemJSON401 *ProblemDetails
@@ -23103,6 +24268,7 @@ type CreateTransactionResponse struct {
 	ApplicationproblemJSON403     *ProblemDetails
 	ApplicationproblemJSON404     *ProblemDetails
 	ApplicationproblemJSON422     *ProblemDetails
+	ApplicationproblemJSON503     *ProblemDetails
 	ApplicationproblemJSONDefault *ProblemDetails
 }
 
@@ -24095,6 +25261,15 @@ func (c *ClientWithResponses) UpdateIndividualApplicationDetailsWithResponse(ctx
 	return ParseUpdateIndividualApplicationDetailsResponse(rsp)
 }
 
+// GetLegalAcceptanceContextWithResponse request returning *GetLegalAcceptanceContextResponse
+func (c *ClientWithResponses) GetLegalAcceptanceContextWithResponse(ctx context.Context, applicationId KSUID, reqEditors ...RequestEditorFn) (*GetLegalAcceptanceContextResponse, error) {
+	rsp, err := c.GetLegalAcceptanceContext(ctx, applicationId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLegalAcceptanceContextResponse(rsp)
+}
+
 // CreateApplicationSubmissionWithResponse request returning *CreateApplicationSubmissionResponse
 func (c *ClientWithResponses) CreateApplicationSubmissionWithResponse(ctx context.Context, applicationId KSUID, params *CreateApplicationSubmissionParams, reqEditors ...RequestEditorFn) (*CreateApplicationSubmissionResponse, error) {
 	rsp, err := c.CreateApplicationSubmission(ctx, applicationId, params, reqEditors...)
@@ -24400,6 +25575,24 @@ func (c *ClientWithResponses) GetInstructionWithResponse(ctx context.Context, in
 		return nil, err
 	}
 	return ParseGetInstructionResponse(rsp)
+}
+
+// ListLegalDocumentsWithResponse request returning *ListLegalDocumentsResponse
+func (c *ClientWithResponses) ListLegalDocumentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListLegalDocumentsResponse, error) {
+	rsp, err := c.ListLegalDocuments(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListLegalDocumentsResponse(rsp)
+}
+
+// GetLegalDocumentWithResponse request returning *GetLegalDocumentResponse
+func (c *ClientWithResponses) GetLegalDocumentWithResponse(ctx context.Context, documentKey string, params *GetLegalDocumentParams, reqEditors ...RequestEditorFn) (*GetLegalDocumentResponse, error) {
+	rsp, err := c.GetLegalDocument(ctx, documentKey, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLegalDocumentResponse(rsp)
 }
 
 // ListMandatesWithResponse request returning *ListMandatesResponse
@@ -24711,6 +25904,24 @@ func (c *ClientWithResponses) UpsertPolicyWalletRelationshipWithResponse(ctx con
 		return nil, err
 	}
 	return ParseUpsertPolicyWalletRelationshipResponse(rsp)
+}
+
+// ListRDMarketingFeeStatementsWithResponse request returning *ListRDMarketingFeeStatementsResponse
+func (c *ClientWithResponses) ListRDMarketingFeeStatementsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListRDMarketingFeeStatementsResponse, error) {
+	rsp, err := c.ListRDMarketingFeeStatements(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRDMarketingFeeStatementsResponse(rsp)
+}
+
+// GetRDMarketingFeeStatementWithResponse request returning *GetRDMarketingFeeStatementResponse
+func (c *ClientWithResponses) GetRDMarketingFeeStatementWithResponse(ctx context.Context, month openapi_types.Date, reqEditors ...RequestEditorFn) (*GetRDMarketingFeeStatementResponse, error) {
+	rsp, err := c.GetRDMarketingFeeStatement(ctx, month, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRDMarketingFeeStatementResponse(rsp)
 }
 
 // DeleteRecipientWithResponse request returning *DeleteRecipientResponse
@@ -27060,6 +28271,46 @@ func ParseUpdateIndividualApplicationDetailsResponse(rsp *http.Response) (*Updat
 	return response, nil
 }
 
+// ParseGetLegalAcceptanceContextResponse parses an HTTP response from a GetLegalAcceptanceContextWithResponse call
+func ParseGetLegalAcceptanceContextResponse(rsp *http.Response) (*GetLegalAcceptanceContextResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLegalAcceptanceContextResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LegalAcceptanceContext
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateApplicationSubmissionResponse parses an HTTP response from a CreateApplicationSubmissionWithResponse call
 func ParseCreateApplicationSubmissionResponse(rsp *http.Response) (*CreateApplicationSubmissionResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -27315,6 +28566,12 @@ func ParseListCustomersResponse(rsp *http.Response) (*ListCustomersResponse, err
 
 			// Meta Meta information about the response
 			Meta Meta `json:"meta"`
+
+			// StatusCounts How many customers hold each unified status, across the
+			// same filters (search, date, sub-client) but ignoring the
+			// `status` selection itself, so the dashboard can render a
+			// count per status chip while a status filter is active.
+			StatusCounts *CustomerStatusCounts `json:"status_counts,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -28397,6 +29654,81 @@ func ParseGetInstructionResponse(rsp *http.Response) (*GetInstructionResponse, e
 			return nil, err
 		}
 		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListLegalDocumentsResponse parses an HTTP response from a ListLegalDocumentsWithResponse call
+func ParseListLegalDocumentsResponse(rsp *http.Response) (*ListLegalDocumentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListLegalDocumentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Data []LegalDocument `json:"data"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLegalDocumentResponse parses an HTTP response from a GetLegalDocumentWithResponse call
+func ParseGetLegalDocumentResponse(rsp *http.Response) (*GetLegalDocumentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLegalDocumentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LegalDocument
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
 
 	}
 
@@ -29595,6 +30927,107 @@ func ParseUpsertPolicyWalletRelationshipResponse(rsp *http.Response) (*UpsertPol
 			return nil, err
 		}
 		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRDMarketingFeeStatementsResponse parses an HTTP response from a ListRDMarketingFeeStatementsWithResponse call
+func ParseListRDMarketingFeeStatementsResponse(rsp *http.Response) (*ListRDMarketingFeeStatementsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRDMarketingFeeStatementsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RDMarketingFeeStatementList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRDMarketingFeeStatementResponse parses an HTTP response from a GetRDMarketingFeeStatementWithResponse call
+func ParseGetRDMarketingFeeStatementResponse(rsp *http.Response) (*GetRDMarketingFeeStatementResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRDMarketingFeeStatementResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RDMarketingFeeStatement
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
 
 	}
 
@@ -30922,6 +32355,13 @@ func ParseCreateSignerResponse(rsp *http.Response) (*CreateSignerResponse, error
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Signer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest Signer
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -31146,6 +32586,13 @@ func ParseCreateTransactionResponse(rsp *http.Response) (*CreateTransactionRespo
 			return nil, err
 		}
 		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ProblemDetails

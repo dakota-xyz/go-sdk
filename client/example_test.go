@@ -116,9 +116,9 @@ func ExampleConversationTurn_blockers() {
 	}
 }
 
-// Speak your product's language. Register the vocabulary ONCE — the per-turn
-// WithClientPolicy override is for development, and forgetting it fails
-// silently, with the agent narrating in platform nouns again.
+// Speak your product's language. Registration is the ONLY way to set a policy:
+// it belongs to the client, not to a request, so every drafting turn and every
+// accept resolve it from here and cannot disagree with one another.
 func ExampleClient_Raw_registerAgenticPolicy() {
 	c, err := client.New(client.WithAPIKey("sk_test_your_key"))
 	if err != nil {
