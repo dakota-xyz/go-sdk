@@ -102,9 +102,14 @@ hand-written surface.
   into an empty `Link` and a zero `ExpiresAt` indistinguishable from "expires
   at the Unix epoch". `Link` is removed in favor of `LinkType`, `URL`, and
   `Status`, and `ExpiresAt` becomes `*int64` so a genuinely absent expiry
-  decodes to `nil` instead of `0`. The removal of `Link` is source-breaking,
-  but that field never held a value on any released version, so no working
-  code can regress.
+  decodes to `nil` instead of `0`. Both changes are source-breaking: `Link`
+  is removed, and `time.Unix(data.ExpiresAt, 0)` no longer compiles against
+  an `*int64`. Neither field ever held a usable value on any released
+  version — `Link` was always empty and `ExpiresAt` was always either a real
+  timestamp or a `0` indistinguishable from the Unix epoch — so no working
+  code can regress. Note also that a nil `ExpiresAt` is the *common* case on
+  `customer.kyb_link.created`, not the exception: check for nil before
+  dereferencing.
 - **`types.KYBApplicationSubmittedData` now matches the payload the platform
   actually sends.** The struct decoded a bare `type` string, but
   `customer.kyb_application.submitted` carries `application_id` and
@@ -116,10 +121,13 @@ hand-written surface.
   `types.OneOffTransactionData` are removed.** The platform's outbound
   webhook sanitizer strips every `provider_`-prefixed key before a webhook
   is ever delivered, so `ProviderID`, `ProviderExternalID`, and
-  `ProviderStatus` on both structs could never be populated by a real
-  payload. Removing them is source-breaking for anything that referenced
-  those fields, but they never held a value on any released version, so no
-  working code can regress.
+  `ProviderStatus` on both structs could never be populated by a *delivered
+  webhook payload* — the only thing these structs are for. (The platform's
+  delivery-history API returns the raw stored content, where those keys do
+  still appear; that surface is separately ticketed and is not modeled by
+  this package.) Removing them is source-breaking for anything that
+  referenced those fields, but they never held a value on any released
+  version, so no working code can regress.
 - **`types.BVNKOnboardingData` is reduced to its one documented field.** The
   struct declared `id`, `status`, and `reason`, but the platform has no
   emitter for `bvnk.onboarding.created` or `bvnk.onboarding.updated` today —
@@ -129,6 +137,96 @@ hand-written surface.
   event type remains part of the public contract. `ID`, `Status`, and
   `Reason` never held a value on any released version, so no working code
   can regress.
+- **`types.CustomerData` now matches the payload the platform actually
+  sends.** The struct tagged its primary key `id`, but `customer.created`
+  and `customer.updated` carry `customer_id` — so the customer ID on every
+  customer webhook decoded to `""`, the same silent-empty-identifier failure
+  as the KYB structs above. `ReferenceID` was a mis-tag of the emitted
+  `external_id`, and `Email`, `Status`, `PhoneNumber`, `DateOfBirth`,
+  `SSNLastFour`, `IncorporatedOn`, and `Address` are not emitted on these
+  events at all. `ID` becomes `CustomerID` (tag `customer_id`),
+  `ReferenceID` becomes `ExternalID` (tag `external_id`), the seven
+  never-populated fields are removed, and `ImportReference`
+  (`{source, reference}`, present on `customer.created` for token-sharing
+  imports) is added. The rename and removals are source-breaking, but none
+  of those fields ever held a value on any released version, so no working
+  code can regress.
+- **`types.TargetCreatedData`, `types.TargetUpdatedData`, and
+  `types.TargetDeletedData` described the wrong concept entirely.** The
+  structs modeled a savings/payout target (`amount`, `currency`,
+  `frequency`); a platform *target* is a registered webhook endpoint.
+  `target.created` carries `target_id`, `url`, `global`, and an optional
+  `event_types`; `target.updated` and `target.deleted` carry the same
+  endpoint under `target_url` instead of `url`, which is why these remain
+  three types rather than one. Every previous field is removed. This is
+  source-breaking, but no field on any of the three ever held a value on any
+  released version, so no working code can regress.
+- **`types.ExceptionData` and `types.ExceptionClearedData` now match the
+  payloads the platform actually sends.** Both events identify the exception
+  as `exception_id`, not `id`, and carry a `type`; `exception.created` adds
+  an optional `customer_id` and an open-ended `exception_content` blob.
+  Neither event carries a timestamp of its own — the enclosing envelope's
+  `Created` is the time. `AutoAccountID`, `TransactionID`, `Message`, and
+  `CreatedAt`/`ClearedAt` are removed; `ExceptionID`, `CustomerID`, and
+  `Content` are added. Five of the six fields on the first struct and all
+  three on the second never held a value on any released version, so no
+  working code can regress.
+- **`types.RecipientData` and `types.RecipientUpdatedData` now match the
+  payloads the platform actually sends.** `Type` and `BankAccount` are not
+  emitted on either event, and the emitted `status` and `address` were not
+  decodable. Both fields are removed in favor of `Status` and `Address`.
+  Separately, **`recipient.updated` carries no `customer_id` at all**, so
+  `RecipientUpdatedData.CustomerID` always decoded to `""`; it is removed
+  rather than left to read as an empty string — resolve the owner from `ID`,
+  or retain the `customer_id` delivered with `recipient.created`.
+  `types.RecipientDeletedData` gains `CustomerID`, which that event always
+  emits. The removals are source-breaking, but none of the removed fields
+  ever held a value on any released version, so no working code can regress.
+- **`types.DestinationData` now matches the payload the platform actually
+  sends.** `destination.created` carries `id`, `recipient_id`, `name`,
+  `type`, and exactly one of an optional `crypto` or `bank_account` block.
+  `CustomerID` and `Currency` are not emitted and are removed; `Name`,
+  `Type`, and `Crypto` are added. `types.DestinationDeletedData` gains
+  `RecipientID`, which that event always emits. The removals are
+  source-breaking, but neither field ever held a value on any released
+  version, so no working code can regress.
+- **`types.APIKeyData` now matches the payload the platform actually
+  sends.** `api_key.created` carries `id` and `last_6`; `UserID` and `Name`
+  are not emitted, and `last_6` — the one fragment of a key that is safe to
+  display and the field clients use to identify a key in a list — was not
+  decodable. `UserID` and `Name` are removed and `Last6` is added. The event
+  also carries the key's `hash`, which is deliberately *not* surfaced on the
+  SDK's typed payload. The removals are source-breaking, but neither field
+  ever held a value on any released version, so no working code can regress.
+- **`types.WalletTransactionIntent.Sponsor` is removed and
+  `types.WalletTransactionOperation` gains `AssetID`.** No platform event
+  ever emits a `sponsor` key, so the field was always `false` — a value a
+  consumer could easily mistake for "gas is not sponsored". Conversely
+  `asset_id` is emitted on every wallet transaction operation and was not
+  modeled, so the asset silently decoded to `""`. The removal is
+  source-breaking, but the field never held a meaningful value on any
+  released version, so no working code can regress.
+- **`types.OneOffTransactionData` gains `SenderDetails`.** The platform
+  emits `sender_details` on one-off transactions (the crypto subset:
+  `sender_wallet_address` and `sender_network`) and the sanitizer does not
+  strip it, but only the auto-transaction struct modeled it, so the
+  originating wallet was unreachable from a one-off payload. Additive only.
+
+### Deliberately deferred
+
+The sweep above corrects every field that could never populate. These
+emitted keys are knowingly *not* modeled yet, and are additive whenever they
+land — no struct below decodes incorrectly without them:
+
+- `fiat_rail`, `return_code`, `return_reason`, `return_initiated_at`,
+  `return_deadline`, `net_recovered_amount`, `reversal_reason`, and
+  `reversal_initiated_at` on the transaction payloads (the return and
+  reversal lifecycles).
+- `imad` on the one-off transaction receipt.
+- `developer_fee_bps` on `auto_account.created` / `auto_account.updated`.
+- `hash` on `api_key.created`, which will stay unmodeled by choice.
+- The gap between `webhook.AllEventTypes` and the set of event types the
+  platform actually emits, which is tracked separately.
 
 ## [0.4.0] - 2026-06-17
 
