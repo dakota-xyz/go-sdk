@@ -4,6 +4,16 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- **Insight chat (alpha).** `ChatCustomerInsightsWithResponse` and the
+  `InsightChat{Message,Request,Response}` types are gone from `client/gen`:
+  platform removed `POST /customers/{customer_id}/insights/chat` for the agentic
+  BETA (ENG-3153), so the call had no server to reach. The deterministic report
+  `GetCustomerInsightsWithResponse` is unaffected. Nothing here shipped in a
+  tagged release — the operation existed only on `main` — and the conversational
+  surface is expected to return in a reshaped form after the beta.
+
 ### Added — agentic payments catch-up (alpha)
 
 Regenerated `client/gen` against the current platform spec, bringing the Go
@@ -70,11 +80,13 @@ hand-written surface.
   (`Signer`, `P256Signer`, `MandateSignPayload`, `VerifyMandateSignature`). See
   `client/example_test.go` and the README "Agentic Payments (Alpha)" section.
   This surface is `x-alpha`/flag-gated and may change without a major bump.
-- **Customer insight (alpha).** Read-only account-insight operations generated
-  into `client/gen`, reachable via `c.Raw()`: `GetCustomerInsightsWithResponse`
-  (the deterministic report — snapshot, `insights[]`, `suggestions[]`, each item
-  carrying typed `evidence`) and `ChatCustomerInsightsWithResponse` (the advisory
-  chat, `{messages[]} → {reply, conversation_status}`). Also `x-alpha`/flag-gated.
+- **Customer insight (alpha).** The read-only account-insight operation
+  generated into `client/gen` and reachable via `c.Raw()`:
+  `GetCustomerInsightsWithResponse` (the deterministic report — snapshot,
+  `insights[]`, `suggestions[]`, each item carrying typed `evidence`). Also
+  `x-alpha`/flag-gated. (This entry also announced a companion
+  `ChatCustomerInsightsWithResponse`; see **Removed** above — it never reached
+  a tagged release.)
 
 ### Changed
 

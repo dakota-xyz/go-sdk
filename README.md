@@ -345,7 +345,7 @@ if err != nil {
 // Submit `sig` via the mandate-approve endpoint (c.Raw()) to activate the mandate.
 ```
 
-The full agentic surface (`/payment-agents`, `/mandates`, `/instructions`, proposals) is always reachable via `c.Raw()`. The read-only **customer insight** surface — `c.Raw().GetCustomerInsightsWithResponse(ctx, customerID)` for the deterministic account report and `c.Raw().ChatCustomerInsightsWithResponse(...)` for the advisory chat — is reachable the same way.
+The full agentic surface (`/payment-agents`, `/mandates`, `/instructions`, proposals) is always reachable via `c.Raw()`. The read-only **customer insight** report — `c.Raw().GetCustomerInsightsWithResponse(ctx, customerID)` — is reachable the same way.
 
 ### Blockers: for your application, not your customer
 
