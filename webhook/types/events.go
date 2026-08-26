@@ -237,8 +237,13 @@ type DestinationDeletedData struct {
 // TargetCreatedData is the event payload for target.created events.
 //
 // A target is a registered webhook endpoint. Global reports whether the
-// endpoint receives every event type; EventTypes lists the subscribed types and
-// is present only on a non-global target.
+// endpoint receives every event type.
+//
+// EventTypes lists the subscribed types. The platform omits the key unless the
+// target is both non-global and subscribed to at least one type, so an empty
+// EventTypes does not imply a global target: read Global for that. Its order is
+// not meaningful — the platform builds the list by ranging a map — so compare
+// it as a set and never equality-diff two payloads on it.
 //
 // Note the endpoint URL arrives as `url` on target.created but as `target_url`
 // on target.updated and target.deleted, which is why these are three types
@@ -250,7 +255,8 @@ type TargetCreatedData struct {
 	EventTypes []string `json:"event_types,omitempty"`
 }
 
-// TargetUpdatedData is the event payload for target.updated events.
+// TargetUpdatedData is the event payload for target.updated events. Global and
+// EventTypes carry the same caveats as on [TargetCreatedData].
 type TargetUpdatedData struct {
 	TargetID   string   `json:"target_id"`
 	TargetURL  string   `json:"target_url"`
