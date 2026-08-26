@@ -37,7 +37,9 @@ type SignerGroupMember struct {
 	KeyType   string `json:"key_type"`
 }
 
-// PolicyContent describes a policy within a wallet event.
+// PolicyContent describes a policy within a wallet event. It also stands
+// alone as the entire top-level payload of wallet.policy.created and
+// wallet.policy.updated.
 type PolicyContent struct {
 	ID            string              `json:"id"`
 	ClientID      string              `json:"client_id"`
