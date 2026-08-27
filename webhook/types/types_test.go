@@ -684,17 +684,6 @@ func TestEventDataAs_ExceptionClearedData(t *testing.T) {
 	}
 }
 
-// bvnk.onboarding.* has no platform emitter today; this pins the one shape
-// the published public spec documents for it.
-func TestEventDataAs_BVNKOnboardingData(t *testing.T) {
-	data := decodeEvent[types.BVNKOnboardingData](
-		t, "evt_bvnk_onboarding_data", webhook.EventBVNKOnboardingCreated, `{"customer_id":"mh4981Rh0eiHymFzltxUJjS7aNP"}`,
-	)
-	if data.CustomerID != "mh4981Rh0eiHymFzltxUJjS7aNP" {
-		t.Errorf("CustomerID = %q, want %q", data.CustomerID, "mh4981Rh0eiHymFzltxUJjS7aNP")
-	}
-}
-
 func TestEventDataAs_WalletEventData(t *testing.T) {
 	payload := `{
 		"wallet":{

@@ -51,9 +51,6 @@ const (
 	EventExceptionCreated EventType = "exception.created"
 	EventExceptionCleared EventType = "exception.cleared"
 
-	EventBVNKOnboardingCreated EventType = "bvnk.onboarding.created"
-	EventBVNKOnboardingUpdated EventType = "bvnk.onboarding.updated"
-
 	EventWalletCreated            EventType = "wallet.created"
 	EventWalletUpdated            EventType = "wallet.updated"
 	EventWalletSignerGroupCreated EventType = "wallet.signer_group.created"
@@ -101,8 +98,6 @@ var AllEventTypes = []EventType{
 	EventTargetDeleted,
 	EventExceptionCreated,
 	EventExceptionCleared,
-	EventBVNKOnboardingCreated,
-	EventBVNKOnboardingUpdated,
 	EventWalletCreated,
 	EventWalletUpdated,
 	EventWalletSignerGroupCreated,

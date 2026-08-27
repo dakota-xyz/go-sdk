@@ -295,18 +295,3 @@ type ExceptionClearedData struct {
 	Type        string  `json:"type"`
 	CustomerID  *string `json:"customer_id,omitempty"`
 }
-
-// ---------------------------------------------------------------------------
-// BVNK
-// ---------------------------------------------------------------------------
-
-// BVNKOnboardingData is the event payload for bvnk.onboarding.created and
-// bvnk.onboarding.updated events.
-//
-// The platform has no emitter for these event types today — the type is
-// retained only because the event type remains in the published public
-// event-type enum. Its shape follows the one example the public spec
-// documents; if a real emitter appears, extend it then.
-type BVNKOnboardingData struct {
-	CustomerID string `json:"customer_id"`
-}

@@ -138,15 +138,16 @@ hand-written surface.
   thing this package models. Removing them is source-breaking for anything
   that referenced those fields, but they never held a value on any released
   version, so no working code can regress.
-- **`types.BVNKOnboardingData` is reduced to its one documented field.** The
-  struct declared `id`, `status`, and `reason`, but the platform has no
-  emitter for `bvnk.onboarding.created` or `bvnk.onboarding.updated` today —
-  those event types exist only in the published public event-type enum,
-  with a documented example payload of `{customer_id}`. The struct now
-  matches that example and is retained (rather than removed) because the
-  event type remains part of the public contract. `ID`, `Status`, and
-  `Reason` never held a value on any released version, so no working code
-  can regress.
+- **`bvnk.onboarding.created`, `bvnk.onboarding.updated`, and
+  `types.BVNKOnboardingData` are removed.** Dakota does not use BVNK as a
+  provider — the platform has no emitter for these event types and never
+  sends them, so no consumer of this SDK could ever have received one.
+  (The event types remain in the platform's published public event-type
+  enum for now; removing them there is tracked separately and out of scope
+  for this SDK.) Removing `EventBVNKOnboardingCreated`,
+  `EventBVNKOnboardingUpdated`, and `types.BVNKOnboardingData` is
+  source-breaking for anything that referenced them, but since no delivered
+  webhook could ever carry this shape, no running code can regress.
 - **`types.CustomerData` now matches the payload the platform actually
   sends.** The struct tagged its primary key `id`, but `customer.created`
   and `customer.updated` carry `customer_id` — so the customer ID on every
