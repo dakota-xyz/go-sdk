@@ -1715,17 +1715,18 @@ type AccountCreateRequest struct {
 	// accounts. Setting it on an `onramp` or `swap` account is REJECTED
 	// with a 400: those sweep to a crypto address, where no reference is
 	// delivered, so accepting it would store a value the payee can never
-	// see. SWIFT is validated but NOT delivered: a SWIFT transfer carries
-	// no payment reference at all, and a one-off is no different — both
-	// reach the same send path, which has nowhere to put one. Do not plan
-	// on a reference reaching a SWIFT payee by any route today. ACH and
-	// wire (`fedwire`, `us_bank_account`) do deliver it.
+	// see. On SWIFT the reference is carried as the wire's remittance
+	// information; whether the payee sees it depends on the receiving
+	// bank and any intermediaries, so do not rely on it for payee-side
+	// reconciliation. ACH and wire (`fedwire`, `us_bank_account`)
+	// deliver it as the addenda / wire message.
 	//
 	// Validated against the account's `rail` with the same per-rail rules
 	// as a one-off's `payment_reference` — ACH at most 18 characters and
 	// letters/numbers/spaces only, wire (`fedwire`, `us_bank_account`) at
-	// most 140 characters, SEPA 6-140, SWIFT 5-140. A `swift` account
-	// validates the value but, per above, never delivers it.
+	// most 140 characters, SEPA 6-140, SWIFT 5-140 across at most 4
+	// lines of 35 characters (letters, numbers, spaces, commas, and
+	// periods only).
 	//
 	// Omit for the default, which is unchanged: no reference is attached.
 	// An empty string means the same thing and is accepted — a client that
@@ -1734,7 +1735,7 @@ type AccountCreateRequest struct {
 	// valid crypto account.
 	PaymentReference *string `json:"payment_reference,omitempty"`
 
-	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
+	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	Rail *PaymentCapability `json:"rail,omitempty"`
 
 	// ReturnAddress A unique identifier for a specific account on a specific blockchain. When rendered as a string, it has the syntax: <network-id>://<canonical-address> (e.g., ethereum-mainnet://0x165cd37b4c644c2921454429e7f9358d18a45e14)
@@ -1764,13 +1765,13 @@ type AccountResponse struct {
 	// DestinationAsset Asset received at the destination.
 	DestinationAsset *string `json:"destination_asset,omitempty"`
 
-	// DestinationRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
+	// DestinationRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	DestinationRail *PaymentCapability `json:"destination_rail,omitempty"`
 
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
-	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
+	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	Rail *PaymentCapability `json:"rail,omitempty"`
 
 	// SourceAsset Asset sent into the account.
@@ -1995,7 +1996,7 @@ type AgenticChatMessage struct {
 // AgenticChatMessageRole defines model for AgenticChatMessage.Role.
 type AgenticChatMessageRole string
 
-// AgenticClientPolicy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+// AgenticClientPolicy BETA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
 //
 // SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
 //
@@ -2081,7 +2082,10 @@ type AgenticInstructionsResult struct {
 // AgenticProposal A self-contained series of actions. Cross-action links are <entity>_id fields - empty binds to the artifact created in this proposal, a real id reuses an existing one. Every proposal must instruct a payment or draft a mandate - a mandate-only proposal is a standing authorization (sign now, schedule under it later by mandate_id with no new signature).
 type AgenticProposal struct {
 	Actions []AgenticAction `json:"actions"`
-	Summary *string         `json:"summary,omitempty"`
+
+	// PaymentAgentId The payment agent this proposal was drafted under. Present on proposals returned by the drafting endpoint (it echoes the endpoint's agent); ignored on input - the accept endpoint takes the agent in its own payment_agent_id field.
+	PaymentAgentId *string `json:"payment_agent_id,omitempty"`
+	Summary        *string `json:"summary,omitempty"`
 }
 
 // AgenticProposalsProgress Live snapshot of an in-flight proposal-drafting turn. Coarse and customer-safe: a phase enum, one human sentence, and the model round. Tool counts only — never payee names, amounts, or addresses.
@@ -2107,7 +2111,7 @@ type AgenticProposalsProgressPhase string
 
 // AgenticProposalsResult The agent's next step. At least one of `proposals` or `reply` is always present in a successful response — `proposals` at high confidence (optionally with a short `reply` note), or `reply` alone when the agent needs more from the user.
 type AgenticProposalsResult struct {
-	// Blockers ALPHA — machine-actionable reasons the agent could not complete the request, for the CLIENT APPLICATION rather than the customer. `reply` explains it in prose, which software cannot branch on: "extend the limit to cover Priya", "I need her bank details" and "that rail is not supported" all arrive as some text. A blocker names the reason as a stable code so the client can act on it — opening its own limit editor with the payee filled in, say — and only then decide what the customer sees.
+	// Blockers BETA — machine-actionable reasons the agent could not complete the request, for the CLIENT APPLICATION rather than the customer. `reply` explains it in prose, which software cannot branch on: "extend the limit to cover Priya", "I need her bank details" and "that rail is not supported" all arrive as some text. A blocker names the reason as a stable code so the client can act on it — opening its own limit editor with the payee filled in, say — and only then decide what the customer sees.
 	// MAY ACCOMPANY PROPOSALS, and routinely does. The common case is a payee who does not exist yet: the turn proposes creating them AND reports that the limit will not reach them, because the client has to do both, in that order — accept the proposal so the payee has an id, then amend the limit to include it. Treat proposals and blockers as independent, never as alternatives.
 	// Absent when nothing blocked the turn. ALWAYS switch on `code` and ignore codes you do not know, as new ones are added over time. Every blocker returned has been re-checked against the server's own data, so a code never reflects only the model's opinion.
 	Blockers *[]AgenticBlocker `json:"blockers,omitempty"`
@@ -2948,7 +2952,7 @@ type AutoAccountTransaction struct {
 	// Receipt Detailed receipt information for a transaction
 	Receipt *TransactionReceipt `json:"receipt,omitempty"`
 
-	// ReturnCode NACHA/Fedwire return code (e.g., R01) when the transaction was returned by the receiving bank.
+	// ReturnCode Return code (e.g., R01) when the transaction was returned by the receiving bank. NACHA/Fedwire codes for US bank rails; international (SWIFT) wire returns carry no NACHA code and may return a reduced amount after intermediary fees.
 	ReturnCode *string `json:"return_code,omitempty"`
 
 	// ReturnDeadline Unix timestamp deadline for return processing.
@@ -3011,7 +3015,7 @@ type BankAccount struct {
 	// BankPhone Phone number of the bank.
 	BankPhone *string `json:"bank_phone,omitempty"`
 
-	// Bic BIC/SWIFT code for the international bank account.
+	// Bic BIC/SWIFT code for the international bank account. On deposit instructions it is populated only for SWIFT-capable accounts; give the sender both this BIC and the routing number.
 	Bic *string `json:"bic,omitempty"`
 
 	// Capabilities List of payment capabilities supported by a rail. Multiple values may
@@ -3340,7 +3344,7 @@ type ClientPricingConfig struct {
 	// SepaFeeCents Per-SEPA transaction fee in cents
 	SepaFeeCents int `json:"sepaFeeCents"`
 
-	// SwiftFeeCents Per-Swift-transfer banking fee in USD cents.
+	// SwiftFeeCents Per-Swift-transfer banking fee in USD cents, debited from the prepaid credit balance on outbound transfers only; deposits carry no banking fee. Self-serve default is 2500 ($25.00).
 	SwiftFeeCents int `json:"swiftFeeCents"`
 
 	// TransferFeeBps Transfer fee in basis points (0-10000, representing 0% to 100%)
@@ -5306,7 +5310,7 @@ type OneOffTransaction struct {
 	// DestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	DestinationId KSUID `json:"destination_id"`
 
-	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
+	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
 
 	// DestinationRoutingNumber ABA routing number for US bank accounts
@@ -5321,7 +5325,7 @@ type OneOffTransaction struct {
 	// NetRecoveredAmount Decimal amount actually recovered when a returned transaction settled short, denominated in the transaction's own currency (the same basis as its face amount), so face amount minus this value is exactly what the bank withheld. Present only when a return came back short — absent when the full amount was recovered, or when the rail reports no net figure at all (ACH never does). Absent means the face amount is authoritative; it never means zero.
 	NetRecoveredAmount *string `json:"net_recovered_amount"`
 
-	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT or SEPA reference)
+	// PaymentReference Payment reference message for bank transfers (e.g. wire message, SWIFT remittance information, or SEPA reference)
 	PaymentReference *string `json:"payment_reference"`
 
 	// Receipt Detailed receipt information for a transaction
@@ -5330,7 +5334,7 @@ type OneOffTransaction struct {
 	// ResourceType Discriminator field. Always "one_off" for one-off transactions.
 	ResourceType TransactionResourceType `json:"resource_type"`
 
-	// ReturnCode NACHA/Fedwire return code (e.g., R01) when the transaction was returned by the receiving bank.
+	// ReturnCode Return code (e.g., R01) when the transaction was returned by the receiving bank. NACHA/Fedwire codes for US bank rails; international (SWIFT) wire returns carry no NACHA code and may return a reduced amount after intermediary fees.
 	ReturnCode *string `json:"return_code,omitempty"`
 
 	// ReturnDeadline Unix timestamp deadline for return processing.
@@ -5398,13 +5402,13 @@ type OneOffTransactionRequest struct {
 	// DestinationNetworkId Identifier for a blockchain network
 	DestinationNetworkId *NetworkId `json:"destination_network_id,omitempty"`
 
-	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
+	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
 
 	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%). Overrides the default client fee for this transaction.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
-	// PaymentReference Optional payment reference message for bank transfers. Length limits: ACH (1-18 chars), Wire (1-140 chars), SEPA (6-140 chars), SWIFT (1-140 chars, max 4 lines of 35 chars each)
+	// PaymentReference Optional payment reference message for bank transfers, carried on the payment as the ACH addenda, the wire message, or the SWIFT remittance information. On SWIFT, whether the payee sees it depends on the receiving bank and any intermediaries. Length limits: ACH 1-18 characters (letters/numbers/spaces), wire 1-140, SEPA 6-140, SWIFT 5-140 across at most 4 lines of 35 characters (letters, numbers, spaces, commas, and periods only).
 	PaymentReference *string `json:"payment_reference,omitempty"`
 
 	// SourceAsset Source crypto asset symbol
@@ -5558,7 +5562,7 @@ type PaymentAgentSignerGroupRef struct {
 	SignerGroupId string `json:"signer_group_id"`
 }
 
-// PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead.
+// PaymentCapability Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 type PaymentCapability string
 
 // PersonName Full name of a person
@@ -5868,14 +5872,14 @@ type RecipientResponse struct {
 // RecipientResponseStatus Current status of the recipient
 type RecipientResponseStatus string
 
-// RegisteredAgenticClientPolicy A client's registered `client_policy` (ALPHA) with its registration timestamps.
+// RegisteredAgenticClientPolicy A client's registered `client_policy` (BETA) with its registration timestamps.
 //
 // `policy` is the NORMALIZED form — what the server will actually apply, not an echo of what was sent. Values that mean "the default" are normalized away (`payee_model: nested` becomes absent, because an explicit nested and an absent policy have to be the same value rather than two values that merely behave alike today).
 type RegisteredAgenticClientPolicy struct {
 	// CreatedAt Unix time this client first registered a policy.
 	CreatedAt *int64 `json:"created_at,omitempty"`
 
-	// Policy ALPHA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
+	// Policy BETA — how THIS client's product speaks, and what the agent may propose for it. It reshapes what the drafting model SEES (tool results, tool descriptions, prompt sections) and constrains what it may PROPOSE, so the agent narrates in the client's own nouns instead of platform ones.
 	//
 	// SCOPE: this is a per-CLIENT policy — it belongs to the `client_id` behind the API key, never to a key (api keys are N:1 to clients, so a per-key policy would fragment for a client running one service key per deployment). REGISTER IT at `PUT /agentic-policy`, which resolves the client from the API key: there is no id to pass and no other client's policy to address.
 	//

@@ -68,7 +68,7 @@ func WithTimezone(tz string) ConversationOption {
 
 // NewAgentConversation starts a fresh conversation with the agent.
 //
-// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// Experimental: agentic payments is a beta surface (x-beta, flag-gated on
 // the platform) and may change without a major-version bump.
 func (c *Client) NewAgentConversation(agentID string, opts ...ConversationOption) *AgentConversation {
 	cv := &AgentConversation{client: c, agentID: agentID}

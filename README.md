@@ -281,9 +281,9 @@ fmt.Printf("Transaction created: %s\n", tx.Id)
 fmt.Printf("Status: %s\n", tx.Status)
 ```
 
-## Agentic Payments (Alpha)
+## Agentic Payments (Beta)
 
-> ⚠️ **Alpha.** The hosted payment-agent surface is `x-alpha` and flag-gated on the platform (endpoints return `404` unless enabled for your key). The SDK helpers below may change — or be removed — without a major-version bump. Not recommended for production.
+> ⚠️ **Beta.** The hosted payment-agent surface is `x-beta` and flag-gated on the platform (endpoints return `404` unless enabled for your key). The SDK helpers below may change — or be removed — without a major-version bump. Not recommended for production.
 
 A **payment agent** is a named, customer-scoped signer Dakota can drive: you provision it, endorse it onto a wallet, then it drafts and — once a **mandate** is signed — fires payments, bounded by that customer-approved mandate. Runnable snippets live in [`client/example_test.go`](client/example_test.go).
 

@@ -54,7 +54,7 @@ func firstOrNewUUID(keys []uuid.UUID) (uuid.UUID, error) {
 // (e.g. after a crash/partition) safe to dedupe server-side; omit it and a fresh
 // key is generated per call.
 //
-// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// Experimental: agentic payments is a beta surface (x-beta, flag-gated on
 // the platform) and may change without a major-version bump.
 func (c *Client) AttachUserToWallet(ctx context.Context, walletID, signerPublicKey, spendingGroupID string, idempotencyKey ...uuid.UUID) (alreadyMember bool, err error) {
 	if walletID == "" || signerPublicKey == "" || spendingGroupID == "" {
