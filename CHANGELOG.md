@@ -4,6 +4,54 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Changed — the agentic surface is BETA, not alpha (ENG-3168)
+
+Platform promoted the whole agentic surface from alpha to beta. Nothing about
+the wire contract moved: same paths, parameters, schemas, status codes and
+response shapes. What changed is the maturity marker, and it reaches this SDK
+three ways — the vendored spec's `x-alpha: true` is now `x-beta: true`, the 21
+operation summaries read `(BETA)`, and the generated doc comments that quote
+them followed. The hand-written notes in `README.md`, `client/doc.go` and the
+`client/agentic*.go` helpers say beta too.
+
+Beta is not a promise of stability. These helpers may still change, or be
+removed, without a major-version bump, and the endpoints stay flag-gated on the
+platform (`404` unless enabled for your key).
+
+### Added — `AgenticProposal.PaymentAgentId`
+
+Picked up by the same re-vendor. It names the payment agent a proposal was
+drafted under, and is present on proposals returned by the drafting endpoint —
+it echoes the agent you called. Ignored on input: the accept endpoint takes the
+agent in its own `payment_agent_id` field. Optional, so nothing existing breaks.
+
+### Changed — spec sync with platform main
+
+`client/gen/openapi.yaml` is a copy of platform `openapi.public.yaml` at the
+alpha-to-beta commit, replacing one that was 82 lines behind. Beyond the two
+items above the delta is documentation only, and the corrections are worth
+reading if you touch SWIFT:
+
+- **A payment reference DOES reach a SWIFT payee**, carried as the wire's
+  remittance information. The old text said SWIFT "carries no payment reference
+  at all" and told you not to plan on one — that was wrong. Whether the payee
+  sees it still depends on the receiving bank and any intermediaries, so it is
+  not something to reconcile against, but it is delivered.
+- **SWIFT reference formatting is tighter than documented**: 5-140 characters
+  across at most 4 lines of 35, and only letters, numbers, spaces, commas and
+  periods.
+- **The self-serve SWIFT banking fee is 2500 ($25.00), not 4000.** Debited from
+  the prepaid credit balance on outbound transfers only; deposits carry no
+  banking fee.
+- **International (SWIFT) wire returns carry no NACHA code**, and may return a
+  reduced amount after intermediary fees. Intermediary and beneficiary banks can
+  deduct en route; Dakota neither controls nor learns those deductions, and they
+  do not appear in external fees — so the amount received can be lower than the
+  amount sent.
+- Onboarding submission is no longer `pending`-only: applicants may also submit
+  in `request_for_information` and `compliance_review`, and Dakota admins in
+  `admin_revision`.
+
 ### Removed
 
 - **Insight chat (alpha).** `ChatCustomerInsightsWithResponse` and the

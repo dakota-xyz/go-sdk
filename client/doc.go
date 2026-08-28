@@ -12,13 +12,13 @@
 //
 // The generated client/types are available under client/gen.
 //
-// # Agentic payments (alpha)
+// # Agentic payments (beta)
 //
 // The hosted payment-agent surface — [Client.AttachUserToWallet],
 // [Client.NewAgentConversation], the mandate-signing helpers ([Signer],
 // [P256Signer], [MandateSignPayload]), and the raw /payment-agents, /mandates,
-// and /instructions operations under client/gen — is an ALPHA feature. The
-// endpoints are x-alpha and flag-gated on the platform (they return 404 unless
+// and /instructions operations under client/gen — is a BETA feature. The
+// endpoints are x-beta and flag-gated on the platform (they return 404 unless
 // enabled), and these helpers may change (or be removed) without a
 // major-version bump. Not recommended for production.
 package client

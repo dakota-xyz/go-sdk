@@ -8,7 +8,7 @@ import (
 	"github.com/dakota-xyz/go-sdk/client/gen"
 )
 
-// Agentic payments is an ALPHA surface (x-alpha, flag-gated on the platform);
+// Agentic payments is a BETA surface (x-beta, flag-gated on the platform);
 // these helpers may change without a major-version bump.
 
 // Draft payments from natural language: the agent turns a prompt into a

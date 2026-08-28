@@ -69,7 +69,7 @@ type Signer interface {
 // returned by GetMandate/ListMandates — no server state is needed, and field
 // order is irrelevant (JCS sorts). The result is what a Signer signs.
 //
-// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// Experimental: agentic payments is a beta surface (x-beta, flag-gated on
 // the platform) and may change without a major-version bump.
 func MandateSignPayload(m gen.Mandate, action MandateAction) ([]byte, error) {
 	switch {
@@ -121,7 +121,7 @@ func MandateSignPayload(m gen.Mandate, action MandateAction) ([]byte, error) {
 // signed here are the bytes the server verifies. Pass the SAME rule to
 // AmendMandate.
 //
-// Experimental: agentic payments is an alpha surface (x-alpha, flag-gated on
+// Experimental: agentic payments is a beta surface (x-beta, flag-gated on
 // the platform) and may change without a major-version bump.
 func MandateAmendSignPayload(m gen.Mandate, version int, rule gen.MandateRule) ([]byte, error) {
 	switch {
