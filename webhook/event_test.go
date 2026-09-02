@@ -143,8 +143,8 @@ func TestEventDataAs_InvalidJSON(t *testing.T) {
 func TestAllEventTypes(t *testing.T) {
 	allTypes := webhook.AllEventTypes
 
-	if len(allTypes) != 41 {
-		t.Errorf("expected 41 event types, got %d", len(allTypes))
+	if len(allTypes) != 39 {
+		t.Errorf("expected 39 event types, got %d", len(allTypes))
 	}
 
 	seen := make(map[webhook.EventType]struct{}, len(allTypes))
