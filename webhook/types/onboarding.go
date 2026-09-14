@@ -25,9 +25,10 @@ type CapabilityRequirement struct {
 // ("customer.capability_status.updated"), emitted when a customer's standing
 // for a capability (rail) changes.
 //
-// Status is one of "available", "enabling" or "action_required" today.
-// Requirements lists what is still OUTSTANDING; the platform sends an empty
-// array, never omits the key, when nothing is owed.
+// Status is one of "available", "enabling", "action_required" or
+// "unavailable" today; treat the set as open. Requirements lists what is still
+// OUTSTANDING; the platform sends an empty array, never omits the key, when
+// nothing is owed.
 type CustomerCapabilityStatusUpdatedData struct {
 	CustomerID   string                  `json:"customer_id"`
 	Capability   string                  `json:"capability"`

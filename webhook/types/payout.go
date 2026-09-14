@@ -22,8 +22,10 @@ type FeePayoutDestinationUpdatedData struct {
 // A destination has no history of its own — a PUT replaces the row — so this
 // event is the only record that it changed, which is why it carries the
 // address, what it replaced, and who did it. PreviousAddress is the empty
-// string on a first registration and UpdatedBy the empty string when the
-// change is not attributable to a user; both keys are always present.
+// string on a first registration. UpdatedBy is the EMAIL of the dashboard
+// user who made the change — personal data, so treat a logged payload
+// accordingly — and the empty string when the change is not attributable to a
+// user. Both keys are always present.
 type RDPayoutDestinationUpdatedData struct {
 	WalletAddress   string `json:"wallet_address"`
 	PreviousAddress string `json:"previous_address"`

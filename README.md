@@ -358,8 +358,14 @@ report, err := client.CheckResponse(c.Raw().GetClientInsightsWithResponse(ctx, &
     WindowDays: ptr(30), // 1–90, default 14
 }))
 for _, row := range report.JSON200.Customers {
-    if row.ItemCounts.Critical > 0 {
-        fmt.Println(row.CustomerId, row.TotalUsd) // Name and TotalUsd are optional (pointers)
+    if row.ItemCounts.Critical == 0 {
+        continue
+    }
+    // Name and TotalUsd are optional, so they are pointers.
+    if row.TotalUsd != nil {
+        fmt.Println(row.CustomerId, *row.TotalUsd)
+    } else {
+        fmt.Println(row.CustomerId, "(balance index not configured)")
     }
 }
 ```

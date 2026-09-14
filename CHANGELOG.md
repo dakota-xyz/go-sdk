@@ -11,7 +11,8 @@ All notable changes to the Dakota Go SDK are documented in this file.
 to the spec the TypeScript SDK carries at the same sync. The platform now gates
 its public spec with a `check-openapi-fresh` CI job, and the commit that last
 touched the internal spec regenerated the public one alongside it, so this copy
-is not stale against `routes.go`: all three new routes are registered there.
+is not stale against `routes.go`: all four new operations (three paths) are
+registered there.
 
 Everything on `c.Raw()` below comes from the regeneration. What needed a hand
 is the webhook package, which does not generate.
@@ -89,8 +90,10 @@ so the next sync cannot drift again.
   `IntermediaryBic`: the correspondent bank between Dakota's bank and `Bic`.
   Leave it unset unless a payment is refused for want of one; a destination
   that needs one is replaced, not edited.
-- `OneOffTransaction` and the nested transaction gain `Uetr`, the RFC 4122
-  end-to-end reference on the wire rail; `Omad` is now nullable.
+- `TransactionSettlement` and `TransactionReceipt` gain `Uetr`, the RFC 4122
+  end-to-end reference that identifies a payment across every institution on
+  the wire rail. Nil for non-wire rails and for wires whose reference has not
+  been assigned yet.
 - `MandateBudgetLine.PriorScope`: true on a `per_target` line whose spend was
   booked under an EARLIER target scope. On such a line a nil `RemainingCount`
   / `RemainingAmount` means NO headroom, not "not capped".

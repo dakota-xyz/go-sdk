@@ -146,10 +146,8 @@ func TestEventDataAs_InvalidJSON(t *testing.T) {
 func TestAllEventTypes(t *testing.T) {
 	allTypes := webhook.AllEventTypes
 
-	if len(allTypes) != 46 {
-		t.Errorf("expected 46 event types, got %d", len(allTypes))
-	}
-
+	// The count itself is pinned by TestAllEventTypes_MatchesSpec, which
+	// derives it from the vendored spec rather than a literal to bump.
 	seen := make(map[webhook.EventType]struct{}, len(allTypes))
 	for _, et := range allTypes {
 		if _, ok := seen[et]; ok {
@@ -181,6 +179,9 @@ func TestAllEventTypes_MatchesSpec(t *testing.T) {
 	var enumerated []string
 	inSchema, inEnum := false, false
 	for _, line := range strings.Split(string(raw), "\n") {
+		// A CRLF checkout (core.autocrlf on Windows) would otherwise match
+		// nothing and fail on the count below — loudly, but for no reason.
+		line = strings.TrimRight(line, "\r")
 		switch {
 		case line == "    EventType:":
 			inSchema = true
