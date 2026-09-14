@@ -217,6 +217,7 @@ const (
 const (
 	ApplicationStatusAdminRevision         ApplicationStatus = "admin_revision"
 	ApplicationStatusApproved              ApplicationStatus = "approved"
+	ApplicationStatusClosed                ApplicationStatus = "closed"
 	ApplicationStatusCompleted             ApplicationStatus = "completed"
 	ApplicationStatusComplianceReview      ApplicationStatus = "compliance_review"
 	ApplicationStatusDeclined              ApplicationStatus = "declined"
@@ -433,6 +434,11 @@ const (
 	CapabilityRequirementTypeTermsAcceptance CapabilityRequirementType = "terms_acceptance"
 )
 
+// Defines values for ClientInsightSeriesBucket.
+const (
+	ClientInsightSeriesBucketDay ClientInsightSeriesBucket = "day"
+)
+
 // Defines values for ClientUserRole.
 const (
 	ClientUserRoleAdmin  ClientUserRole = "admin"
@@ -553,8 +559,7 @@ const (
 	EventTypeAutoAccountCreated              EventType = "auto_account.created"
 	EventTypeAutoAccountDeleted              EventType = "auto_account.deleted"
 	EventTypeAutoAccountUpdated              EventType = "auto_account.updated"
-	EventTypeBvnkOnboardingCreated           EventType = "bvnk.onboarding.created"
-	EventTypeBvnkOnboardingUpdated           EventType = "bvnk.onboarding.updated"
+	EventTypeCustomerApplicationWithdrawn    EventType = "customer.application.withdrawn"
 	EventTypeCustomerCapabilityStatusUpdated EventType = "customer.capability_status.updated"
 	EventTypeCustomerCreated                 EventType = "customer.created"
 	EventTypeCustomerKybApplicationSubmitted EventType = "customer.kyb_application.submitted"
@@ -562,6 +567,8 @@ const (
 	EventTypeCustomerKybLinkUpdated          EventType = "customer.kyb_link.updated"
 	EventTypeCustomerKybStatusCreated        EventType = "customer.kyb_status.created"
 	EventTypeCustomerKybStatusUpdated        EventType = "customer.kyb_status.updated"
+	EventTypeCustomerRfiRequested            EventType = "customer.rfi.requested"
+	EventTypeCustomerRfiResponded            EventType = "customer.rfi.responded"
 	EventTypeCustomerUpdated                 EventType = "customer.updated"
 	EventTypeDestinationCreated              EventType = "destination.created"
 	EventTypeDestinationDeleted              EventType = "destination.deleted"
@@ -569,6 +576,7 @@ const (
 	EventTypeExceptionCreated                EventType = "exception.created"
 	EventTypeFeePayoutDestinationDeleted     EventType = "fee_payout_destination.deleted"
 	EventTypeFeePayoutDestinationUpdated     EventType = "fee_payout_destination.updated"
+	EventTypeRdPayoutDestinationUpdated      EventType = "rd_payout_destination.updated"
 	EventTypeRecipientCreated                EventType = "recipient.created"
 	EventTypeRecipientDeleted                EventType = "recipient.deleted"
 	EventTypeRecipientUpdated                EventType = "recipient.updated"
@@ -1429,6 +1437,12 @@ const (
 	SimulateInboundJSONBodyTypeFedwireOutboundReturned SimulateInboundJSONBodyType = "fedwire_outbound_returned"
 	SimulateInboundJSONBodyTypeFedwireOutboundSettled  SimulateInboundJSONBodyType = "fedwire_outbound_settled"
 	SimulateInboundJSONBodyTypeFedwireReversal         SimulateInboundJSONBodyType = "fedwire_reversal"
+	SimulateInboundJSONBodyTypeSwiftInbound            SimulateInboundJSONBodyType = "swift_inbound"
+	SimulateInboundJSONBodyTypeSwiftOutboundFailed     SimulateInboundJSONBodyType = "swift_outbound_failed"
+	SimulateInboundJSONBodyTypeSwiftOutboundRejected   SimulateInboundJSONBodyType = "swift_outbound_rejected"
+	SimulateInboundJSONBodyTypeSwiftOutboundReturned   SimulateInboundJSONBodyType = "swift_outbound_returned"
+	SimulateInboundJSONBodyTypeSwiftOutboundSettled    SimulateInboundJSONBodyType = "swift_outbound_settled"
+	SimulateInboundJSONBodyTypeSwiftReversal           SimulateInboundJSONBodyType = "swift_reversal"
 	SimulateInboundJSONBodyTypeWireInbound             SimulateInboundJSONBodyType = "wire_inbound"
 	SimulateInboundJSONBodyTypeWireOutboundFailed      SimulateInboundJSONBodyType = "wire_outbound_failed"
 	SimulateInboundJSONBodyTypeWireOutboundRejected    SimulateInboundJSONBodyType = "wire_outbound_rejected"
@@ -2206,6 +2220,7 @@ type Application struct {
 	//   (proof_of_address, bank_statement, or utility_bill) after their application has
 	//   already been approved or completed. The customer remains active but is subject to
 	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+	// - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// ApplicationSubmittedAt When the application was submitted (null if not yet submitted)
@@ -2433,6 +2448,7 @@ type ApplicationListItem struct {
 	//   (proof_of_address, bank_statement, or utility_bill) after their application has
 	//   already been approved or completed. The customer remains active but is subject to
 	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+	// - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// ApplicationType Type of application
@@ -2503,6 +2519,7 @@ type ApplicationNotReadyError struct {
 //     (proof_of_address, bank_statement, or utility_bill) after their application has
 //     already been approved or completed. The customer remains active but is subject to
 //     the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+//   - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 type ApplicationStatus string
 
 // ApplicationValidation Complete validation state for an application (computed at retrieval time)
@@ -2666,6 +2683,7 @@ type AssociatedIndividualResponse struct {
 	//   (proof_of_address, bank_statement, or utility_bill) after their application has
 	//   already been approved or completed. The customer remains active but is subject to
 	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+	// - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 	ApplicationStatus ApplicationStatus          `json:"application_status"`
 	Individual        AssociatedIndividualEntity `json:"individual"`
 }
@@ -3146,6 +3164,7 @@ type BusinessDetailsResponse struct {
 	//   (proof_of_address, bank_statement, or utility_bill) after their application has
 	//   already been approved or completed. The customer remains active but is subject to
 	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+	// - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// Business Business entity data (entity information only, no validation)
@@ -3316,6 +3335,132 @@ type CapabilityRequirementSeverity string
 
 // CapabilityRequirementType defines model for CapabilityRequirement.Type.
 type CapabilityRequirementType string
+
+// ClientInsightCustomer One customer's roll-up row for the drill-down table. Re-query with `?customer_id=` (or the customer report) for the full picture.
+type ClientInsightCustomer struct {
+	ActiveMandates int    `json:"active_mandates"`
+	CustomerId     string `json:"customer_id"`
+
+	// ItemCounts How many report items (insights + suggestions) reference the customer, by severity.
+	ItemCounts ClientInsightItemCounts `json:"item_counts"`
+
+	// LastActivityAt Unix seconds of the customer's most recent executed payment in the lookback. Omitted when there is none.
+	LastActivityAt        *int64  `json:"last_activity_at,omitempty"`
+	Name                  *string `json:"name,omitempty"`
+	OpenScheduledPayments int     `json:"open_scheduled_payments"`
+
+	// TotalUsd Indexed funding-wallet balance in USD. Present only when the balance index is configured.
+	TotalUsd *string `json:"total_usd,omitempty"`
+
+	// Upcoming Open scheduled payments due within the window.
+	Upcoming InsightSnapshotUpcoming `json:"upcoming"`
+}
+
+// ClientInsightCustomersSummary The customer population behind the report. `scanned < total` means the report hit its per-request scan cap (100) and was computed over a prefix of the book in the customer list's order (name, then id) — truncation is never silent. `with_activity` counts customers with any non-cancelled scheduled payment or report item, not only inside the window.
+type ClientInsightCustomersSummary struct {
+	Scanned      int `json:"scanned"`
+	Total        int `json:"total"`
+	WithActivity int `json:"with_activity"`
+	WithCritical int `json:"with_critical"`
+}
+
+// ClientInsightFacets The values present in the report BEFORE the item filters (`kind`, `severity`, `responsibility`) were applied — so a UI can offer every option a client could pick even while a filter is active. `assets` are the assets moving in the window (metrics + series).
+type ClientInsightFacets struct {
+	Assets           []string `json:"assets"`
+	Kinds            []string `json:"kinds"`
+	Responsibilities []string `json:"responsibilities"`
+	Severities       []string `json:"severities"`
+}
+
+// ClientInsightItemCounts How many report items (insights + suggestions) reference the customer, by severity.
+type ClientInsightItemCounts struct {
+	Critical int `json:"critical"`
+	Info     int `json:"info"`
+	Warn     int `json:"warn"`
+}
+
+// ClientInsightMetric One portfolio KPI over the report window, paired with the previous window's value so a dashboard can render a trend delta (value + change vs the prior period). Amount metrics repeat per asset with `asset` set; count metrics omit it. `key` is an OPEN set like `kind`.
+type ClientInsightMetric struct {
+	// Asset Set on amount metrics (one metric entry per asset); absent on counts.
+	Asset *string `json:"asset,omitempty"`
+
+	// ChangePct Decimal string, signed — percent change vs `previous`. Omitted when `previous` is zero.
+	ChangePct *string `json:"change_pct,omitempty"`
+
+	// Key Machine-readable metric name. Open set — emitted today are `executed_volume` (per asset), `executed_payments`, `failed_payments` and `new_counterparties`.
+	Key string `json:"key"`
+
+	// Label Human-readable metric name for direct rendering.
+	Label string `json:"label"`
+
+	// Previous Decimal string — the same metric over the window immediately before the report window.
+	Previous *string `json:"previous,omitempty"`
+
+	// Value Decimal string — the metric over the report window.
+	Value string `json:"value"`
+}
+
+// ClientInsightReport The deterministic, read-only portfolio insight report for the calling client. Computed on demand across the client's own customers (never cross-tenant); nothing is stored.
+type ClientInsightReport struct {
+	// Customers Per-customer roll-up for the drill-down table, sorted worst-first (critical count, then warn, then activity).
+	Customers []ClientInsightCustomer `json:"customers"`
+
+	// Facets The values present in the report BEFORE the item filters (`kind`, `severity`, `responsibility`) were applied — so a UI can offer every option a client could pick even while a filter is active. `assets` are the assets moving in the window (metrics + series).
+	Facets      ClientInsightFacets `json:"facets"`
+	GeneratedAt int64               `json:"generated_at"`
+
+	// Insights Observations across the book (always present, possibly empty).
+	Insights []InsightItem `json:"insights"`
+
+	// Series Daily time series for charts. Map keys are an OPEN set named `<metric>` for counts and `<metric>.<ASSET>` for amounts — emitted today: `executed_payments`, `failed_payments`, `executed_volume.<ASSET>` (lookback over the report window) and `upcoming_obligations.<ASSET>` (forward-looking: open payments due per day from now through the next `window_days`; an OVERDUE open payment is not plotted here — it is counted in `snapshot.upcoming`, which spans everything due through the horizon, and surfaces as a `payment_at_risk` item). Clients must ignore keys they do not recognize.
+	Series ClientInsightSeries `json:"series"`
+
+	// Snapshot Typed FACTS about the client's whole book — rendered directly, not narrated. `total_usd` covers indexed funding-wallet balances and is present only when the balance index is configured; it degrades to absent, never to an error. `balances` (per wallet × asset) is present only when the report is scoped to one customer (`?customer_id=`), so a drill-down can show that customer's holdings overall, by asset and by wallet.
+	Snapshot ClientInsightSnapshot `json:"snapshot"`
+
+	// Suggestions Advisory recommendations (always present, possibly empty). Non-binding — acting on one is a separate, human-gated step.
+	Suggestions []InsightItem `json:"suggestions"`
+	WindowDays  int           `json:"window_days"`
+}
+
+// ClientInsightSeries Daily time series for charts. Map keys are an OPEN set named `<metric>` for counts and `<metric>.<ASSET>` for amounts — emitted today: `executed_payments`, `failed_payments`, `executed_volume.<ASSET>` (lookback over the report window) and `upcoming_obligations.<ASSET>` (forward-looking: open payments due per day from now through the next `window_days`; an OVERDUE open payment is not plotted here — it is counted in `snapshot.upcoming`, which spans everything due through the horizon, and surfaces as a `payment_at_risk` item). Clients must ignore keys they do not recognize.
+type ClientInsightSeries struct {
+	Bucket ClientInsightSeriesBucket `json:"bucket"`
+
+	// From Start of the earliest bucket (unix seconds).
+	From    int64                                 `json:"from"`
+	Metrics map[string][]ClientInsightSeriesPoint `json:"metrics"`
+
+	// To End of the latest bucket (unix seconds).
+	To int64 `json:"to"`
+}
+
+// ClientInsightSeriesBucket defines model for ClientInsightSeries.Bucket.
+type ClientInsightSeriesBucket string
+
+// ClientInsightSeriesPoint One bucket of a time series.
+type ClientInsightSeriesPoint struct {
+	// T Bucket start (unix seconds, UTC).
+	T int64 `json:"t"`
+
+	// V Decimal string — the bucket's value.
+	V string `json:"v"`
+}
+
+// ClientInsightSnapshot Typed FACTS about the client's whole book — rendered directly, not narrated. `total_usd` covers indexed funding-wallet balances and is present only when the balance index is configured; it degrades to absent, never to an error. `balances` (per wallet × asset) is present only when the report is scoped to one customer (`?customer_id=`), so a drill-down can show that customer's holdings overall, by asset and by wallet.
+type ClientInsightSnapshot struct {
+	ActiveMandates int                       `json:"active_mandates"`
+	Balances       *[]InsightSnapshotBalance `json:"balances,omitempty"`
+
+	// Customers The customer population behind the report. `scanned < total` means the report hit its per-request scan cap (100) and was computed over a prefix of the book in the customer list's order (name, then id) — truncation is never silent. `with_activity` counts customers with any non-cancelled scheduled payment or report item, not only inside the window.
+	Customers             ClientInsightCustomersSummary `json:"customers"`
+	Metrics               []ClientInsightMetric         `json:"metrics"`
+	OpenScheduledPayments int                           `json:"open_scheduled_payments"`
+	TotalUsd              *string                       `json:"total_usd,omitempty"`
+
+	// Upcoming Open scheduled payments due within the window.
+	Upcoming InsightSnapshotUpcoming `json:"upcoming"`
+}
 
 // ClientPricingConfig defines model for ClientPricingConfig.
 type ClientPricingConfig struct {
@@ -4260,6 +4405,7 @@ type EDDWithApplicationID struct {
 	//   (proof_of_address, bank_statement, or utility_bill) after their application has
 	//   already been approved or completed. The customer remains active but is subject to
 	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+	// - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 	Edd               EDDResponse       `json:"edd"`
 }
@@ -4407,6 +4553,9 @@ type FiatIBANDestinationRequest struct {
 	// Iban IBAN (International Bank Account Number) for the account.
 	Iban string `json:"iban"`
 
+	// IntermediaryBic BIC of the correspondent bank that carries the payment between Dakota's bank and `bic`. Leave it unset for destinations the sending bank can route on its own, which is nearly all of them. Set it only when a payment is refused for want of an intermediary. A destination cannot be changed after it is created, so a destination that needs one is replaced, not edited.
+	IntermediaryBic *string `json:"intermediary_bic,omitempty"`
+
 	// Name Name of the destination for reference
 	Name string `json:"name"`
 }
@@ -4450,6 +4599,9 @@ type FiatIBANDestinationResponse struct {
 
 	// Iban IBAN (International Bank Account Number) for the account.
 	Iban string `json:"iban"`
+
+	// IntermediaryBic BIC of the correspondent bank that carries the payment between Dakota's bank and `bic`. Leave it unset for destinations the sending bank can route on its own, which is nearly all of them. Set it only when a payment is refused for want of an intermediary. A destination cannot be changed after it is created, so a destination that needs one is replaced, not edited.
+	IntermediaryBic *string `json:"intermediary_bic,omitempty"`
 
 	// Name Name of the destination for reference
 	Name *string `json:"name,omitempty"`
@@ -4590,6 +4742,7 @@ type IndividualDetailsResponse struct {
 	//   (proof_of_address, bank_statement, or utility_bill) after their application has
 	//   already been approved or completed. The customer remains active but is subject to
 	//   the $3,000 USD-equivalent rolling 7-day transaction limit until the review concludes.
+	// - `closed` - Compliance took the application out of review without a decision. It may be reopened to `under_review` by compliance.
 	ApplicationStatus ApplicationStatus `json:"application_status"`
 
 	// Individual Individual entity data (entity information only, no validation)
@@ -4802,6 +4955,9 @@ type InsightEvidence struct {
 
 // InsightItem One observation (in `insights`) or advisory recommendation (in `suggestions`) — the same schema in both arrays. `kind` is an OPEN set: new kinds appear without notice and clients must ignore kinds they do not recognize.
 type InsightItem struct {
+	// CustomerId Client-level report only — the customer this item is about. Omitted on cross-customer aggregates (which list the affected customers in `detail`) and on the customer report, where the scope is the path.
+	CustomerId *string `json:"customer_id,omitempty"`
+
 	// Detail Machine-readable facts behind the message (decimal strings, counts, unix timestamps). Keys vary by kind.
 	Detail *map[string]interface{} `json:"detail,omitempty"`
 
@@ -4811,8 +4967,8 @@ type InsightItem struct {
 	// Kind Machine-readable item type. This is an OPEN set — the values below are the kinds emitted TODAY, but new kinds may be added at any time without a breaking change, so it is documented as an extensible enum rather than a closed one. A client MUST render an unrecognized kind generically from `message` + `severity` (and `evidence`), never drop it. Kinds emitted today, by array:
 	// Observations (`insights[]`):
 	//   * `upcoming_payments` — open payments due within the horizon (count + per-asset totals).
-	//   * `payment_failures_clustered` — ≥2 recent failures to the same payee sharing one reason (root cause).
-	//   * `payments_failed` — remaining recent singleton failures, summarized.
+	//   * `payment_failures_clustered` — ≥2 recent failures to the same payee sharing one reason (root cause). `detail` carries `failure_reason`, `failure_code` (the documented stable code, when the reason classifies) and `docs_url` (the published failure_code reference).
+	//   * `payments_failed` — remaining recent singleton failures, summarized (`detail.docs_url` links the reference).
 	//   * `account_activity` — executed volume over the window + mandates awaiting signature.
 	//   * `new_counterparty` — first open payments to a recently-added payee.
 	//   * `counterparty_concentration` — one payee dominates recent executed outflow.
@@ -4822,11 +4978,18 @@ type InsightItem struct {
 	//   * `funding_shortfall` — a funding wallet's indexed balance is below its near-term payment needs.
 	//   * `mandate_expiring` — an active mandate ends soon (warn when open payments depend on it).
 	//   * `mandate_headroom` — a mandate's window budget is nearly or already over-consumed.
+	//
+	// Kinds emitted only by the client-level report (`GET /insights`) today:
+	//   * `volume_anomaly` — a customer's executed volume is a large multiple of that customer's own baseline (observation).
+	//   * `recipient_dormant` — a previously-paid recipient has gone unpaid for a long stretch (observation; `detail` carries `days_since_last_use` and `last_used_at`).
 	Kind string `json:"kind"`
 
 	// Message Human-readable, self-contained statement of the finding, with exact amounts and dates.
-	Message  string              `json:"message"`
-	Severity InsightItemSeverity `json:"severity"`
+	Message string `json:"message"`
+
+	// Responsibility Client-level report only — a coarse grouping label for routing and filtering (which "department" cares). A label, not ownership: it reuses the insight-agent responsibility catalog names so a future entity build can adopt them without a contract change.
+	Responsibility *string             `json:"responsibility,omitempty"`
+	Severity       InsightItemSeverity `json:"severity"`
 }
 
 // InsightItemSeverity defines model for InsightItem.Severity.
@@ -5113,6 +5276,9 @@ type MandateBudgetLine struct {
 
 	// OpenCount Scheduled payments that have NOT fired yet but will consume this bucket at their due date.
 	OpenCount int `json:"open_count"`
+
+	// PriorScope True on a `per_target` line whose spend was booked under an EARLIER version's target scope (before a `target_type` amendment) and that no current rule target claims. The spend is real and still counts toward the `aggregate` lines, but no payment can consume this bucket under the current rule — so **on a prior-scope line, absent `remaining_count`/`remaining_amount` means NO headroom, not "not capped"**. Never set on `aggregate` lines. Omitted (false) on ordinary lines.
+	PriorScope *bool `json:"prior_scope,omitempty"`
 
 	// RemainingAmount Amount still permitted in this bucket after committed spend and open earmarks, floored at 0 and returned as a decimal string. ABSENT when the rule sets no amount cap for this line's scope — absence means "not capped", never "nothing left".
 	//
@@ -5785,12 +5951,22 @@ type RDMarketingFeeStatement struct {
 	DaysStamped int                `json:"days_stamped"`
 	Month       openapi_types.Date `json:"month"`
 
-	// OwedMinor What the month owes this client, RD minor units. ABSENT until the
-	// month is priced — never zero, which would state that nothing is
-	// owed.
+	// OwedMinor What the month will pay this client, as a whole number of RD
+	// minor units. ABSENT until the month is priced — absent and zero
+	// are different facts, and zero means the month owes nothing
+	// payable.
 	OwedMinor *string `json:"owed_minor,omitempty"`
 
-	// YBpsMonthly The rate in force for THIS month, in monthly basis points. A later rate change does not rewrite it.
+	// YBpsAnnual The CONTRACT rate, in basis points per year, as the Order Form
+	// quotes it. Stated beside the applied rate so a client can check the
+	// month was charged from the rate they signed.
+	YBpsAnnual float64 `json:"y_bps_annual"`
+
+	// YBpsMonthly The rate APPLIED to this month, in monthly basis points: the annual
+	// contract rate charged for the days this month actually has
+	// (y_bps_annual x days_in_month / 365), rounded to 2 decimal places —
+	// the precision it is charged and stored at. A later rate change does
+	// not rewrite it.
 	YBpsMonthly float64 `json:"y_bps_monthly"`
 }
 
@@ -5802,6 +5978,21 @@ type RDMarketingFeeStatementList struct {
 	// who has never had a contract gets 404 instead, and the portal
 	// hides the section entirely. The two are different answers.
 	Months []openapi_types.Date `json:"months"`
+}
+
+// RDPayoutDestination A client's registered destination for RD marketing-fee payouts.
+type RDPayoutDestination struct {
+	Address string `json:"address"`
+
+	// Chain CAIP-2 chain id. Always Base, because RD exists only there.
+	Chain     string    `json:"chain"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// RDPayoutDestinationRequest The wallet to send this client's RD marketing fee to.
+type RDPayoutDestinationRequest struct {
+	// Address An EVM address on Base.
+	Address string `json:"address"`
 }
 
 // RFIRequestedItems Reviewer-selected resubmission scope for an RFI.
@@ -6721,6 +6912,9 @@ type TransactionReceipt struct {
 
 	// Subtotal Detailed representation of an amount with its asset and optional metadata
 	Subtotal *AmountDetails `json:"subtotal,omitempty"`
+
+	// Uetr Unique End-to-end Transaction Reference (UETR), the RFC 4122 UUID that identifies this payment end to end across every institution on the wire rail. Absent for non-wire rails and for wires whose reference has not yet been assigned.
+	Uetr *string `json:"uetr,omitempty"`
 }
 
 // TransactionResource defines model for TransactionResource.
@@ -6741,6 +6935,9 @@ type TransactionSettlement struct {
 
 	// TxnHash Transaction hash for crypto transactions.
 	TxnHash *string `json:"txnHash"`
+
+	// Uetr Unique End-to-end Transaction Reference (UETR), the RFC 4122 UUID that identifies this payment end to end across every institution on the wire rail. Absent for non-wire rails and for wires whose reference has not yet been assigned.
+	Uetr *string `json:"uetr"`
 }
 
 // TransactionStatus Current status of a transaction.
@@ -7581,6 +7778,20 @@ type GetPersonaImportJobParams struct {
 	ResultsAfterIndex *int `form:"results_after_index,omitempty" json:"results_after_index,omitempty"`
 }
 
+// WithdrawCustomerApplicationJSONBody defines parameters for WithdrawCustomerApplication.
+type WithdrawCustomerApplicationJSONBody struct {
+	// Reason Why the application is being withdrawn, recorded for audit
+	// and shown to reviewers. Defaults to a generic reason when
+	// omitted.
+	Reason *string `json:"reason,omitempty"`
+}
+
+// WithdrawCustomerApplicationParams defines parameters for WithdrawCustomerApplication.
+type WithdrawCustomerApplicationParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
 // ListRecipientsParams defines parameters for ListRecipients.
 type ListRecipientsParams struct {
 	// Limit A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 20.
@@ -7615,6 +7826,27 @@ type ListEventsParams struct {
 type PutFeePayoutDestinationParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// GetClientInsightsParams defines parameters for GetClientInsights.
+type GetClientInsightsParams struct {
+	// CustomerId Scope the whole report to one customer (drill-down). An unknown or foreign customer is a 404, mirroring the customer report.
+	CustomerId *string `form:"customer_id,omitempty" json:"customer_id,omitempty"`
+
+	// WalletId Keep only items whose evidence references this wallet.
+	WalletId *string `form:"wallet_id,omitempty" json:"wallet_id,omitempty"`
+
+	// Kind Keep only items of these kinds (comma-separated, e.g. `kind=volume_anomaly,recipient_dormant`; open set — an unrecognized value simply matches nothing).
+	Kind *[]string `form:"kind,omitempty" json:"kind,omitempty"`
+
+	// Severity Keep only items of these severities (comma-separated, e.g. `severity=critical,warn`). Values are `info`, `warn`, `critical`; anything else is a 400.
+	Severity *[]string `form:"severity,omitempty" json:"severity,omitempty"`
+
+	// Responsibility Keep only items carrying one of these grouping labels (comma-separated).
+	Responsibility *[]string `form:"responsibility,omitempty" json:"responsibility,omitempty"`
+
+	// WindowDays Report window in days — the lookback for trends/series and the horizon for upcoming obligations.
+	WindowDays *int `form:"window_days,omitempty" json:"window_days,omitempty"`
 }
 
 // GetLegalDocumentParams defines parameters for GetLegalDocument.
@@ -7689,6 +7921,12 @@ type UpsertPolicyWalletRelationshipParams struct {
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
 
+// PutRDPayoutDestinationParams defines parameters for PutRDPayoutDestination.
+type PutRDPayoutDestinationParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
 // UpdateRecipientParams defines parameters for UpdateRecipient.
 type UpdateRecipientParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
@@ -7722,8 +7960,17 @@ type CreateDestinationParams struct {
 // SimulateInboundJSONBody defines parameters for SimulateInbound.
 type SimulateInboundJSONBody struct {
 	// AccountId Platform account ID of the target onramp/offramp auto account.
-	// **Required for `ach_inbound`, `fedwire_inbound`, and `fednow_inbound`.**
-	// Ignored for other `type` values.
+	//
+	// **Required for every fiat `type`** — all `*_inbound` values
+	// except `crypto_inbound`, and all `*_outbound_*` and
+	// `*_reversal` values. On an inbound simulation it is the
+	// onramp account receiving the payment. On an outbound or
+	// reversal simulation it is the offramp account that funded
+	// the one-off transaction, and `one_off_transaction_id` is
+	// required alongside it.
+	//
+	// Ignored only for `crypto_inbound`, which uses
+	// `wallet_address` instead.
 	AccountId *string `json:"account_id,omitempty"`
 
 	// Amount Amount as a decimal string
@@ -7770,6 +8017,13 @@ type SimulateInboundJSONBody struct {
 	// Fedwire flows; the `wire_*` values are accepted as legacy
 	// aliases for backwards compatibility and may be removed in
 	// a future major version.
+	//
+	// Use `swift_inbound` to simulate an international deposit
+	// into a SWIFT onramp account. The rail a deposit books on is
+	// derived from the receiving account, so `swift_inbound` and
+	// `wire_inbound` behave identically: against a SWIFT account
+	// both produce a SWIFT deposit, and against a domestic
+	// account both produce a Fedwire one.
 	Type SimulateInboundJSONBodyType `json:"type"`
 
 	// WalletAddress The on-chain wallet address returned by `POST /wallets`
@@ -8287,6 +8541,9 @@ type BulkImportFromSumsubTokensJSONRequestBody BulkImportFromSumsubTokensJSONBod
 // ImportPersonaTokensJSONRequestBody defines body for ImportPersonaTokens for application/json ContentType.
 type ImportPersonaTokensJSONRequestBody ImportPersonaTokensJSONBody
 
+// WithdrawCustomerApplicationJSONRequestBody defines body for WithdrawCustomerApplication for application/json ContentType.
+type WithdrawCustomerApplicationJSONRequestBody WithdrawCustomerApplicationJSONBody
+
 // CreateRecipientJSONRequestBody defines body for CreateRecipient for application/json ContentType.
 type CreateRecipientJSONRequestBody = RecipientRequest
 
@@ -8337,6 +8594,9 @@ type DeletePolicyWalletRelationshipJSONRequestBody = EndorsedRequest
 
 // UpsertPolicyWalletRelationshipJSONRequestBody defines body for UpsertPolicyWalletRelationship for application/json ContentType.
 type UpsertPolicyWalletRelationshipJSONRequestBody = EndorsedRequest
+
+// PutRDPayoutDestinationJSONRequestBody defines body for PutRDPayoutDestination for application/json ContentType.
+type PutRDPayoutDestinationJSONRequestBody = RDPayoutDestinationRequest
 
 // UpdateRecipientJSONRequestBody defines body for UpdateRecipient for application/json ContentType.
 type UpdateRecipientJSONRequestBody = RecipientRequest
@@ -9550,6 +9810,11 @@ type ClientInterface interface {
 	// GetCustomer request
 	GetCustomer(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// WithdrawCustomerApplicationWithBody request with any body
+	WithdrawCustomerApplicationWithBody(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	WithdrawCustomerApplication(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, body WithdrawCustomerApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetCustomerCapabilities request
 	GetCustomerCapabilities(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -9585,6 +9850,9 @@ type ClientInterface interface {
 	PutFeePayoutDestinationWithBody(ctx context.Context, params *PutFeePayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutFeePayoutDestination(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetClientInsights request
+	GetClientInsights(ctx context.Context, params *GetClientInsightsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateInstructionsWithBody request with any body
 	CreateInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -9694,6 +9962,14 @@ type ClientInterface interface {
 	UpsertPolicyWalletRelationshipWithBody(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpsertPolicyWalletRelationship(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRDPayoutDestination request
+	GetRDPayoutDestination(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutRDPayoutDestinationWithBody request with any body
+	PutRDPayoutDestinationWithBody(ctx context.Context, params *PutRDPayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutRDPayoutDestination(ctx context.Context, params *PutRDPayoutDestinationParams, body PutRDPayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListRDMarketingFeeStatements request
 	ListRDMarketingFeeStatements(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -10637,6 +10913,30 @@ func (c *APIClient) GetCustomer(ctx context.Context, customerId KSUID, reqEditor
 	return c.Client.Do(req)
 }
 
+func (c *APIClient) WithdrawCustomerApplicationWithBody(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewWithdrawCustomerApplicationRequestWithBody(c.Server, customerId, applicationId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) WithdrawCustomerApplication(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, body WithdrawCustomerApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewWithdrawCustomerApplicationRequest(c.Server, customerId, applicationId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *APIClient) GetCustomerCapabilities(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCustomerCapabilitiesRequest(c.Server, customerId)
 	if err != nil {
@@ -10783,6 +11083,18 @@ func (c *APIClient) PutFeePayoutDestinationWithBody(ctx context.Context, params 
 
 func (c *APIClient) PutFeePayoutDestination(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutFeePayoutDestinationRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetClientInsights(ctx context.Context, params *GetClientInsightsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetClientInsightsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -11275,6 +11587,42 @@ func (c *APIClient) UpsertPolicyWalletRelationshipWithBody(ctx context.Context, 
 
 func (c *APIClient) UpsertPolicyWalletRelationship(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpsertPolicyWalletRelationshipRequest(c.Server, policyId, walletId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) GetRDPayoutDestination(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRDPayoutDestinationRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) PutRDPayoutDestinationWithBody(ctx context.Context, params *PutRDPayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutRDPayoutDestinationRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) PutRDPayoutDestination(ctx context.Context, params *PutRDPayoutDestinationParams, body PutRDPayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutRDPayoutDestinationRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -15368,6 +15716,73 @@ func NewGetCustomerRequest(server string, customerId KSUID) (*http.Request, erro
 	return req, nil
 }
 
+// NewWithdrawCustomerApplicationRequest calls the generic WithdrawCustomerApplication builder with application/json body
+func NewWithdrawCustomerApplicationRequest(server string, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, body WithdrawCustomerApplicationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewWithdrawCustomerApplicationRequestWithBody(server, customerId, applicationId, params, "application/json", bodyReader)
+}
+
+// NewWithdrawCustomerApplicationRequestWithBody generates requests for WithdrawCustomerApplication with any type of body
+func NewWithdrawCustomerApplicationRequestWithBody(server string, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "customer_id", runtime.ParamLocationPath, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "application_id", runtime.ParamLocationPath, applicationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/customers/%s/applications/%s/withdraw", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewGetCustomerCapabilitiesRequest generates requests for GetCustomerCapabilities
 func NewGetCustomerCapabilitiesRequest(server string, customerId KSUID) (*http.Request, error) {
 	var err error
@@ -15848,6 +16263,135 @@ func NewPutFeePayoutDestinationRequestWithBody(server string, params *PutFeePayo
 
 		req.Header.Set("x-idempotency-key", headerParam0)
 
+	}
+
+	return req, nil
+}
+
+// NewGetClientInsightsRequest generates requests for GetClientInsights
+func NewGetClientInsightsRequest(server string, params *GetClientInsightsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/insights")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.CustomerId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "customer_id", runtime.ParamLocationQuery, *params.CustomerId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.WalletId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "wallet_id", runtime.ParamLocationQuery, *params.WalletId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", false, "kind", runtime.ParamLocationQuery, *params.Kind); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Severity != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", false, "severity", runtime.ParamLocationQuery, *params.Severity); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Responsibility != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", false, "responsibility", runtime.ParamLocationQuery, *params.Responsibility); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.WindowDays != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "window_days", runtime.ParamLocationQuery, *params.WindowDays); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -17121,6 +17665,86 @@ func NewUpsertPolicyWalletRelationshipRequestWithBody(server string, policyId st
 	}
 
 	operationPath := fmt.Sprintf("/policies/%s/wallets/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetRDPayoutDestinationRequest generates requests for GetRDPayoutDestination
+func NewGetRDPayoutDestinationRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/rd-marketing-fee/payout-destination")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutRDPayoutDestinationRequest calls the generic PutRDPayoutDestination builder with application/json body
+func NewPutRDPayoutDestinationRequest(server string, params *PutRDPayoutDestinationParams, body PutRDPayoutDestinationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutRDPayoutDestinationRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPutRDPayoutDestinationRequestWithBody generates requests for PutRDPayoutDestination with any type of body
+func NewPutRDPayoutDestinationRequestWithBody(server string, params *PutRDPayoutDestinationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/rd-marketing-fee/payout-destination")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -20753,6 +21377,11 @@ type ClientWithResponsesInterface interface {
 	// GetCustomerWithResponse request
 	GetCustomerWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerResponse, error)
 
+	// WithdrawCustomerApplicationWithBodyWithResponse request with any body
+	WithdrawCustomerApplicationWithBodyWithResponse(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WithdrawCustomerApplicationResponse, error)
+
+	WithdrawCustomerApplicationWithResponse(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, body WithdrawCustomerApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*WithdrawCustomerApplicationResponse, error)
+
 	// GetCustomerCapabilitiesWithResponse request
 	GetCustomerCapabilitiesWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerCapabilitiesResponse, error)
 
@@ -20788,6 +21417,9 @@ type ClientWithResponsesInterface interface {
 	PutFeePayoutDestinationWithBodyWithResponse(ctx context.Context, params *PutFeePayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFeePayoutDestinationResponse, error)
 
 	PutFeePayoutDestinationWithResponse(ctx context.Context, params *PutFeePayoutDestinationParams, body PutFeePayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutFeePayoutDestinationResponse, error)
+
+	// GetClientInsightsWithResponse request
+	GetClientInsightsWithResponse(ctx context.Context, params *GetClientInsightsParams, reqEditors ...RequestEditorFn) (*GetClientInsightsResponse, error)
 
 	// CreateInstructionsWithBodyWithResponse request with any body
 	CreateInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateInstructionsResponse, error)
@@ -20897,6 +21529,14 @@ type ClientWithResponsesInterface interface {
 	UpsertPolicyWalletRelationshipWithBodyWithResponse(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpsertPolicyWalletRelationshipResponse, error)
 
 	UpsertPolicyWalletRelationshipWithResponse(ctx context.Context, policyId string, walletId KSUID, params *UpsertPolicyWalletRelationshipParams, body UpsertPolicyWalletRelationshipJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertPolicyWalletRelationshipResponse, error)
+
+	// GetRDPayoutDestinationWithResponse request
+	GetRDPayoutDestinationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRDPayoutDestinationResponse, error)
+
+	// PutRDPayoutDestinationWithBodyWithResponse request with any body
+	PutRDPayoutDestinationWithBodyWithResponse(ctx context.Context, params *PutRDPayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutRDPayoutDestinationResponse, error)
+
+	PutRDPayoutDestinationWithResponse(ctx context.Context, params *PutRDPayoutDestinationParams, body PutRDPayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRDPayoutDestinationResponse, error)
 
 	// ListRDMarketingFeeStatementsWithResponse request
 	ListRDMarketingFeeStatementsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListRDMarketingFeeStatementsResponse, error)
@@ -22342,6 +22982,33 @@ func (r GetCustomerResponse) StatusCode() int {
 	return 0
 }
 
+type WithdrawCustomerApplicationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r WithdrawCustomerApplicationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r WithdrawCustomerApplicationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetCustomerCapabilitiesResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -22596,6 +23263,30 @@ func (r PutFeePayoutDestinationResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutFeePayoutDestinationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetClientInsightsResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ClientInsightReport
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetClientInsightsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetClientInsightsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -23289,6 +23980,56 @@ func (r UpsertPolicyWalletRelationshipResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpsertPolicyWalletRelationshipResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetRDPayoutDestinationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RDPayoutDestination
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRDPayoutDestinationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRDPayoutDestinationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutRDPayoutDestinationResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RDPayoutDestination
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r PutRDPayoutDestinationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutRDPayoutDestinationResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -25256,6 +25997,23 @@ func (c *ClientWithResponses) GetCustomerWithResponse(ctx context.Context, custo
 	return ParseGetCustomerResponse(rsp)
 }
 
+// WithdrawCustomerApplicationWithBodyWithResponse request with arbitrary body returning *WithdrawCustomerApplicationResponse
+func (c *ClientWithResponses) WithdrawCustomerApplicationWithBodyWithResponse(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WithdrawCustomerApplicationResponse, error) {
+	rsp, err := c.WithdrawCustomerApplicationWithBody(ctx, customerId, applicationId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseWithdrawCustomerApplicationResponse(rsp)
+}
+
+func (c *ClientWithResponses) WithdrawCustomerApplicationWithResponse(ctx context.Context, customerId KSUID, applicationId string, params *WithdrawCustomerApplicationParams, body WithdrawCustomerApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*WithdrawCustomerApplicationResponse, error) {
+	rsp, err := c.WithdrawCustomerApplication(ctx, customerId, applicationId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseWithdrawCustomerApplicationResponse(rsp)
+}
+
 // GetCustomerCapabilitiesWithResponse request returning *GetCustomerCapabilitiesResponse
 func (c *ClientWithResponses) GetCustomerCapabilitiesWithResponse(ctx context.Context, customerId KSUID, reqEditors ...RequestEditorFn) (*GetCustomerCapabilitiesResponse, error) {
 	rsp, err := c.GetCustomerCapabilities(ctx, customerId, reqEditors...)
@@ -25368,6 +26126,15 @@ func (c *ClientWithResponses) PutFeePayoutDestinationWithResponse(ctx context.Co
 		return nil, err
 	}
 	return ParsePutFeePayoutDestinationResponse(rsp)
+}
+
+// GetClientInsightsWithResponse request returning *GetClientInsightsResponse
+func (c *ClientWithResponses) GetClientInsightsWithResponse(ctx context.Context, params *GetClientInsightsParams, reqEditors ...RequestEditorFn) (*GetClientInsightsResponse, error) {
+	rsp, err := c.GetClientInsights(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetClientInsightsResponse(rsp)
 }
 
 // CreateInstructionsWithBodyWithResponse request with arbitrary body returning *CreateInstructionsResponse
@@ -25723,6 +26490,32 @@ func (c *ClientWithResponses) UpsertPolicyWalletRelationshipWithResponse(ctx con
 		return nil, err
 	}
 	return ParseUpsertPolicyWalletRelationshipResponse(rsp)
+}
+
+// GetRDPayoutDestinationWithResponse request returning *GetRDPayoutDestinationResponse
+func (c *ClientWithResponses) GetRDPayoutDestinationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRDPayoutDestinationResponse, error) {
+	rsp, err := c.GetRDPayoutDestination(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRDPayoutDestinationResponse(rsp)
+}
+
+// PutRDPayoutDestinationWithBodyWithResponse request with arbitrary body returning *PutRDPayoutDestinationResponse
+func (c *ClientWithResponses) PutRDPayoutDestinationWithBodyWithResponse(ctx context.Context, params *PutRDPayoutDestinationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutRDPayoutDestinationResponse, error) {
+	rsp, err := c.PutRDPayoutDestinationWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutRDPayoutDestinationResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutRDPayoutDestinationWithResponse(ctx context.Context, params *PutRDPayoutDestinationParams, body PutRDPayoutDestinationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRDPayoutDestinationResponse, error) {
+	rsp, err := c.PutRDPayoutDestination(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutRDPayoutDestinationResponse(rsp)
 }
 
 // ListRDMarketingFeeStatementsWithResponse request returning *ListRDMarketingFeeStatementsResponse
@@ -28842,6 +29635,67 @@ func ParseGetCustomerResponse(rsp *http.Response) (*GetCustomerResponse, error) 
 	return response, nil
 }
 
+// ParseWithdrawCustomerApplicationResponse parses an HTTP response from a WithdrawCustomerApplicationWithResponse call
+func ParseWithdrawCustomerApplicationResponse(rsp *http.Response) (*WithdrawCustomerApplicationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &WithdrawCustomerApplicationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetCustomerCapabilitiesResponse parses an HTTP response from a GetCustomerCapabilitiesWithResponse call
 func ParseGetCustomerCapabilitiesResponse(rsp *http.Response) (*GetCustomerCapabilitiesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -29346,6 +30200,46 @@ func ParsePutFeePayoutDestinationResponse(rsp *http.Response) (*PutFeePayoutDest
 			return nil, err
 		}
 		response.ApplicationproblemJSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetClientInsightsResponse parses an HTTP response from a GetClientInsightsWithResponse call
+func ParseGetClientInsightsResponse(rsp *http.Response) (*GetClientInsightsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetClientInsightsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ClientInsightReport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
 
 	}
 
@@ -30699,6 +31593,100 @@ func ParseUpsertPolicyWalletRelationshipResponse(rsp *http.Response) (*UpsertPol
 			return nil, err
 		}
 		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRDPayoutDestinationResponse parses an HTTP response from a GetRDPayoutDestinationWithResponse call
+func ParseGetRDPayoutDestinationResponse(rsp *http.Response) (*GetRDPayoutDestinationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRDPayoutDestinationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RDPayoutDestination
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutRDPayoutDestinationResponse parses an HTTP response from a PutRDPayoutDestinationWithResponse call
+func ParsePutRDPayoutDestinationResponse(rsp *http.Response) (*PutRDPayoutDestinationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutRDPayoutDestinationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RDPayoutDestination
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
 
 	}
 
