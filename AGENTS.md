@@ -117,6 +117,7 @@ All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse
 - `CreateCustomerWithResponse(ctx, params, request)` - params contains idempotency key
 - `ListCustomersWithResponse(ctx, params)`
 - `GetCustomerWithResponse(ctx, customerID)`
+- `WithdrawCustomerApplicationWithResponse(ctx, customerID, applicationID, params, request)` - withdraw an UNDECIDED onboarding application (e.g. after an RFI the customer will not answer). FINAL: status becomes `withdrawn`, onboarding again needs a new application; already decided → 409. Body is required — send `gen.WithdrawCustomerApplicationJSONRequestBody{}` at minimum; `Reason` (≤500 chars) is shown to reviewers. Answers a bare 200 with NO body: check `StatusCode()`, there is no `JSON200`. Emits `customer.application.withdrawn`.
 
 ### Recipients
 - `CreateRecipientWithResponse(ctx, customerID, params, request)` - params contains idempotency key
@@ -224,8 +225,17 @@ All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse
 - `GetCountriesWithResponse(ctx)`
 - `GetSupportedNetworksWithResponse(ctx)`
 
+### RD Marketing Fee
+- `ListRDMarketingFeeStatementsWithResponse(ctx)` / `GetRDMarketingFeeStatementWithResponse(ctx, month)` - statements; `YBpsAnnual` is the CONTRACT rate, `YBpsMonthly` what THIS month was charged at
+- `GetRDPayoutDestinationWithResponse(ctx)` - the wallet the fee is paid to. 404 = nothing registered yet (ordinary, not an error); 403 = not in the programme
+- `PutRDPayoutDestinationWithResponse(ctx, params, request)` - register or replace it. Base only, so the request is just `Address`; response `Chain` is always `eip155:8453`. SEPARATE from the developer-fee destination (`PutFeePayoutDestination…`) — different programme, different asset. Emits `rd_payout_destination.updated`
+
+### Insights (Beta)
+- `GetCustomerInsightsWithResponse(ctx, customerID)` - one customer's deterministic, read-only report
+- `GetClientInsightsWithResponse(ctx, params)` - the whole book: KPI `Snapshot.Metrics` with previous-window values, daily `Series` (open-set keys: `failed_payments`, `executed_volume.USDC`, …), `Facets`, per-customer roll-up in `Customers` sorted worst-first. Filters (`CustomerId`, `WalletId`, `Kind`, `Severity`, `Responsibility`, `WindowDays` 1–90) only narrow; slice filters go on the wire comma-separated. Items gain `CustomerId` (nil on cross-customer aggregates) and `Responsibility` (label, not ownership). Scans ≤100 customers — check `Snapshot.Customers.Scanned < Total`. 404 = agentic off or unknown `CustomerId`
+
 ### Sandbox Simulation
-- `SimulateInboundWithResponse(ctx, request)` - Simulate ACH/Wire deposits (request needs SimulationId)
+- `SimulateInboundWithResponse(ctx, params, request)` - Simulate a deposit (`ach_inbound`, `fedwire_inbound`, `swift_inbound`, `fednow_inbound` take `AccountId`; `crypto_inbound` takes `WalletAddress`), or an outbound settlement/return/reversal (`*_outbound_*`, `*_reversal` take the funding offramp `AccountId` AND `OneOffTransactionId`). `swift_inbound` and `fedwire_inbound` behave identically — the rail is derived from the receiving ACCOUNT
 - `SimulateOnboardingWithResponse(ctx, request)` - Simulate KYB status changes (request needs SimulationId)
 - `ListSandboxScenariosWithResponse(ctx, params)`
 - `GetSimulationWithResponse(ctx, simulationID)`
@@ -286,6 +296,14 @@ handler, _ := webhook.NewHandler(
 )
 http.Handle("/webhooks", handler)
 ```
+
+Typed payloads live in `webhook/types`; decode with `webhook.EventDataAs[T](event)`. Onboarding lifecycle events a client integration must handle:
+
+- `customer.rfi.requested` → `types.CustomerRFIRequestedData`. A reviewer needs more. `Requirements` lists what is owed (switch on `Type`: `document` with `DocumentType` XOR `Purpose` + `Status` `missing`/`on_file`; `field` with `Path`; `question` with `Key`/`Prompt`, and `RequireDocument` means the answer MUST come with an upload). NEVER carries the resubmission link (it embeds a credential) — read it from the customer resource. `MessageID` dedupes redeliveries and pairs the response.
+- `customer.rfi.responded` → `types.CustomerRFIRespondedData`. Stop chasing. No `rfi.resolved` exists: the decision arrives as `customer.kyb_status.updated`.
+- `customer.application.withdrawn` → `types.CustomerApplicationWithdrawnData`. Terminal. `Reason` omitted when none was recorded.
+- `customer.capability_status.updated` → `types.CustomerCapabilityStatusUpdatedData`. A rail's standing changed; `Requirements` is what still gates it (empty array, never absent).
+- `fee_payout_destination.updated` → `types.FeePayoutDestinationUpdatedData` (`Type` only); `fee_payout_destination.deleted` → empty object; `rd_payout_destination.updated` → `types.RDPayoutDestinationUpdatedData` (`PreviousAddress` empty on first registration, always present).
 
 ## Supported Networks
 
