@@ -345,7 +345,26 @@ if err != nil {
 // Submit `sig` via the mandate-approve endpoint (c.Raw()) to activate the mandate.
 ```
 
-The full agentic surface (`/payment-agents`, `/mandates`, `/instructions`, proposals) is always reachable via `c.Raw()`. The read-only **customer insight** report — `c.Raw().GetCustomerInsightsWithResponse(ctx, customerID)` — is reachable the same way.
+The full agentic surface (`/payment-agents`, `/mandates`, `/instructions`, proposals) is always reachable via `c.Raw()`. The read-only **customer insight** report — `c.Raw().GetCustomerInsightsWithResponse(ctx, customerID)` — is reachable the same way, and so is its whole-book companion:
+
+```go
+// One deterministic report over ALL your customers' agentic activity: KPI
+// metrics with previous-window values, daily series for charts, and a
+// per-customer roll-up sorted worst-first. Every filter is optional and only
+// narrows; the response shape never changes. Multi-value filters are slices
+// and go on the wire comma-separated.
+report, err := client.CheckResponse(c.Raw().GetClientInsightsWithResponse(ctx, &gen.GetClientInsightsParams{
+    Severity:   &[]string{"critical", "warn"},
+    WindowDays: ptr(30), // 1–90, default 14
+}))
+for _, row := range report.JSON200.Customers {
+    if row.ItemCounts.Critical > 0 {
+        fmt.Println(row.CustomerId, row.TotalUsd) // Name and TotalUsd are optional (pointers)
+    }
+}
+```
+
+Items reuse the customer report's `InsightItem`, plus `CustomerId` (nil on cross-customer aggregates) and `Responsibility` (`payment_ops` / `compliance` — a grouping label for routing, not ownership). The report scans at most 100 customers per request; `Snapshot.Customers.Scanned < Total` says it was computed over a prefix of the book.
 
 ### Blockers: for your application, not your customer
 
@@ -420,6 +439,7 @@ import (
 
     "github.com/dakota-xyz/go-sdk/webhook"
     "github.com/dakota-xyz/go-sdk/webhook/idempotency"
+    "github.com/dakota-xyz/go-sdk/webhook/types"
 )
 
 func main() {
@@ -436,6 +456,23 @@ func main() {
         webhook.On(webhook.EventTransactionOneOffUpdated, func(ctx context.Context, event webhook.Event) error {
             fmt.Printf("Transaction %s updated\n", event.ID)
             // Check transaction status, update your records, notify user, etc.
+            return nil
+        }),
+
+        // A reviewer needs more from one of your customers. The payload lists
+        // what is owed — documents by type or purpose, fields, questions —
+        // but never the resubmission link: it embeds a credential. Read the
+        // link from the customer resource with your API key.
+        webhook.On(webhook.EventCustomerRFIRequested, func(ctx context.Context, event webhook.Event) error {
+            rfi, err := webhook.EventDataAs[types.CustomerRFIRequestedData](event)
+            if err != nil {
+                return err
+            }
+            // rfi.MessageID dedupes redeliveries and pairs the later
+            // customer.rfi.responded with this request.
+            for _, req := range rfi.Requirements {
+                fmt.Printf("customer %s owes a %s\n", rfi.CustomerID, req.Type)
+            }
             return nil
         }),
 

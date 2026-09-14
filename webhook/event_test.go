@@ -2,6 +2,9 @@ package webhook_test
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -143,8 +146,8 @@ func TestEventDataAs_InvalidJSON(t *testing.T) {
 func TestAllEventTypes(t *testing.T) {
 	allTypes := webhook.AllEventTypes
 
-	if len(allTypes) != 39 {
-		t.Errorf("expected 39 event types, got %d", len(allTypes))
+	if len(allTypes) != 46 {
+		t.Errorf("expected 46 event types, got %d", len(allTypes))
 	}
 
 	seen := make(map[webhook.EventType]struct{}, len(allTypes))
@@ -156,6 +159,60 @@ func TestAllEventTypes(t *testing.T) {
 
 		if !et.IsValid() {
 			t.Errorf("expected %q to be valid", et)
+		}
+	}
+}
+
+// TestAllEventTypes_MatchesSpec pins AllEventTypes to the EventType enum in
+// the vendored spec, in both directions.
+//
+// The enum is the platform's contract for what a target can subscribe to. A
+// spec sync that adds a value must add a constant here, or a consumer has only
+// a string literal to register on and IsValid says the platform's own event is
+// unknown; one that removes a value must remove the constant, or the SDK keeps
+// advertising an event nothing emits. Reading the enum out of the YAML by hand
+// keeps this package free of a YAML dependency it has no other use for.
+func TestAllEventTypes_MatchesSpec(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "client", "gen", "openapi.yaml"))
+	if err != nil {
+		t.Fatalf("read spec: %v", err)
+	}
+
+	var enumerated []string
+	inSchema, inEnum := false, false
+	for _, line := range strings.Split(string(raw), "\n") {
+		switch {
+		case line == "    EventType:":
+			inSchema = true
+		case inSchema && !inEnum && strings.HasPrefix(line, "    ") && !strings.HasPrefix(line, "     "):
+			// The next sibling schema: the block is over.
+			inSchema = false
+		case inSchema && line == "      enum:":
+			inEnum = true
+		case inEnum && strings.HasPrefix(line, "        - "):
+			enumerated = append(enumerated, strings.TrimPrefix(line, "        - "))
+		case inEnum:
+			inEnum, inSchema = false, false
+		}
+	}
+	if len(enumerated) < 40 {
+		t.Fatalf("found only %d EventType enum values in the spec; the scan is broken", len(enumerated))
+	}
+
+	known := make(map[string]struct{}, len(webhook.AllEventTypes))
+	for _, et := range webhook.AllEventTypes {
+		known[string(et)] = struct{}{}
+	}
+	specSet := make(map[string]struct{}, len(enumerated))
+	for _, v := range enumerated {
+		specSet[v] = struct{}{}
+		if _, ok := known[v]; !ok {
+			t.Errorf("spec enumerates %q but AllEventTypes has no constant for it", v)
+		}
+	}
+	for _, et := range webhook.AllEventTypes {
+		if _, ok := specSet[string(et)]; !ok {
+			t.Errorf("AllEventTypes carries %q, which the spec's EventType enum does not list", et)
 		}
 	}
 }

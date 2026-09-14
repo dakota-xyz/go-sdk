@@ -4,6 +4,115 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — the surface the 2026-09 spec sync brought in
+
+`client/gen/openapi.yaml` is a copy of platform `openapi.public.yaml` at
+`39c2aa1e` (2026-09-14), replacing one 839 lines behind, and is byte-identical
+to the spec the TypeScript SDK carries at the same sync. The platform now gates
+its public spec with a `check-openapi-fresh` CI job, and the commit that last
+touched the internal spec regenerated the public one alongside it, so this copy
+is not stale against `routes.go`: all three new routes are registered there.
+
+Everything on `c.Raw()` below comes from the regeneration. What needed a hand
+is the webhook package, which does not generate.
+
+**Withdraw an onboarding application.**
+`WithdrawCustomerApplicationWithResponse(ctx, customerID, applicationID,
+params, body)` — for a customer who will not or cannot continue, after a
+request for information they chose not to answer, say. FINAL: the customer's
+status becomes `withdrawn` and onboarding them again needs a new application;
+an already decided application answers 409. The body is required (send an
+empty `WithdrawCustomerApplicationJSONRequestBody{}` at minimum); `Reason`
+(≤500 chars) is recorded for audit and shown to reviewers. Note the success
+shape: a bare 200 with NO body, so there is no `JSON200` — check
+`StatusCode()`. Emits `customer.application.withdrawn`.
+
+**Client-level portfolio insights (BETA).**
+`GetClientInsightsWithResponse(ctx, params)` is the whole-book companion of
+`GetCustomerInsightsWithResponse`: one deterministic, read-only
+`ClientInsightReport` over every customer's agentic activity. Items reuse
+`InsightItem`, which gains `CustomerId` (nil on cross-customer aggregates) and
+`Responsibility` (`payment_ops` / `compliance` — a grouping label for routing,
+not ownership). On top: KPI `Snapshot.Metrics` (`ClientInsightMetric`, with
+previous-window values for trend deltas), daily `Series` (open-set map keys —
+`<metric>` for counts, `<metric>.<ASSET>` for amounts), `Facets` listing the
+values present BEFORE item filters, and a per-customer roll-up in `Customers`
+sorted worst-first. Every filter in `GetClientInsightsParams` is optional and
+only narrows; the slice filters (`Kind`, `Severity`, `Responsibility`) go on
+the wire comma-separated, as the spec's `explode: false` says. Scans at most
+100 customers per request — `Snapshot.Customers.Scanned < Total` says so. Two
+kinds are emitted only at this scope today: `volume_anomaly` and
+`recipient_dormant`.
+
+**RD marketing-fee payout destination.** `GetRDPayoutDestinationWithResponse`
+and `PutRDPayoutDestinationWithResponse`, with `RDPayoutDestination` and
+`RDPayoutDestinationRequest`. A SEPARATE registration from the developer-fee
+destination — the two programmes pay different assets. RD exists only on Base,
+so the request is just `Address` and the response's `Chain` is always
+`eip155:8453`. GET answers 404 while nothing is registered (the ordinary state
+for a new client) and 403 when the client is not in the programme. PUT replaces
+any existing destination and emits `rd_payout_destination.updated`.
+
+**Webhook event types, with typed payloads.** `webhook` gains
+`EventCustomerRFIRequested`, `EventCustomerRFIResponded`,
+`EventCustomerApplicationWithdrawn` and `EventRDPayoutDestinationUpdated`, and
+`webhook/types` gains their payloads — `CustomerRFIRequestedData` (with
+`RFIRequirement` and `RFIRequirementEntity`), `CustomerRFIRespondedData`,
+`CustomerApplicationWithdrawnData`, `RDPayoutDestinationUpdatedData` — shaped
+from the platform's emitters in `pkg/core/events` and held to them by the
+strict fixture decoder. Two things worth knowing about the RFI payload: it
+carries NO resubmission link on purpose (the link embeds a credential and
+webhook bodies come to rest in logs — read it from the customer resource), and
+`MessageID` is the correlation handle for deduping redeliveries and pairing the
+later `customer.rfi.responded`.
+
+**Three event types the spec already listed but this SDK did not.** The same
+pass adds `EventCustomerCapabilityStatusUpdated`
+(`customer.capability_status.updated`, payload
+`CustomerCapabilityStatusUpdatedData` + `CapabilityRequirement`),
+`EventFeePayoutDestinationUpdated` (`fee_payout_destination.updated`, payload
+`FeePayoutDestinationUpdatedData`) and `EventFeePayoutDestinationDeleted`
+(`fee_payout_destination.deleted`, empty payload). They have been in the public
+`EventType` enum for a while; without constants `IsValid()` reported the
+platform's own events as unknown, and a consumer had only a string literal to
+register on. `AllEventTypes` is now 46 entries, and a new test
+(`TestAllEventTypes_MatchesSpec`) pins it to the spec's enum in both directions
+so the next sync cannot drift again.
+
+**Smaller shape changes, all additive.**
+- `RDMarketingFeeStatement.YBpsAnnual` (required): the CONTRACT rate as the
+  Order Form quotes it, beside `YBpsMonthly`, now documented as the rate
+  APPLIED to the month (annual × days in month / 365, 2 dp).
+- `ApplicationStatusClosed` — compliance took the application out of review
+  without a decision; it may be reopened to `under_review`.
+- International bank destinations (request and response) gain
+  `IntermediaryBic`: the correspondent bank between Dakota's bank and `Bic`.
+  Leave it unset unless a payment is refused for want of one; a destination
+  that needs one is replaced, not edited.
+- `OneOffTransaction` and the nested transaction gain `Uetr`, the RFC 4122
+  end-to-end reference on the wire rail; `Omad` is now nullable.
+- `MandateBudgetLine.PriorScope`: true on a `per_target` line whose spend was
+  booked under an EARLIER target scope. On such a line a nil `RemainingCount`
+  / `RemainingAmount` means NO headroom, not "not capped".
+- Sandbox `SimulateInbound` gains `swift_inbound`, `swift_outbound_settled` /
+  `_failed` / `_returned` / `_rejected` and `swift_reversal`. The rail a
+  deposit books on is derived from the RECEIVING account, so `swift_inbound`
+  and `fedwire_inbound` behave identically. `AccountId` is now documented as
+  required for EVERY fiat type — outbound and reversal simulations take the
+  funding offramp account alongside `OneOffTransactionId`.
+- Mandate amend: `target_type` may now change, and doing so requires the
+  resulting rule to carry an aggregate ceiling. Documentation only here;
+  `MandateAmendSignPayload` is unchanged.
+- Signer create / delete descriptions now state the ownership rules and which
+  of 403 / 404 / 409 each case answers.
+
+### Removed — `gen.EventTypeBvnkOnboardingCreated` / `Updated`
+
+The platform dropped `bvnk.onboarding.*` from the public `EventType` enum, so
+the regeneration drops the two `gen` constants. The `webhook` package removed
+its own BVNK constants and payload in #16 already; nothing in this SDK
+referenced the `gen` ones.
+
 ### Changed — the agentic surface is BETA, not alpha (ENG-3168)
 
 Platform promoted the whole agentic surface from alpha to beta. Nothing about

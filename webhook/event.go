@@ -28,6 +28,43 @@ const (
 	EventCustomerKYBStatusUpdated        EventType = "customer.kyb_status.updated"
 	EventCustomerKYBApplicationSubmitted EventType = "customer.kyb_application.submitted"
 
+	// EventCustomerCapabilityStatusUpdated is emitted when a customer's
+	// standing for a capability (rail) changes. Its payload is
+	// [types.CustomerCapabilityStatusUpdatedData]: the capability, the new
+	// status, and the OUTSTANDING requirements, keyed by opaque join keys and
+	// never by a partner name.
+	EventCustomerCapabilityStatusUpdated EventType = "customer.capability_status.updated"
+
+	// EventCustomerRFIRequested is emitted when a reviewer opens a request for
+	// information against a customer's application. Its payload is
+	// [types.CustomerRFIRequestedData]: what is still owed, but deliberately
+	// NOT the resubmission link — that link embeds an access token, and a
+	// webhook body comes to rest in logs, traces and retry buffers. Read the
+	// link from the customer resource over your own authenticated channel.
+	EventCustomerRFIRequested EventType = "customer.rfi.requested"
+	// EventCustomerRFIResponded is emitted when the requested information
+	// arrives and the application returns to review. Its payload is
+	// [types.CustomerRFIRespondedData]. There is no rfi.resolved event: an
+	// RFI ends in a decision, which customer.kyb_status.updated reports.
+	EventCustomerRFIResponded EventType = "customer.rfi.responded"
+	// EventCustomerApplicationWithdrawn is emitted when an onboarding
+	// application is withdrawn, by the applicant or by the client on their
+	// behalf. Withdrawal is terminal. Its payload is
+	// [types.CustomerApplicationWithdrawnData].
+	EventCustomerApplicationWithdrawn EventType = "customer.application.withdrawn"
+
+	// EventFeePayoutDestinationUpdated is emitted when a client registers or
+	// replaces its developer-fee payout destination. Its payload is
+	// [types.FeePayoutDestinationUpdatedData].
+	EventFeePayoutDestinationUpdated EventType = "fee_payout_destination.updated"
+	// EventFeePayoutDestinationDeleted is emitted when that destination is
+	// removed. Its payload is an empty object.
+	EventFeePayoutDestinationDeleted EventType = "fee_payout_destination.deleted"
+	// EventRDPayoutDestinationUpdated is emitted when a client sets or
+	// replaces the wallet its RD marketing fee is sent to. Its payload is
+	// [types.RDPayoutDestinationUpdatedData].
+	EventRDPayoutDestinationUpdated EventType = "rd_payout_destination.updated"
+
 	EventAutoAccountCreated EventType = "auto_account.created"
 	EventAutoAccountUpdated EventType = "auto_account.updated"
 	EventAutoAccountDeleted EventType = "auto_account.deleted"
@@ -81,6 +118,13 @@ var AllEventTypes = []EventType{
 	EventCustomerKYBStatusCreated,
 	EventCustomerKYBStatusUpdated,
 	EventCustomerKYBApplicationSubmitted,
+	EventCustomerCapabilityStatusUpdated,
+	EventCustomerRFIRequested,
+	EventCustomerRFIResponded,
+	EventCustomerApplicationWithdrawn,
+	EventFeePayoutDestinationUpdated,
+	EventFeePayoutDestinationDeleted,
+	EventRDPayoutDestinationUpdated,
 	EventAutoAccountCreated,
 	EventAutoAccountUpdated,
 	EventAutoAccountDeleted,
