@@ -31,3 +31,21 @@ type RDPayoutDestinationUpdatedData struct {
 	PreviousAddress string `json:"previous_address"`
 	UpdatedBy       string `json:"updated_by"`
 }
+
+// DeploymentPayoutDestinationUpdatedData is the event payload for
+// [webhook.EventDeploymentPayoutDestinationUpdated]
+// ("deployment_payout_destination.updated"), emitted when a client sets or
+// replaces the wallet ONE deployment's payouts are sent to.
+//
+// It carries everything [RDPayoutDestinationUpdatedData] does, plus the asset
+// and network naming the deployment. That split is the point: RD's own
+// destination keeps rd_payout_destination.updated, so a subscriber to RD's
+// event is never handed another deployment's wallet as RD's. Asset and
+// network are always present on this event.
+type DeploymentPayoutDestinationUpdatedData struct {
+	WalletAddress   string `json:"wallet_address"`
+	PreviousAddress string `json:"previous_address"`
+	UpdatedBy       string `json:"updated_by"`
+	Asset           string `json:"asset"`
+	Network         string `json:"network"`
+}
