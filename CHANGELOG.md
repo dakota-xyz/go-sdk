@@ -4,6 +4,43 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — x402, and the rest of the 2026-09-23 spec sync
+
+`client/gen/openapi.yaml` is refreshed from platform `openapi.public.yaml` at
+`fef7169e`, which is the first copy to carry x402.
+
+**x402 agentic payments.** Six operations on `c.Raw()`: `EnableX402` and
+`GetX402` (the agent's x402 wallet and the address to fund),
+`CreateX402Mandate` and `ListX402Mandates` (the spending allowance, with the
+window's committed spend), `CreateX402Signature` (the signing endpoint), and
+`ListX402Holds` (the record of what was authorized). Platform's settle
+endpoint stays internal and is deliberately absent.
+
+Two things worth knowing before you call them:
+
+- `CreateX402Signature` is idempotent on `X-Idempotency-Key`, and it means it:
+  one key mints at most one payment authorization, so a request that times out
+  is safe to retry under the same key. Reuse a key for a DIFFERENT payment and
+  you get a 409. One 409 must not be retried — the one saying the payment
+  already settled — because a fresh key would pay the seller a second time.
+- `payment_header` is the value to send, and `payment_header_name` tells you
+  which header to put it in (`X-PAYMENT` for x402 v1, `PAYMENT-SIGNATURE` for
+  v2). Treat the header value like cash: anyone holding it can settle the
+  payment until `valid_before`.
+
+**Webhooks (hand-written, as ever).** `EventDeploymentPayoutDestinationUpdated`
+("deployment_payout_destination.updated") and its payload
+`types.DeploymentPayoutDestinationUpdatedData`. It splits from
+`rd_payout_destination.updated` so a subscriber to RD's event is never handed
+another deployment's wallet as RD's; it carries the same three fields plus the
+`asset` and `network` naming the deployment. The spec-drift test caught its
+absence, which is what that test is for.
+
+The sync also brings in everything else platform published since `39c2aa1e` —
+the RD marketing-fee and self-serve surfaces among it — since this is a full
+re-copy rather than an x402-only edit.
+
+
 ### Added — the surface the 2026-09 spec sync brought in
 
 `client/gen/openapi.yaml` is a copy of platform `openapi.public.yaml` at

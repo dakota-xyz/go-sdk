@@ -64,6 +64,12 @@ const (
 	// replaces the wallet its RD marketing fee is sent to. Its payload is
 	// [types.RDPayoutDestinationUpdatedData].
 	EventRDPayoutDestinationUpdated EventType = "rd_payout_destination.updated"
+	// EventDeploymentPayoutDestinationUpdated is emitted when a client sets or
+	// replaces the wallet one NON-RD deployment's payouts are sent to. Its
+	// payload is [types.DeploymentPayoutDestinationUpdatedData], which names
+	// the deployment's asset and network — RD keeps its own event, so a
+	// subscriber to that one never receives another deployment's wallet.
+	EventDeploymentPayoutDestinationUpdated EventType = "deployment_payout_destination.updated"
 
 	EventAutoAccountCreated EventType = "auto_account.created"
 	EventAutoAccountUpdated EventType = "auto_account.updated"
@@ -125,6 +131,7 @@ var AllEventTypes = []EventType{
 	EventFeePayoutDestinationUpdated,
 	EventFeePayoutDestinationDeleted,
 	EventRDPayoutDestinationUpdated,
+	EventDeploymentPayoutDestinationUpdated,
 	EventAutoAccountCreated,
 	EventAutoAccountUpdated,
 	EventAutoAccountDeleted,
