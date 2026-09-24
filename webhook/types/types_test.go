@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/dakota-xyz/go-sdk/webhook"
@@ -300,7 +301,9 @@ func TestEventDataAs_AutoAccountData(t *testing.T) {
 	}
 }
 
-func TestEventDataAs_AutoTransactionData(t *testing.T) {
+// A receipt emitted before developer_fee existed carries only client_fee: it
+// must still decode, with DeveloperFee left empty for the caller to fall back.
+func TestEventDataAs_ReceiptWithoutDeveloperFee(t *testing.T) {
 	payload := `{
 		"id":"txn_1",
 		"auto_account_id":"aa_1",
@@ -323,6 +326,52 @@ func TestEventDataAs_AutoTransactionData(t *testing.T) {
 		}
 	}`
 
+	// webhook.EventDataAs directly, not decodeEvent: the strict decoder
+	// rightly refuses a fixture missing a modeled key, and this one is
+	// missing developer_fee on purpose.
+	data, err := webhook.EventDataAs[types.AutoTransactionData](webhook.Event{
+		ID:   "evt_receipt_without_developer_fee",
+		Type: webhook.EventTransactionAutoUpdated,
+		Data: webhook.EventData{Object: json.RawMessage(payload)},
+	})
+	if err != nil {
+		t.Fatalf("EventDataAs error: %v", err)
+	}
+	if data.Receipt == nil {
+		t.Fatal("expected non-nil Receipt")
+	}
+	if data.Receipt.ClientFee != "0.25" {
+		t.Errorf("Receipt.ClientFee = %q, want %q", data.Receipt.ClientFee, "0.25")
+	}
+	if data.Receipt.DeveloperFee != "" {
+		t.Errorf("Receipt.DeveloperFee = %q, want empty", data.Receipt.DeveloperFee)
+	}
+}
+
+func TestEventDataAs_AutoTransactionData(t *testing.T) {
+	payload := `{
+		"id":"txn_1",
+		"auto_account_id":"aa_1",
+		"destination_id":"dest_1",
+		"type":"inbound",
+		"status":"completed",
+		"created_at":1700000000,
+		"updated_at":1700001000,
+		"receipt":{
+			"input_currency":"USD",
+			"output_currency":"USDC",
+			"initial_amount":"100.00",
+			"subtotal_amount":"99.50",
+			"converted_amount":"99.50",
+			"outgoing_amount":"99.00",
+			"external_fee":"0.25",
+			"client_fee":"0.25",
+			"developer_fee":"0.25",
+			"dakota_fee":"0.00",
+			"exchange_rate":"1.0"
+		}
+	}`
+
 	data := decodeEvent[types.AutoTransactionData](
 		t, "evt_auto_transaction_data", webhook.EventTransactionAutoUpdated, payload,
 	)
@@ -334,6 +383,9 @@ func TestEventDataAs_AutoTransactionData(t *testing.T) {
 	}
 	if data.Receipt == nil {
 		t.Fatal("expected non-nil Receipt")
+	}
+	if data.Receipt.DeveloperFee != "0.25" {
+		t.Errorf("Receipt.DeveloperFee = %q, want %q", data.Receipt.DeveloperFee, "0.25")
 	}
 	if data.Receipt.InputCurrency != "USD" {
 		t.Errorf(

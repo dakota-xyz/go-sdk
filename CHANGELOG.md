@@ -4,6 +4,34 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — fixed developer fee (ENG-3905)
+
+A partial sync: `client/gen/openapi.yaml` takes only the developer-fee hunks
+of platform ENG-3899 (`ae739649`) and ENG-3900 (`9e438daa`) on top of the
+x402 copy. Platform's other changes since then are left for a separate full
+sync. Every deprecated field below is still sent and accepted, so existing
+code keeps working. Move to the new names before the next major version.
+
+- **Receipts.** `TransactionReceipt.DeveloperFee` (`*AmountDetails`) is the new
+  name for `ClientFee`, which is now deprecated and always carries the same
+  value.
+- **Accounts and one-offs report their rate.** `AccountResponse.DeveloperFeeBps`
+  and `OneOffTransaction.DeveloperFeeBps` (`int32`, always present, `0` when
+  no developer fee is charged). One-offs created before the field existed
+  report `0`, whatever fee they were created with.
+- **Agentic defaults.** `CreateInstructionsRequest.DeveloperFeeDefaults` and
+  `CreateProposalsRequest.DeveloperFeeDefaults` take a `DeveloperFeeDefaults`
+  containing `Swap` and `Offramp`, each a `DeveloperFeeRate` with a
+  `DeveloperFeeBps`. They replace the deprecated `DeveloperFee` (`SwapBps` /
+  `OfframpBps`). Sending both is a 400.
+- **Agentic action override.** `CreateAutoAccountAction.DeveloperFeeBps`
+  replaces the deprecated `FeeBps`. Sending both is a 400.
+- **Webhooks (hand-written).** `types.Receipt.DeveloperFee` is the new name
+  for `ClientFee`, which is now deprecated. Webhook receipts carry it as a flat
+  decimal string, like every other amount in them. Events emitted before the
+  field existed (and redeliveries of them) leave it empty, so fall back to
+  `ClientFee` there.
+
 ### Added — x402, and the rest of the 2026-09-23 spec sync
 
 `client/gen/openapi.yaml` is refreshed from platform `openapi.public.yaml` at

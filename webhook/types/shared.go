@@ -46,18 +46,27 @@ type Asset struct {
 
 // Receipt contains the financial breakdown of a transaction.
 type Receipt struct {
-	InputCurrency   string  `json:"input_currency"`
-	OutputCurrency  string  `json:"output_currency"`
-	InitialAmount   string  `json:"initial_amount"`
-	SubtotalAmount  string  `json:"subtotal_amount"`
-	ConvertedAmount string  `json:"converted_amount"`
-	OutgoingAmount  string  `json:"outgoing_amount"`
-	ExternalFee     string  `json:"external_fee"`
-	ClientFee       string  `json:"client_fee"`
-	DakotaFee       string  `json:"dakota_fee"`
-	ExchangeRate    string  `json:"exchange_rate"`
-	GasFee          *string `json:"gas_fee,omitempty"`
-	IMAD            *string `json:"imad,omitempty"`
+	InputCurrency   string `json:"input_currency"`
+	OutputCurrency  string `json:"output_currency"`
+	InitialAmount   string `json:"initial_amount"`
+	SubtotalAmount  string `json:"subtotal_amount"`
+	ConvertedAmount string `json:"converted_amount"`
+	OutgoingAmount  string `json:"outgoing_amount"`
+	ExternalFee     string `json:"external_fee"`
+	// ClientFee is the developer fee under its old name.
+	//
+	// Deprecated: Use DeveloperFee, which carries the same value.
+	ClientFee string `json:"client_fee"`
+	// DeveloperFee is the developer fee charged on this transaction, as a
+	// flat decimal string like the rest of this receipt (REST receipts use
+	// an {amount, asset} object instead). Equal to ClientFee, except on
+	// events emitted before the field existed (and their redeliveries),
+	// where it is empty: fall back to ClientFee then.
+	DeveloperFee string  `json:"developer_fee"`
+	DakotaFee    string  `json:"dakota_fee"`
+	ExchangeRate string  `json:"exchange_rate"`
+	GasFee       *string `json:"gas_fee,omitempty"`
+	IMAD         *string `json:"imad,omitempty"`
 }
 
 // CryptoDetails contains blockchain-specific transaction metadata.

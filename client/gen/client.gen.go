@@ -1860,6 +1860,9 @@ type AccountResponse struct {
 	// DestinationRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	DestinationRail *PaymentCapability `json:"destination_rail,omitempty"`
 
+	// DeveloperFeeBps Developer fee charged on each deposit to this account, in basis points (1 bp = 0.01%). 0 when the account charges no developer fee.
+	DeveloperFeeBps int32 `json:"developer_fee_bps"`
+
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
@@ -3701,7 +3704,11 @@ type CreateAutoAccountAction struct {
 	// DestinationId The REAL destination the auto-account forwards to: a crypto destination (⇒ swap) or a bank destination (⇒ offramp). Empty = the destination created in this proposal.
 	DestinationId *string `json:"destination_id,omitempty"`
 
-	// FeeBps Optional developer fee in basis points (0–10000).
+	// DeveloperFeeBps Optional developer fee for this auto-account, in basis points (0–10000). An explicit override: it wins over `developer_fee_defaults` for either payout type. Replaces the deprecated `fee_bps`; send one or the other, not both.
+	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
+
+	// FeeBps Deprecated: use `developer_fee_bps`. Same meaning (basis points, 0–10000); still accepted during the rename and removed in a later release. Sending both `fee_bps` and `developer_fee_bps` is a 400.
+	// Deprecated: Renamed to developer_fee_bps, which carries the same value.
 	FeeBps *int32 `json:"fee_bps,omitempty"`
 
 	// OutputAsset The asset the recipient receives (a currency such as USD for a bank offramp).
@@ -3767,12 +3774,20 @@ type CreateCryptoDestinationAction struct {
 
 // CreateInstructionsRequest defines model for CreateInstructionsRequest.
 type CreateInstructionsRequest struct {
-	// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	// DeveloperFee Deprecated: use `developer_fee_defaults`. `swap_bps` is now `developer_fee_defaults.swap.developer_fee_bps` and `offramp_bps` is now `developer_fee_defaults.offramp.developer_fee_bps`. Still accepted during the rename and removed in a later release; sending both `developer_fee` and `developer_fee_defaults` is a 400.
 	//
-	// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
-	DeveloperFee   *DeveloperFee     `json:"developer_fee,omitempty"`
-	PaymentAgentId string            `json:"payment_agent_id"`
-	Proposals      []AgenticProposal `json:"proposals"`
+	// Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all. Both rates are DEFAULTS for the auto-accounts a request creates; an action-level fee is an explicit override and still wins outright, for either type.
+	// Deprecated: Renamed to developer_fee_defaults (DeveloperFeeDefaults).
+	DeveloperFee *DeveloperFee `json:"developer_fee,omitempty"`
+
+	// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	//
+	// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` on `create_auto_account` is an explicit override and still wins outright, for either type.
+	//
+	// Replaces the deprecated `developer_fee` object: `swap_bps` is now `swap.developer_fee_bps` and `offramp_bps` is now `offramp.developer_fee_bps`.
+	DeveloperFeeDefaults *DeveloperFeeDefaults `json:"developer_fee_defaults,omitempty"`
+	PaymentAgentId       string                `json:"payment_agent_id"`
+	Proposals            []AgenticProposal     `json:"proposals"`
 }
 
 // CreateMandateAction defines model for CreateMandateAction.
@@ -3864,10 +3879,18 @@ type CreatePolicyRuleRequestRuleType string
 
 // CreateProposalsRequest A freeform proposals conversation. The server is stateless — send the whole history in `messages` on each call. `prompt` is a convenience for a single-shot turn (or the latest user message); it is appended after `messages`. At least one of `prompt` or `messages` must be non-empty. Supplying both is valid only when `messages` does not already end with a user turn; otherwise the request is rejected with 400 (two consecutive user turns are not allowed).
 type CreateProposalsRequest struct {
-	// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	// DeveloperFee Deprecated: use `developer_fee_defaults`. `swap_bps` is now `developer_fee_defaults.swap.developer_fee_bps` and `offramp_bps` is now `developer_fee_defaults.offramp.developer_fee_bps`. Still accepted during the rename and removed in a later release; sending both `developer_fee` and `developer_fee_defaults` is a 400.
 	//
-	// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
+	// Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all. Both rates are DEFAULTS for the auto-accounts a request creates; an action-level fee is an explicit override and still wins outright, for either type.
+	// Deprecated: Renamed to developer_fee_defaults (DeveloperFeeDefaults).
 	DeveloperFee *DeveloperFee `json:"developer_fee,omitempty"`
+
+	// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	//
+	// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` on `create_auto_account` is an explicit override and still wins outright, for either type.
+	//
+	// Replaces the deprecated `developer_fee` object: `swap_bps` is now `swap.developer_fee_bps` and `offramp_bps` is now `offramp.developer_fee_bps`.
+	DeveloperFeeDefaults *DeveloperFeeDefaults `json:"developer_fee_defaults,omitempty"`
 
 	// Messages The conversation so far, oldest first.
 	Messages *[]AgenticChatMessage `json:"messages,omitempty"`
@@ -4349,15 +4372,34 @@ type DetailsValidation struct {
 	Ready bool `json:"ready"`
 }
 
-// DeveloperFee Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+// DeveloperFee Deprecated: use `developer_fee_defaults`. `swap_bps` is now `developer_fee_defaults.swap.developer_fee_bps` and `offramp_bps` is now `developer_fee_defaults.offramp.developer_fee_bps`. Still accepted during the rename and removed in a later release; sending both `developer_fee` and `developer_fee_defaults` is a 400.
 //
-// Both rates are DEFAULTS for the auto-accounts a request creates. An action-level `fee_bps` is an explicit override and still wins outright, for either type.
+// Your developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap_bps` for a crypto payout, `offramp_bps` for a bank payout. Omit a rate, or send zero, and that payout type carries no fee at all. Both rates are DEFAULTS for the auto-accounts a request creates; an action-level fee is an explicit override and still wins outright, for either type.
 type DeveloperFee struct {
 	// OfframpBps Rate for a bank payout — a `create_auto_account` naming a `rail`. An offramp converts too (it just settles on a rail instead of a chain), so charging it is a pricing decision that belongs to you. Zero or omitted means the payout is free of a conversion fee.
 	OfframpBps *int32 `json:"offramp_bps,omitempty"`
 
 	// SwapBps Rate for a crypto payout — a `create_auto_account` naming no `rail`.
 	SwapBps *int32 `json:"swap_bps,omitempty"`
+}
+
+// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+//
+// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` on `create_auto_account` is an explicit override and still wins outright, for either type.
+//
+// Replaces the deprecated `developer_fee` object: `swap_bps` is now `swap.developer_fee_bps` and `offramp_bps` is now `offramp.developer_fee_bps`.
+type DeveloperFeeDefaults struct {
+	// Offramp The developer fee for one payout type. `swap` applies to a `create_auto_account` naming no `rail` (a crypto payout); `offramp` applies to one naming a `rail` (a bank payout — an offramp converts too, so charging it is a pricing decision that belongs to you).
+	Offramp *DeveloperFeeRate `json:"offramp,omitempty"`
+
+	// Swap The developer fee for one payout type. `swap` applies to a `create_auto_account` naming no `rail` (a crypto payout); `offramp` applies to one naming a `rail` (a bank payout — an offramp converts too, so charging it is a pricing decision that belongs to you).
+	Swap *DeveloperFeeRate `json:"swap,omitempty"`
+}
+
+// DeveloperFeeRate The developer fee for one payout type. `swap` applies to a `create_auto_account` naming no `rail` (a crypto payout); `offramp` applies to one naming a `rail` (a bank payout — an offramp converts too, so charging it is a pricing decision that belongs to you).
+type DeveloperFeeRate struct {
+	// DeveloperFeeBps Rate in basis points (1 bp = 0.01%), 0–10000. Zero or omitted means this payout type carries no developer fee.
+	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 }
 
 // DeveloperFeeStatementAsset defines model for DeveloperFeeStatementAsset.
@@ -4412,7 +4454,7 @@ type DeveloperFeeStatementTransaction struct {
 	// Date Unix seconds (completed_at)
 	Date int64 `json:"date"`
 
-	// Fee decimal string, client_fee_amount
+	// Fee decimal string, developer fee charged on this transaction
 	Fee string `json:"fee"`
 	Id  string `json:"id"`
 
@@ -5755,6 +5797,9 @@ type OneOffTransaction struct {
 	// DestinationRoutingNumber ABA routing number for US bank accounts
 	DestinationRoutingNumber *string `json:"destination_routing_number,omitempty"`
 
+	// DeveloperFeeBps Developer fee for this transaction in basis points (1 bp = 0.01%), as set by `developer_fee_bps` on the request. 0 when no developer fee was set. One-off transactions created before this field was introduced also report 0, whatever fee they were created with.
+	DeveloperFeeBps int32 `json:"developer_fee_bps"`
+
 	// FailureReason Reason for failure if status is failed
 	FailureReason *string `json:"failure_reason,omitempty"`
 
@@ -5844,7 +5889,7 @@ type OneOffTransactionRequest struct {
 	// DestinationPaymentRail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	DestinationPaymentRail *PaymentCapability `json:"destination_payment_rail,omitempty"`
 
-	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%). Overrides the default client fee for this transaction.
+	// DeveloperFeeBps Developer fee for this transaction in basis points (1 bp = 0.01%). Omitted means no developer fee.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
 	// PaymentReference Optional payment reference message for bank transfers, carried on the payment as the ACH addenda, the wire message, or the SWIFT remittance information. On SWIFT, whether the payee sees it depends on the receiving bank and any intermediaries. Length limits: ACH 1-18 characters (letters/numbers/spaces), wire 1-140, SEPA 6-140, SWIFT 5-140 across at most 4 lines of 35 characters (letters, numbers, spaces, commas, and periods only).
@@ -7380,7 +7425,8 @@ type TransactionOperation struct {
 
 // TransactionReceipt Detailed receipt information for a transaction
 type TransactionReceipt struct {
-	// ClientFee Detailed representation of an amount with its asset and optional metadata
+	// ClientFee Deprecated: use `developer_fee`. Same value; will be removed in the next major version.
+	// Deprecated: Use developer_fee, which carries the same value.
 	ClientFee *AmountDetails `json:"client_fee,omitempty"`
 
 	// Converted Detailed representation of an amount with its asset and optional metadata
@@ -7388,6 +7434,9 @@ type TransactionReceipt struct {
 
 	// DakotaFee Detailed representation of an amount with its asset and optional metadata
 	DakotaFee *AmountDetails `json:"dakota_fee,omitempty"`
+
+	// DeveloperFee Detailed representation of an amount with its asset and optional metadata
+	DeveloperFee *AmountDetails `json:"developer_fee,omitempty"`
 
 	// ExchangeRate Exchange rate used for the transaction
 	ExchangeRate string `json:"exchange_rate"`
