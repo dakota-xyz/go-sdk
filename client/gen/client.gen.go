@@ -1752,6 +1752,15 @@ type AccountCreateRequest struct {
 	// DeveloperFeeBps Developer fee in basis points (1 bp = 0.01%).
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
 
+	// DeveloperFeeFixed Fixed developer fee charged on every deposit to this account, **in
+	// units of the asset deposited** (for example 10.00 USDC on a USDC
+	// deposit, 10.00 USD on a USD bank deposit, 10.00 EUR on a EUR bank
+	// deposit). A decimal string such as "10.00", with at most 2 decimal
+	// places. Must be greater than 0. Cannot be combined with
+	// `developer_fee_bps`: send one or the other. Setting it on update
+	// replaces an existing `developer_fee_bps`.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
+
 	// FiatDestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	FiatDestinationId *KSUID `json:"fiat_destination_id,omitempty"`
 
@@ -1863,8 +1872,14 @@ type AccountResponse struct {
 	// DeveloperFeeBps Developer fee charged on each deposit to this account, in basis points (1 bp = 0.01%). 0 when the account charges no developer fee.
 	DeveloperFeeBps int32 `json:"developer_fee_bps"`
 
+	// DeveloperFeeFixed Fixed developer fee charged on every deposit to this account, in units of the asset deposited. Absent when the account charges `developer_fee_bps` instead.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
+
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
+
+	// MinimumDeposit Smallest deposit that will be processed, in units of the asset deposited: `developer_fee_fixed` + 0.01. Smaller deposits are not converted. Returned for fixed-fee accounts only.
+	MinimumDeposit *string `json:"minimum_deposit,omitempty"`
 
 	// Rail Type of payment rail capability supported. For onramp accounts, `us_bank_account` indicates the account accepts ACH, Wire (Fedwire), and FedNow deposits interchangeably. `fednow` is the FedNow instant US-domestic USD rail for payouts and deposits — $500k per-transaction cap on payouts; a payout destination whose bank cannot receive FedNow is rejected at account creation with problem type `https://docs.dakota.xyz/api-reference/errors#fednow-destination-unreachable` — route that destination over `ach` instead. `swift` is the international USD wire rail: gated on the customer's `international_wire` capability, USD only, payouts target `fiat_iban` destinations, and deposit instructions carry the BIC and the beneficiary address. Intermediary banks may deduct fees en route, so the amount received can be lower than the amount sent. `sepa` is not currently offered.
 	Rail *PaymentCapability `json:"rail,omitempty"`
@@ -1887,8 +1902,9 @@ type AccountType string
 
 // AccountUpdateRequest Unified account update request for onramp/offramp/swap.
 //
-// **Only `developer_fee_bps` can be updated on an existing account.**
-// Routing fields (`crypto_destination_id`, `destination_network_id`,
+// **Only the developer fee (`developer_fee_bps` or
+// `developer_fee_fixed`) can be updated on an existing account.** Setting
+// one replaces the other. Routing fields (`crypto_destination_id`, `destination_network_id`,
 // `destination_asset`, and `fiat_destination_id`) are immutable after
 // creation. To change the destination asset, network, or address,
 // create a new account. A new onramp account returns new virtual account
@@ -1915,9 +1931,19 @@ type AccountUpdateRequest struct {
 
 	// DeveloperFeeBps Developer fee (client revenue share) in basis points. When set,
 	// updates the fee applied to FUTURE transactions on this account;
-	// existing transactions are unaffected. This is the only updatable
-	// field; routing fields remain immutable.
+	// existing transactions are unaffected. Setting it replaces an
+	// existing `developer_fee_fixed`. The developer fee is the only
+	// updatable field; routing fields remain immutable.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
+
+	// DeveloperFeeFixed Fixed developer fee charged on every deposit to this account, **in
+	// units of the asset deposited** (for example 10.00 USDC on a USDC
+	// deposit, 10.00 USD on a USD bank deposit, 10.00 EUR on a EUR bank
+	// deposit). A decimal string such as "10.00", with at most 2 decimal
+	// places. Must be greater than 0. Cannot be combined with
+	// `developer_fee_bps`: send one or the other. Setting it on update
+	// replaces an existing `developer_fee_bps`.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
 
 	// FiatDestinationId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	FiatDestinationId *KSUID `json:"fiat_destination_id,omitempty"`
@@ -5800,6 +5826,9 @@ type OneOffTransaction struct {
 	// DeveloperFeeBps Developer fee for this transaction in basis points (1 bp = 0.01%), as set by `developer_fee_bps` on the request. 0 when no developer fee was set. One-off transactions created before this field was introduced also report 0, whatever fee they were created with.
 	DeveloperFeeBps int32 `json:"developer_fee_bps"`
 
+	// DeveloperFeeFixed Fixed developer fee for this transaction, in units of the asset deposited, as set by `developer_fee_fixed` on the request. Absent when no fixed fee was set.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
+
 	// FailureReason Reason for failure if status is failed
 	FailureReason *string `json:"failure_reason,omitempty"`
 
@@ -5891,6 +5920,15 @@ type OneOffTransactionRequest struct {
 
 	// DeveloperFeeBps Developer fee for this transaction in basis points (1 bp = 0.01%). Omitted means no developer fee.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
+
+	// DeveloperFeeFixed Fixed developer fee for this transaction, **in units of the asset
+	// deposited** (for example 10.00 USDC on a USDC deposit). A decimal
+	// string such as "10.00", with at most 2 decimal places. Must be
+	// greater than 0. Cannot be combined with `developer_fee_bps`: send
+	// one or the other. The depositor must send the destination amount
+	// plus this fee; a deposit that does not cover the fee is not
+	// converted.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
 
 	// PaymentReference Optional payment reference message for bank transfers, carried on the payment as the ACH addenda, the wire message, or the SWIFT remittance information. On SWIFT, whether the payee sees it depends on the receiving bank and any intermediaries. Length limits: ACH 1-18 characters (letters/numbers/spaces), wire 1-140, SEPA 6-140, SWIFT 5-140 across at most 4 lines of 35 characters (letters, numbers, spaces, commas, and periods only).
 	PaymentReference *string `json:"payment_reference,omitempty"`

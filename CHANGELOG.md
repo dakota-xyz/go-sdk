@@ -4,6 +4,28 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — fixed developer fee amount (ENG-3918)
+
+A partial sync: `client/gen/openapi.yaml` takes only the `openapi.public.yaml`
+hunks of platform ENG-3916 (`76b510fb`) and ENG-4029 (`ec4d623a`), both in
+platform v0.3.79. Platform's other changes are left for a separate full sync.
+Existing `DeveloperFeeBps` usage is unchanged.
+
+- **Requests.** `AccountCreateRequest`, `AccountUpdateRequest` and
+  `OneOffTransactionRequest` take `DeveloperFeeFixed` (`*string`): a fixed
+  developer fee in units of the deposited asset, a decimal string such as
+  `"10.00"` with at most 2 decimals, greater than 0 and with no upper cap. It
+  cannot be combined with `DeveloperFeeBps`; send one or the other. On an
+  account update, setting either one replaces the other.
+- **One-offs.** The depositor sends the destination amount plus the fixed fee.
+  A deposit that does not cover the fee is not converted. The API does not
+  compare `amount` with the fee.
+- **Responses.** `AccountResponse.DeveloperFeeFixed` and
+  `AccountResponse.MinimumDeposit` (`*string`, fixed-fee accounts only;
+  `MinimumDeposit` is the fee + 0.01, and smaller deposits are not converted).
+  `OneOffTransaction.DeveloperFeeFixed` (`*string`). All three are omitted,
+  not null, when no fixed fee is set.
+
 ### Added — fixed developer fee (ENG-3905)
 
 A partial sync: `client/gen/openapi.yaml` takes only the developer-fee hunks
