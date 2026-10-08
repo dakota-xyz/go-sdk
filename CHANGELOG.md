@@ -4,6 +4,29 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — fixed developer fee for agentic payments (ENG-3923)
+
+A partial sync: `client/gen/openapi.yaml` takes only the `openapi.public.yaml`
+hunks of platform ENG-3921 (`5b497b9b`, `1d0200b0`), both in platform
+v0.3.97. Platform's removal of the deprecated `fee_bps` and `developer_fee`
+(ENG-3907) is left for the full sync, so those still appear here as
+deprecated, but the server has rejected them with a 400 since platform
+v0.3.82: do not send `FeeBps` or `DeveloperFee`. Existing `DeveloperFeeBps`
+usage is unchanged.
+
+- **Agentic defaults.** `DeveloperFeeRate` (the `Swap` and `Offramp` of
+  `DeveloperFeeDefaults`) takes `DeveloperFeeFixed` (`*string`): a flat fee
+  per payment in units of the asset deposited, a decimal string such as
+  `"10.00"` with at most 2 decimals, greater than 0. It cannot be combined
+  with `DeveloperFeeBps` on the same payout type; send one or the other.
+- **Agentic action override.** `CreateAutoAccountAction.DeveloperFeeFixed`
+  (`*string`, same format) is an explicit override that wins over
+  `DeveloperFeeDefaults`, like `DeveloperFeeBps`. It cannot be combined with
+  `DeveloperFeeBps`.
+- **Gross-up.** A fixed fee is added on top of a payment's `amount`, so the
+  payee receives exactly the amount named, which must be at least 0.01. With
+  `AmountIncludesFee: true` the amount must be at least the fee plus 0.01.
+
 ### Added — fixed developer fee amount (ENG-3918)
 
 A partial sync: `client/gen/openapi.yaml` takes only the `openapi.public.yaml`
