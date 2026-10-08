@@ -226,3 +226,99 @@ func TestCreateOneOff_DeveloperFeeFixedSerializesAsString(t *testing.T) {
 		t.Errorf("JSON201 = %+v, want DeveloperFeeFixed 10.00", txn)
 	}
 }
+
+// Agentic defaults take a fixed fee per payout type (ENG-3923): it goes on the
+// wire as a decimal string with no developer_fee_bps beside it, and a bps
+// payout type next to it is unchanged. The drafted create_auto_account action
+// reports its own fixed fee back.
+func TestCreateProposals_DeveloperFeeDefaultsFixed(t *testing.T) {
+	var got map[string]any
+	c := feeServer(t, http.StatusOK, `{
+		"proposals":[{"actions":[{
+			"type":"create_auto_account",
+			"create_auto_account":{
+				"source_asset":"USDC",
+				"source_network_id":"base-mainnet",
+				"output_asset":"USDC",
+				"output_network_id":"solana-mainnet",
+				"developer_fee_fixed":"10.00"
+			}
+		}]}]
+	}`, &got)
+
+	resp, err := client.CheckResponse(c.Raw().CreatePaymentAgentProposalsWithResponse(context.Background(), "2mGCBGNkLcS2a3y6sPGnHXKzRNt", gen.CreateProposalsRequest{
+		Prompt: ptr("pay Bruno 100 USDC on Solana"),
+		DeveloperFeeDefaults: &gen.DeveloperFeeDefaults{
+			Swap:    &gen.DeveloperFeeRate{DeveloperFeeFixed: ptr("10.00")},
+			Offramp: &gen.DeveloperFeeRate{DeveloperFeeBps: ptr(int32(25))},
+		},
+	}))
+	if err != nil {
+		t.Fatalf("unexpected call error: %v", err)
+	}
+	defaults, _ := got["developer_fee_defaults"].(map[string]any)
+	swap, _ := defaults["swap"].(map[string]any)
+	if v, ok := swap["developer_fee_fixed"].(string); !ok || v != "10.00" {
+		t.Errorf(`request swap.developer_fee_fixed = %#v, want the string "10.00"`, swap["developer_fee_fixed"])
+	}
+	if _, ok := swap["developer_fee_bps"]; ok {
+		t.Errorf("request swap carries developer_fee_bps = %v, want it omitted", swap["developer_fee_bps"])
+	}
+	offramp, _ := defaults["offramp"].(map[string]any)
+	if v, ok := offramp["developer_fee_bps"].(float64); !ok || v != 25 {
+		t.Errorf("request offramp.developer_fee_bps = %#v, want 25", offramp["developer_fee_bps"])
+	}
+	if _, ok := offramp["developer_fee_fixed"]; ok {
+		t.Errorf("request offramp carries developer_fee_fixed = %v, want it omitted", offramp["developer_fee_fixed"])
+	}
+
+	if resp.JSON200 == nil || resp.JSON200.Proposals == nil || len(*resp.JSON200.Proposals) != 1 {
+		t.Fatalf("JSON200 = %+v, want one proposal", resp.JSON200)
+	}
+	actions := (*resp.JSON200.Proposals)[0].Actions
+	if len(actions) != 1 {
+		t.Fatalf("proposal actions = %+v, want one", actions)
+	}
+	action := actions[0].CreateAutoAccount
+	if action == nil || action.DeveloperFeeFixed == nil || *action.DeveloperFeeFixed != "10.00" {
+		t.Errorf("CreateAutoAccount = %+v, want DeveloperFeeFixed 10.00", action)
+	}
+}
+
+// An action-level fixed fee on create_auto_account is posted back on accept as
+// a decimal string, without developer_fee_bps (ENG-3923).
+func TestCreateInstructions_AutoAccountDeveloperFeeFixedSerializesAsString(t *testing.T) {
+	var got map[string]any
+	c := feeServer(t, http.StatusCreated, `{"instruction_ids":["2mGCBGNkLcS2a3y6sPGnHXKzRNv"]}`, &got)
+
+	_, err := client.CheckResponse(c.Raw().CreateInstructionsWithResponse(context.Background(), gen.CreateInstructionsRequest{
+		PaymentAgentId: "2mGCBGNkLcS2a3y6sPGnHXKzRNt",
+		Proposals: []gen.AgenticProposal{{Actions: []gen.AgenticAction{{
+			Type: gen.AgenticActionTypeCreateAutoAccount,
+			CreateAutoAccount: &gen.CreateAutoAccountAction{
+				SourceAsset:       "USDC",
+				SourceNetworkId:   "base-mainnet",
+				OutputAsset:       "USDC",
+				DeveloperFeeFixed: ptr("10.00"),
+			},
+		}}}},
+	}))
+	if err != nil {
+		t.Fatalf("unexpected call error: %v", err)
+	}
+	proposals, _ := got["proposals"].([]any)
+	if len(proposals) != 1 {
+		t.Fatalf("request proposals = %#v, want one", got["proposals"])
+	}
+	actions, _ := proposals[0].(map[string]any)["actions"].([]any)
+	if len(actions) != 1 {
+		t.Fatalf("request actions = %#v, want one", proposals[0])
+	}
+	auto, _ := actions[0].(map[string]any)["create_auto_account"].(map[string]any)
+	if v, ok := auto["developer_fee_fixed"].(string); !ok || v != "10.00" {
+		t.Errorf(`request create_auto_account.developer_fee_fixed = %#v, want the string "10.00"`, auto["developer_fee_fixed"])
+	}
+	if _, ok := auto["developer_fee_bps"]; ok {
+		t.Errorf("request create_auto_account carries developer_fee_bps = %v, want it omitted", auto["developer_fee_bps"])
+	}
+}

@@ -3730,8 +3730,22 @@ type CreateAutoAccountAction struct {
 	// DestinationId The REAL destination the auto-account forwards to: a crypto destination (⇒ swap) or a bank destination (⇒ offramp). Empty = the destination created in this proposal.
 	DestinationId *string `json:"destination_id,omitempty"`
 
-	// DeveloperFeeBps Optional developer fee for this auto-account, in basis points (0–10000). An explicit override: it wins over `developer_fee_defaults` for either payout type. Replaces the deprecated `fee_bps`; send one or the other, not both.
+	// DeveloperFeeBps Optional developer fee for this auto-account, in basis points (0–10000). An explicit override: it wins over `developer_fee_defaults` for either payout type. Cannot be combined with `developer_fee_fixed`: send one or the other. Replaces the deprecated `fee_bps`; send one or the other, not both.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
+
+	// DeveloperFeeFixed Optional fixed developer fee for this auto-account, charged on every
+	// deposit to it, **in units of the asset deposited** (`source_asset`,
+	// so 10.00 on a USDC deposit is 10.00 USDC). A decimal string such as
+	// "10.00", with at most 2 decimal places. Must be greater than 0.
+	// Cannot be combined with `developer_fee_bps`: send one or the other.
+	// An explicit override, like `developer_fee_bps`: it wins over
+	// `developer_fee_defaults` for either payout type.
+	//
+	// The fee is added on top of a payment's `amount`, so the payee
+	// receives exactly the amount named, which must be at least 0.01;
+	// with `amount_includes_fee: true` the amount must be at least the
+	// fee plus 0.01.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
 
 	// FeeBps Deprecated: use `developer_fee_bps`. Same meaning (basis points, 0–10000); still accepted during the rename and removed in a later release. Sending both `fee_bps` and `developer_fee_bps` is a 400.
 	// Deprecated: Renamed to developer_fee_bps, which carries the same value.
@@ -3806,9 +3820,9 @@ type CreateInstructionsRequest struct {
 	// Deprecated: Renamed to developer_fee_defaults (DeveloperFeeDefaults).
 	DeveloperFee *DeveloperFee `json:"developer_fee,omitempty"`
 
-	// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Each payout type takes either a percentage (`developer_fee_bps`) or a flat amount per payment (`developer_fee_fixed`), never both. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
 	//
-	// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` on `create_auto_account` is an explicit override and still wins outright, for either type.
+	// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` or `developer_fee_fixed` on `create_auto_account` is an explicit override and still wins outright, for either type.
 	//
 	// Replaces the deprecated `developer_fee` object: `swap_bps` is now `swap.developer_fee_bps` and `offramp_bps` is now `offramp.developer_fee_bps`.
 	DeveloperFeeDefaults *DeveloperFeeDefaults `json:"developer_fee_defaults,omitempty"`
@@ -3911,9 +3925,9 @@ type CreateProposalsRequest struct {
 	// Deprecated: Renamed to developer_fee_defaults (DeveloperFeeDefaults).
 	DeveloperFee *DeveloperFee `json:"developer_fee,omitempty"`
 
-	// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+	// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Each payout type takes either a percentage (`developer_fee_bps`) or a flat amount per payment (`developer_fee_fixed`), never both. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
 	//
-	// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` on `create_auto_account` is an explicit override and still wins outright, for either type.
+	// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` or `developer_fee_fixed` on `create_auto_account` is an explicit override and still wins outright, for either type.
 	//
 	// Replaces the deprecated `developer_fee` object: `swap_bps` is now `swap.developer_fee_bps` and `offramp_bps` is now `offramp.developer_fee_bps`.
 	DeveloperFeeDefaults *DeveloperFeeDefaults `json:"developer_fee_defaults,omitempty"`
@@ -3971,7 +3985,7 @@ type CreateScheduledPaymentsAction struct {
 	//
 	// Absent or `false` (the DEFAULT): `amount` is what the payee RECEIVES. The server adds the fee on top, so slightly more leaves the funding wallet. This is what "pay Bruno 10 USDC" means to a person, and it matches the same payment made through a client's own form.
 	//
-	// `true`: `amount` is what LEAVES the wallet, and the payee receives less the fee. Use it only when the customer says so — "send 10 in total", "including the fee".
+	// `true`: `amount` is what LEAVES the wallet, and the payee receives less the fee. Use it only when the customer says so — "send 10 in total", "including the fee". Under a fixed fee (`developer_fee_fixed`) the amount must be at least the fee plus 0.01, or nothing would reach the payee.
 	//
 	// The gross-up is done SERVER-SIDE from the fee on the request; the agent never computes it, so it can neither get the arithmetic wrong nor be talked out of the fee. With no fee configured the two are identical.
 	AmountIncludesFee *bool    `json:"amount_includes_fee,omitempty"`
@@ -4409,9 +4423,9 @@ type DeveloperFee struct {
 	SwapBps *int32 `json:"swap_bps,omitempty"`
 }
 
-// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
+// DeveloperFeeDefaults Your default developer fee, declared per payout type. A conversion is charged the rate for the kind of payout it funds: `swap` for a crypto payout, `offramp` for a bank payout. Each payout type takes either a percentage (`developer_fee_bps`) or a flat amount per payment (`developer_fee_fixed`), never both. Omit a payout type, or set its `developer_fee_bps` to zero, and that payout type carries no fee at all — nothing is charged, nothing is added to the amount, and the agent is told nothing about a fee it could mention. The two are independent, so one conversation can charge a swap and stay silent about a bank payout in the same turn.
 //
-// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` on `create_auto_account` is an explicit override and still wins outright, for either type.
+// Both are DEFAULTS for the auto-accounts a request creates. An action-level `developer_fee_bps` or `developer_fee_fixed` on `create_auto_account` is an explicit override and still wins outright, for either type.
 //
 // Replaces the deprecated `developer_fee` object: `swap_bps` is now `swap.developer_fee_bps` and `offramp_bps` is now `offramp.developer_fee_bps`.
 type DeveloperFeeDefaults struct {
@@ -4424,8 +4438,21 @@ type DeveloperFeeDefaults struct {
 
 // DeveloperFeeRate The developer fee for one payout type. `swap` applies to a `create_auto_account` naming no `rail` (a crypto payout); `offramp` applies to one naming a `rail` (a bank payout — an offramp converts too, so charging it is a pricing decision that belongs to you).
 type DeveloperFeeRate struct {
-	// DeveloperFeeBps Rate in basis points (1 bp = 0.01%), 0–10000. Zero or omitted means this payout type carries no developer fee.
+	// DeveloperFeeBps Rate in basis points (1 bp = 0.01%), 0–10000. Zero or omitted means this payout type carries no developer fee. Cannot be combined with `developer_fee_fixed`: send one or the other.
 	DeveloperFeeBps *int32 `json:"developer_fee_bps,omitempty"`
+
+	// DeveloperFeeFixed Fixed developer fee charged on every payment of this payout type,
+	// **in units of the asset deposited** (the stablecoin the payment
+	// sends, so 10.00 on a USDC payment is 10.00 USDC). A decimal string
+	// such as "10.00", with at most 2 decimal places. Must be greater
+	// than 0. Cannot be combined with `developer_fee_bps`: send one or
+	// the other.
+	//
+	// The fee is added on top of a payment's `amount`, so the payee
+	// receives exactly the amount named, which must be at least 0.01;
+	// with `amount_includes_fee: true` the amount must be at least the
+	// fee plus 0.01.
+	DeveloperFeeFixed *string `json:"developer_fee_fixed,omitempty"`
 }
 
 // DeveloperFeeStatementAsset defines model for DeveloperFeeStatementAsset.
