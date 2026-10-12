@@ -108,6 +108,23 @@ const (
 	// the failed terminal state (the async agentic-payments actor's one silent
 	// state change). Its payload is [types.ScheduledPaymentFailedData].
 	EventScheduledPaymentFailed EventType = "scheduled_payment.failed"
+
+	// EventDepositHeld is emitted each time a deposit enters held: Dakota
+	// kept funds it could not process (for example below the account's
+	// minimum deposit, or over its max_transactions cap) and created no
+	// transaction, so no transaction.* event reports it. The same deposit_id can
+	// get it more than once (a failed return, an undone manual resolution),
+	// so upsert on deposit_id. Its payload carries the deposit, its reason,
+	// fee_to_cover, minimum_deposit and held_at.
+	EventDepositHeld EventType = "deposit.held"
+	// EventDepositReturned is emitted each time a held deposit's funds are
+	// back with the sender, normally once. Every deposit that gets it also
+	// gets an [EventDepositHeld] queued no later than it, which can still
+	// arrive after it: delivery order is not guaranteed, so order a
+	// deposit's events by held_at and returned_at.
+	// Its payload carries the deposit, return_transaction_hash, return_fee,
+	// return_automatic and returned_at.
+	EventDepositReturned EventType = "deposit.returned"
 )
 
 // AllEventTypes contains all known Dakota Platform webhook event types.
@@ -159,6 +176,8 @@ var AllEventTypes = []EventType{
 	EventWalletTransactionUpdated,
 	EventWalletDeposit,
 	EventScheduledPaymentFailed,
+	EventDepositHeld,
+	EventDepositReturned,
 }
 
 // validEventTypes is the set of all known event types.

@@ -4,6 +4,25 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — deposit.held and deposit.returned event types (ENG-4687)
+
+A partial sync: `client/gen/openapi.yaml` takes only the two new values of
+platform's `EventType` enum.
+
+- `webhook.EventDepositHeld` (`"deposit.held"`) and
+  `webhook.EventDepositReturned` (`"deposit.returned"`), both in
+  `AllEventTypes`, so `IsValid` accepts them. `gen.EventTypeDepositHeld` and
+  `gen.EventTypeDepositReturned` name them in a webhook target's
+  `event_types`.
+- `deposit.held` fires each time a deposit Dakota could not process is held
+  (for example below the account's minimum deposit), so one `deposit_id` can
+  get it more than once. `deposit.returned` fires when the funds are back
+  with the sender. Delivery order is not guaranteed: order by `held_at` /
+  `returned_at`, and handle a `deposit.returned` for a `deposit_id` you
+  haven't seen held. There are no typed payload structs yet;
+  decode `Data.Object` with `EventDataAs` into your own type. See
+  [Deposit Events](https://docs.dakota.xyz/documentation/webhooks#deposit-events).
+
 ### Added — fixed developer fee for agentic payments (ENG-3923)
 
 A partial sync: `client/gen/openapi.yaml` takes only the `openapi.public.yaml`

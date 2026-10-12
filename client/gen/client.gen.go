@@ -573,6 +573,8 @@ const (
 	EventTypeCustomerRfiResponded               EventType = "customer.rfi.responded"
 	EventTypeCustomerUpdated                    EventType = "customer.updated"
 	EventTypeDeploymentPayoutDestinationUpdated EventType = "deployment_payout_destination.updated"
+	EventTypeDepositHeld                        EventType = "deposit.held"
+	EventTypeDepositReturned                    EventType = "deposit.returned"
 	EventTypeDestinationCreated                 EventType = "destination.created"
 	EventTypeDestinationDeleted                 EventType = "destination.deleted"
 	EventTypeExceptionCleared                   EventType = "exception.cleared"
