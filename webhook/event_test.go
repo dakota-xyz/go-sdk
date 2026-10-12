@@ -20,6 +20,8 @@ func TestEventType_IsValid(t *testing.T) {
 		{"user.created", webhook.EventUserCreated, true},
 		{"wallet.deposit", webhook.EventWalletDeposit, true},
 		{"transaction.auto.updated", webhook.EventTransactionAutoUpdated, true},
+		{"deposit.held", webhook.EventDepositHeld, true},
+		{"deposit.returned", webhook.EventDepositReturned, true},
 		{"unknown type", webhook.EventType("unknown"), false},
 		{"empty string", webhook.EventType(""), false},
 		{"made up", webhook.EventType("foo.bar.baz"), false},
