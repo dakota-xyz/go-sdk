@@ -27,6 +27,17 @@ type UserDeletedData struct {
 type APIKeyData struct {
 	ID    string `json:"id"`
 	Last6 string `json:"last_6"`
+	// CreatedByAPIKeyID is the key that created this key, when a key did.
+	CreatedByAPIKeyID string `json:"created_by_api_key_id,omitempty"`
+}
+
+// APIKeyUpdatedData is the event payload for api_key.updated events: the
+// key's name and preset after the change. The event's PreviousAttributes holds
+// the values that the change replaced.
+type APIKeyUpdatedData struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Preset string `json:"preset"`
 }
 
 // APIKeyDeletedData is the event payload for api_key.deleted events.

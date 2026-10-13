@@ -17,6 +17,7 @@ const (
 	EventUserDeleted EventType = "user.deleted"
 
 	EventAPIKeyCreated EventType = "api_key.created"
+	EventAPIKeyUpdated EventType = "api_key.updated"
 	EventAPIKeyDeleted EventType = "api_key.deleted"
 
 	EventCustomerCreated EventType = "customer.created"
@@ -133,6 +134,7 @@ var AllEventTypes = []EventType{
 	EventUserUpdated,
 	EventUserDeleted,
 	EventAPIKeyCreated,
+	EventAPIKeyUpdated,
 	EventAPIKeyDeleted,
 	EventCustomerCreated,
 	EventCustomerUpdated,

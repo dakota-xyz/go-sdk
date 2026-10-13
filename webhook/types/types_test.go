@@ -1125,6 +1125,31 @@ func TestEventDataAs_OptionalFieldsOmitted(t *testing.T) {
 	}
 }
 
+// When a key creates a key, api_key.created also names the creating key
+// (ENG-4790).
+func TestEventDataAs_APIKeyData_NamesTheCreatingKey(t *testing.T) {
+	data := decodeEventIgnoring[types.APIKeyData](
+		t, "evt_api_key_data_by_key", webhook.EventAPIKeyCreated,
+		`{"id":"key_2","last_6":"d4e5f6","hash":"e3b0c44298fc1c14","created_by_api_key_id":"key_1"}`,
+		"hash",
+	)
+	if data.CreatedByAPIKeyID != "key_1" {
+		t.Errorf("CreatedByAPIKeyID = %q, want %q", data.CreatedByAPIKeyID, "key_1")
+	}
+}
+
+// api_key.updated carries the key's name and preset after the change. The
+// values it replaced are in the event's PreviousAttributes.
+func TestEventDataAs_APIKeyUpdatedData(t *testing.T) {
+	data := decodeEvent[types.APIKeyUpdatedData](
+		t, "evt_api_key_updated_data", webhook.EventAPIKeyUpdated,
+		`{"id":"key_1","name":"payouts","preset":"read_only"}`,
+	)
+	if data.ID != "key_1" || data.Name != "payouts" || data.Preset != "read_only" {
+		t.Errorf("data = %+v", data)
+	}
+}
+
 func TestEventDataAs_APIKeyDeletedData(t *testing.T) {
 	data := decodeEvent[types.APIKeyDeletedData](
 		t, "evt_api_key_deleted_data", webhook.EventAPIKeyDeleted,
