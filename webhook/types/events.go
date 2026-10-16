@@ -32,12 +32,12 @@ type APIKeyData struct {
 }
 
 // APIKeyUpdatedData is the event payload for api_key.updated events: the
-// key's name and preset after the change. The event's PreviousAttributes holds
+// key's name and scope after the change. The event's PreviousAttributes holds
 // the values that the change replaced.
 type APIKeyUpdatedData struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Preset string `json:"preset"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Scope string `json:"scope"`
 }
 
 // APIKeyDeletedData is the event payload for api_key.deleted events.

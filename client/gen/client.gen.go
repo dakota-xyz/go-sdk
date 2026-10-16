@@ -129,11 +129,11 @@ const (
 	AgenticProposalsResultConversationStatusWarned        AgenticProposalsResultConversationStatus = "warned"
 )
 
-// Defines values for ApiKeyPreset.
+// Defines values for ApiKeyScope.
 const (
-	ApiKeyPresetFullAccess ApiKeyPreset = "full_access"
-	ApiKeyPresetOperate    ApiKeyPreset = "operate"
-	ApiKeyPresetReadOnly   ApiKeyPreset = "read_only"
+	ApiKeyScopeFullAccess ApiKeyScope = "full_access"
+	ApiKeyScopeOperate    ApiKeyScope = "operate"
+	ApiKeyScopeReadOnly   ApiKeyScope = "read_only"
 )
 
 // Defines values for ApplicationApplicationDecision.
@@ -2310,14 +2310,14 @@ type ApiKeyListItem struct {
 	// Name A label that says what the key is for. No two live keys of a client share a name.
 	Name ApiKeyName `json:"name"`
 
-	// Preset The named set of permissions that the key has. The presets nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
 	//
-	// - `full_access`: everything that an admin of the client can do. A key created without a preset gets it.
-	// - `operate`: moves money and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
 	// - `read_only`: reads only.
 	//
 	// A key does not take the role of the person who created it.
-	Preset ApiKeyPreset `json:"preset"`
+	Scope *ApiKeyScope `json:"scope,omitempty"`
 
 	// UserId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	UserId KSUID `json:"user_id"`
@@ -2325,15 +2325,6 @@ type ApiKeyListItem struct {
 
 // ApiKeyName A label that says what the key is for. No two live keys of a client share a name.
 type ApiKeyName = string
-
-// ApiKeyPreset The named set of permissions that the key has. The presets nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
-//
-// - `full_access`: everything that an admin of the client can do. A key created without a preset gets it.
-// - `operate`: moves money and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
-// - `read_only`: reads only.
-//
-// A key does not take the role of the person who created it.
-type ApiKeyPreset string
 
 // ApiKeyResponse defines model for ApiKeyResponse.
 type ApiKeyResponse struct {
@@ -2346,15 +2337,24 @@ type ApiKeyResponse struct {
 	// Name A label that says what the key is for. No two live keys of a client share a name.
 	Name ApiKeyName `json:"name"`
 
-	// Preset The named set of permissions that the key has. The presets nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
 	//
-	// - `full_access`: everything that an admin of the client can do. A key created without a preset gets it.
-	// - `operate`: moves money and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
 	// - `read_only`: reads only.
 	//
 	// A key does not take the role of the person who created it.
-	Preset ApiKeyPreset `json:"preset"`
+	Scope *ApiKeyScope `json:"scope,omitempty"`
 }
+
+// ApiKeyScope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+//
+// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+// - `read_only`: reads only.
+//
+// A key does not take the role of the person who created it.
+type ApiKeyScope string
 
 // Application Application response with separated entity data and validation state
 type Application struct {
@@ -3779,14 +3779,14 @@ type CreateApiKeyRequest struct {
 	// Name A label that says what the key is for. No two live keys of a client share a name.
 	Name *ApiKeyName `json:"name,omitempty"`
 
-	// Preset The named set of permissions that the key has. The presets nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
 	//
-	// - `full_access`: everything that an admin of the client can do. A key created without a preset gets it.
-	// - `operate`: moves money and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
 	// - `read_only`: reads only.
 	//
 	// A key does not take the role of the person who created it.
-	Preset *ApiKeyPreset `json:"preset,omitempty"`
+	Scope *ApiKeyScope `json:"scope,omitempty"`
 }
 
 // CreateAutoAccountAction Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
@@ -7641,19 +7641,19 @@ type TransferFeeOverride struct {
 	SourceAsset string `json:"sourceAsset"`
 }
 
-// UpdateApiKeyRequest Send `name`, `preset` or both. A new preset applies from the next request made with the key, and the key value stays the same.
+// UpdateApiKeyRequest Send `name`, `scope` or both. A new scope applies from the next request made with the key, and the key value stays the same.
 type UpdateApiKeyRequest struct {
 	// Name A label that says what the key is for. No two live keys of a client share a name.
 	Name *ApiKeyName `json:"name,omitempty"`
 
-	// Preset The named set of permissions that the key has. The presets nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
 	//
-	// - `full_access`: everything that an admin of the client can do. A key created without a preset gets it.
-	// - `operate`: moves money and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
 	// - `read_only`: reads only.
 	//
 	// A key does not take the role of the person who created it.
-	Preset *ApiKeyPreset `json:"preset,omitempty"`
+	Scope *ApiKeyScope `json:"scope,omitempty"`
 }
 
 // UpdateClientUserRequest Request body for updating a client user

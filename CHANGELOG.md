@@ -4,7 +4,7 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
-### Added — API key names, last-used time and presets (ENG-4792)
+### Added — API key names, last-used time and scopes (ENG-4792)
 
 A partial sync: `client/gen/openapi.yaml` takes the `/api-keys` paths and the
 API key schemas of platform's `openapi.public.yaml` (platform ENG-3939 and
@@ -14,12 +14,13 @@ ENG-4790), the `api_key.updated` value of `EventType`, and the
 - **Breaking:** `CreateApiKeyWithResponse(ctx, params)` becomes
   `CreateApiKeyWithResponse(ctx, params, body)`. Pass
   `gen.CreateApiKeyJSONRequestBody{}` to create a key as before.
-- The create body takes an optional `Name` and an optional `Preset`:
-  `gen.ApiKeyPresetFullAccess`, `gen.ApiKeyPresetOperate` or
-  `gen.ApiKeyPresetReadOnly`. A key created without a preset has full access.
-- `UpdateApiKeyWithResponse` changes the `Name`, the `Preset` or both of a
-  key. A new preset applies from the next request made with the key.
-- `gen.ApiKeyResponse` and `gen.ApiKeyListItem` have `Name` and `Preset`.
+- The create body takes an optional `Name` and an optional `Scope`:
+  `gen.ApiKeyScopeFullAccess`, `gen.ApiKeyScopeOperate` or
+  `gen.ApiKeyScopeReadOnly`. A key created without a scope has full access.
+- `UpdateApiKeyWithResponse` changes the `Name`, the `Scope` or both of a
+  key. A new scope applies from the next request made with the key.
+- `gen.ApiKeyResponse` and `gen.ApiKeyListItem` have `Name` and `Scope`. `Scope`
+  is a pointer, because the platform leaves it out while scoped API keys are off.
   `gen.ApiKeyListItem` also has `LastUsedAt`, which is nil for a key that was
   never used.
 - `webhook.EventAPIKeyUpdated` (`"api_key.updated"`) is in `AllEventTypes`,

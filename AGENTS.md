@@ -210,13 +210,13 @@ All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse
 - `ListEventsWithResponse(ctx, params)`
 
 ### API Keys
-- `CreateApiKeyWithResponse(ctx, params, request)`: `Name` and `Preset` are optional. A key created without a preset has full access.
-- `ListApiKeysWithResponse(ctx, params)`: each key has `Name`, `Preset` and `LastUsedAt`.
-- `UpdateApiKeyWithResponse(ctx, keyID, params, request)`: changes `Name`, `Preset` or both.
+- `CreateApiKeyWithResponse(ctx, params, request)`: `Name` and `Scope` are optional. A key created without a scope has full access.
+- `ListApiKeysWithResponse(ctx, params)`: each key has `Name`, `Scope` and `LastUsedAt`.
+- `UpdateApiKeyWithResponse(ctx, keyID, params, request)`: changes `Name`, `Scope` or both.
 - `DeleteApiKeyWithResponse(ctx, keyID)`
 - `DeleteAllApiKeysWithResponse(ctx)`
 
-A key can do what its preset allows: `gen.ApiKeyPresetFullAccess`, `gen.ApiKeyPresetOperate` or `gen.ApiKeyPresetReadOnly`. It does not take the role of the person who created it, and it keeps working after that person is removed.
+A key can do what its scope allows: `gen.ApiKeyScopeFullAccess`, `gen.ApiKeyScopeOperate` or `gen.ApiKeyScopeReadOnly`. It does not take the role of the person who created it, and it keeps working after that person is removed.
 
 ### Users (Dashboard)
 - `CreateClientUserWithResponse(ctx, request)`

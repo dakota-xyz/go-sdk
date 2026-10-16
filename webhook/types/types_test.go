@@ -1138,14 +1138,14 @@ func TestEventDataAs_APIKeyData_NamesTheCreatingKey(t *testing.T) {
 	}
 }
 
-// api_key.updated carries the key's name and preset after the change. The
+// api_key.updated carries the key's name and scope after the change. The
 // values it replaced are in the event's PreviousAttributes.
 func TestEventDataAs_APIKeyUpdatedData(t *testing.T) {
 	data := decodeEvent[types.APIKeyUpdatedData](
 		t, "evt_api_key_updated_data", webhook.EventAPIKeyUpdated,
-		`{"id":"key_1","name":"payouts","preset":"read_only"}`,
+		`{"id":"key_1","name":"payouts","scope":"read_only"}`,
 	)
-	if data.ID != "key_1" || data.Name != "payouts" || data.Preset != "read_only" {
+	if data.ID != "key_1" || data.Name != "payouts" || data.Scope != "read_only" {
 		t.Errorf("data = %+v", data)
 	}
 }
