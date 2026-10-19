@@ -129,6 +129,13 @@ const (
 	AgenticProposalsResultConversationStatusWarned        AgenticProposalsResultConversationStatus = "warned"
 )
 
+// Defines values for ApiKeyScope.
+const (
+	ApiKeyScopeFullAccess ApiKeyScope = "full_access"
+	ApiKeyScopeOperate    ApiKeyScope = "operate"
+	ApiKeyScopeReadOnly   ApiKeyScope = "read_only"
+)
+
 // Defines values for ApplicationApplicationDecision.
 const (
 	ApplicationApplicationDecisionApproved  ApplicationApplicationDecision = "approved"
@@ -558,6 +565,7 @@ const (
 const (
 	EventTypeApiKeyCreated                      EventType = "api_key.created"
 	EventTypeApiKeyDeleted                      EventType = "api_key.deleted"
+	EventTypeApiKeyUpdated                      EventType = "api_key.updated"
 	EventTypeAutoAccountCreated                 EventType = "auto_account.created"
 	EventTypeAutoAccountDeleted                 EventType = "auto_account.deleted"
 	EventTypeAutoAccountUpdated                 EventType = "auto_account.updated"
@@ -2296,9 +2304,27 @@ type ApiKeyListItem struct {
 	// KeySuffix Last six characters of the API key
 	KeySuffix string `json:"key_suffix"`
 
+	// LastUsedAt Timestamp of the most recent request made with the API key, accurate to one hour. Null when the key was never used.
+	LastUsedAt *int `json:"last_used_at"`
+
+	// Name A label that says what the key is for. No two live keys of a client share a name.
+	Name ApiKeyName `json:"name"`
+
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	//
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `read_only`: reads only.
+	//
+	// A key does not take the role of the person who created it.
+	Scope *ApiKeyScope `json:"scope,omitempty"`
+
 	// UserId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	UserId KSUID `json:"user_id"`
 }
+
+// ApiKeyName A label that says what the key is for. No two live keys of a client share a name.
+type ApiKeyName = string
 
 // ApiKeyResponse defines model for ApiKeyResponse.
 type ApiKeyResponse struct {
@@ -2307,7 +2333,28 @@ type ApiKeyResponse struct {
 
 	// Key The API key value (only shown once at creation)
 	Key string `json:"key"`
+
+	// Name A label that says what the key is for. No two live keys of a client share a name.
+	Name ApiKeyName `json:"name"`
+
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	//
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `read_only`: reads only.
+	//
+	// A key does not take the role of the person who created it.
+	Scope *ApiKeyScope `json:"scope,omitempty"`
 }
+
+// ApiKeyScope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+//
+// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+// - `read_only`: reads only.
+//
+// A key does not take the role of the person who created it.
+type ApiKeyScope string
 
 // Application Application response with separated entity data and validation state
 type Application struct {
@@ -3725,6 +3772,21 @@ type Country struct {
 type CreateApiKeyForClientRequest struct {
 	// ClientId Client ID to create the API key for
 	ClientId KSUID `json:"client_id"`
+}
+
+// CreateApiKeyRequest defines model for CreateApiKeyRequest.
+type CreateApiKeyRequest struct {
+	// Name A label that says what the key is for. No two live keys of a client share a name.
+	Name *ApiKeyName `json:"name,omitempty"`
+
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	//
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `read_only`: reads only.
+	//
+	// A key does not take the role of the person who created it.
+	Scope *ApiKeyScope `json:"scope,omitempty"`
 }
 
 // CreateAutoAccountAction Provision a provider-managed convert-and-forward "auto-account" so a payment can cross chain families (crypto→crypto swap) or exit to a bank (crypto→bank offramp). The agent pays the auto-account's crypto DEPOSIT on source_network_id (on the funding wallet's own family) and the provider converts source_asset→output_asset and forwards to destination_id. A scheduled payment then targets the deposit; the mandate still targets the real recipient.
@@ -7579,6 +7641,21 @@ type TransferFeeOverride struct {
 	SourceAsset string `json:"sourceAsset"`
 }
 
+// UpdateApiKeyRequest Send `name`, `scope` or both. A new scope applies from the next request made with the key, and the key value stays the same.
+type UpdateApiKeyRequest struct {
+	// Name A label that says what the key is for. No two live keys of a client share a name.
+	Name *ApiKeyName `json:"name,omitempty"`
+
+	// Scope What the key can do. The scopes nest: `read_only` is inside `operate`, and `operate` is inside `full_access`.
+	//
+	// - `full_access`: everything that an admin of the client can do. A key created without a scope gets it.
+	// - `operate`: pays saved payees and runs the business, but cannot add payees, delete anything, or manage users, keys and security settings.
+	// - `read_only`: reads only.
+	//
+	// A key does not take the role of the person who created it.
+	Scope *ApiKeyScope `json:"scope,omitempty"`
+}
+
 // UpdateClientUserRequest Request body for updating a client user
 type UpdateClientUserRequest struct {
 	// FirstName Given name of the user
@@ -8235,6 +8312,12 @@ type CreateApiKeyParams struct {
 
 // CreateApiKeyForClientParams defines parameters for CreateApiKeyForClient.
 type CreateApiKeyForClientParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// UpdateApiKeyParams defines parameters for UpdateApiKey.
+type UpdateApiKeyParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
 	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
 }
@@ -9397,8 +9480,14 @@ type UpdateAccountJSONRequestBody = AccountUpdateRequest
 // UpdateClientAgenticPolicyJSONRequestBody defines body for UpdateClientAgenticPolicy for application/json ContentType.
 type UpdateClientAgenticPolicyJSONRequestBody = AgenticClientPolicy
 
+// CreateApiKeyJSONRequestBody defines body for CreateApiKey for application/json ContentType.
+type CreateApiKeyJSONRequestBody = CreateApiKeyRequest
+
 // CreateApiKeyForClientJSONRequestBody defines body for CreateApiKeyForClient for application/json ContentType.
 type CreateApiKeyForClientJSONRequestBody = CreateApiKeyForClientRequest
+
+// UpdateApiKeyJSONRequestBody defines body for UpdateApiKey for application/json ContentType.
+type UpdateApiKeyJSONRequestBody = UpdateApiKeyRequest
 
 // AddAssociatedIndividualJSONRequestBody defines body for AddAssociatedIndividual for application/json ContentType.
 type AddAssociatedIndividualJSONRequestBody = IndividualRequest
@@ -10593,8 +10682,10 @@ type ClientInterface interface {
 	// ListApiKeys request
 	ListApiKeys(ctx context.Context, params *ListApiKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// CreateApiKey request
-	CreateApiKey(ctx context.Context, params *CreateApiKeyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// CreateApiKeyWithBody request with any body
+	CreateApiKeyWithBody(ctx context.Context, params *CreateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateApiKey(ctx context.Context, params *CreateApiKeyParams, body CreateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateApiKeyForClientWithBody request with any body
 	CreateApiKeyForClientWithBody(ctx context.Context, params *CreateApiKeyForClientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -10603,6 +10694,11 @@ type ClientInterface interface {
 
 	// DeleteApiKey request
 	DeleteApiKey(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateApiKeyWithBody request with any body
+	UpdateApiKeyWithBody(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateApiKey(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, body UpdateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListApplications request
 	ListApplications(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -11291,8 +11387,20 @@ func (c *APIClient) ListApiKeys(ctx context.Context, params *ListApiKeysParams, 
 	return c.Client.Do(req)
 }
 
-func (c *APIClient) CreateApiKey(ctx context.Context, params *CreateApiKeyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateApiKeyRequest(c.Server, params)
+func (c *APIClient) CreateApiKeyWithBody(ctx context.Context, params *CreateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApiKeyRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) CreateApiKey(ctx context.Context, params *CreateApiKeyParams, body CreateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApiKeyRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -11329,6 +11437,30 @@ func (c *APIClient) CreateApiKeyForClient(ctx context.Context, params *CreateApi
 
 func (c *APIClient) DeleteApiKey(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteApiKeyRequest(c.Server, apiKeyId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateApiKeyWithBody(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateApiKeyRequestWithBody(c.Server, apiKeyId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateApiKey(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, body UpdateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateApiKeyRequest(c.Server, apiKeyId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -14405,8 +14537,19 @@ func NewListApiKeysRequest(server string, params *ListApiKeysParams) (*http.Requ
 	return req, nil
 }
 
-// NewCreateApiKeyRequest generates requests for CreateApiKey
-func NewCreateApiKeyRequest(server string, params *CreateApiKeyParams) (*http.Request, error) {
+// NewCreateApiKeyRequest calls the generic CreateApiKey builder with application/json body
+func NewCreateApiKeyRequest(server string, params *CreateApiKeyParams, body CreateApiKeyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateApiKeyRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewCreateApiKeyRequestWithBody generates requests for CreateApiKey with any type of body
+func NewCreateApiKeyRequestWithBody(server string, params *CreateApiKeyParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -14424,10 +14567,12 @@ func NewCreateApiKeyRequest(server string, params *CreateApiKeyParams) (*http.Re
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	if params != nil {
 
@@ -14527,6 +14672,66 @@ func NewDeleteApiKeyRequest(server string, apiKeyId KSUID) (*http.Request, error
 	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateApiKeyRequest calls the generic UpdateApiKey builder with application/json body
+func NewUpdateApiKeyRequest(server string, apiKeyId KSUID, params *UpdateApiKeyParams, body UpdateApiKeyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateApiKeyRequestWithBody(server, apiKeyId, params, "application/json", bodyReader)
+}
+
+// NewUpdateApiKeyRequestWithBody generates requests for UpdateApiKey with any type of body
+func NewUpdateApiKeyRequestWithBody(server string, apiKeyId KSUID, params *UpdateApiKeyParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "api_key_id", runtime.ParamLocationPath, apiKeyId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api-keys/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
 	}
 
 	return req, nil
@@ -23352,8 +23557,10 @@ type ClientWithResponsesInterface interface {
 	// ListApiKeysWithResponse request
 	ListApiKeysWithResponse(ctx context.Context, params *ListApiKeysParams, reqEditors ...RequestEditorFn) (*ListApiKeysResponse, error)
 
-	// CreateApiKeyWithResponse request
-	CreateApiKeyWithResponse(ctx context.Context, params *CreateApiKeyParams, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error)
+	// CreateApiKeyWithBodyWithResponse request with any body
+	CreateApiKeyWithBodyWithResponse(ctx context.Context, params *CreateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error)
+
+	CreateApiKeyWithResponse(ctx context.Context, params *CreateApiKeyParams, body CreateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error)
 
 	// CreateApiKeyForClientWithBodyWithResponse request with any body
 	CreateApiKeyForClientWithBodyWithResponse(ctx context.Context, params *CreateApiKeyForClientParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApiKeyForClientResponse, error)
@@ -23362,6 +23569,11 @@ type ClientWithResponsesInterface interface {
 
 	// DeleteApiKeyWithResponse request
 	DeleteApiKeyWithResponse(ctx context.Context, apiKeyId KSUID, reqEditors ...RequestEditorFn) (*DeleteApiKeyResponse, error)
+
+	// UpdateApiKeyWithBodyWithResponse request with any body
+	UpdateApiKeyWithBodyWithResponse(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateApiKeyResponse, error)
+
+	UpdateApiKeyWithResponse(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, body UpdateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateApiKeyResponse, error)
 
 	// ListApplicationsWithResponse request
 	ListApplicationsWithResponse(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*ListApplicationsResponse, error)
@@ -24157,6 +24369,8 @@ type CreateApiKeyResponse struct {
 	ApplicationproblemJSON400 *ProblemDetails
 	ApplicationproblemJSON401 *ProblemDetails
 	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -24182,6 +24396,7 @@ type CreateApiKeyForClientResponse struct {
 	ApplicationproblemJSON400 *ProblemDetails
 	ApplicationproblemJSON401 *ProblemDetails
 	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
 	ApplicationproblemJSON503 *ProblemDetails
 }
 
@@ -24220,6 +24435,34 @@ func (r DeleteApiKeyResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r DeleteApiKeyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateApiKeyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ApiKeyListItem
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateApiKeyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateApiKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -28156,9 +28399,17 @@ func (c *ClientWithResponses) ListApiKeysWithResponse(ctx context.Context, param
 	return ParseListApiKeysResponse(rsp)
 }
 
-// CreateApiKeyWithResponse request returning *CreateApiKeyResponse
-func (c *ClientWithResponses) CreateApiKeyWithResponse(ctx context.Context, params *CreateApiKeyParams, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error) {
-	rsp, err := c.CreateApiKey(ctx, params, reqEditors...)
+// CreateApiKeyWithBodyWithResponse request with arbitrary body returning *CreateApiKeyResponse
+func (c *ClientWithResponses) CreateApiKeyWithBodyWithResponse(ctx context.Context, params *CreateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error) {
+	rsp, err := c.CreateApiKeyWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateApiKeyResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateApiKeyWithResponse(ctx context.Context, params *CreateApiKeyParams, body CreateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error) {
+	rsp, err := c.CreateApiKey(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -28189,6 +28440,23 @@ func (c *ClientWithResponses) DeleteApiKeyWithResponse(ctx context.Context, apiK
 		return nil, err
 	}
 	return ParseDeleteApiKeyResponse(rsp)
+}
+
+// UpdateApiKeyWithBodyWithResponse request with arbitrary body returning *UpdateApiKeyResponse
+func (c *ClientWithResponses) UpdateApiKeyWithBodyWithResponse(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateApiKeyResponse, error) {
+	rsp, err := c.UpdateApiKeyWithBody(ctx, apiKeyId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateApiKeyResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateApiKeyWithResponse(ctx context.Context, apiKeyId KSUID, params *UpdateApiKeyParams, body UpdateApiKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateApiKeyResponse, error) {
+	rsp, err := c.UpdateApiKey(ctx, apiKeyId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateApiKeyResponse(rsp)
 }
 
 // ListApplicationsWithResponse request returning *ListApplicationsResponse
@@ -30501,6 +30769,20 @@ func ParseCreateApiKeyResponse(rsp *http.Response) (*CreateApiKeyResponse, error
 		}
 		response.ApplicationproblemJSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	}
 
 	return response, nil
@@ -30547,6 +30829,13 @@ func ParseCreateApiKeyForClientResponse(rsp *http.Response) (*CreateApiKeyForCli
 			return nil, err
 		}
 		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
 		var dest ProblemDetails
@@ -30601,6 +30890,74 @@ func ParseDeleteApiKeyResponse(rsp *http.Response) (*DeleteApiKeyResponse, error
 			return nil, err
 		}
 		response.ApplicationproblemJSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateApiKeyResponse parses an HTTP response from a UpdateApiKeyWithResponse call
+func ParseUpdateApiKeyResponse(rsp *http.Response) (*UpdateApiKeyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateApiKeyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ApiKeyListItem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
 
 	}
 
