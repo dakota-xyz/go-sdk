@@ -22,8 +22,7 @@ type UserDeletedData struct {
 // APIKeyData is the event payload for api_key.created events.
 //
 // Last6 is the last six characters of the key, the only fragment that is safe
-// to display and the one clients use to identify a key in a list. The event
-// also carries the key's hash, which the SDK deliberately does not surface.
+// to display and the one clients use to identify a key in a list.
 type APIKeyData struct {
 	ID    string `json:"id"`
 	Last6 string `json:"last_6"`
