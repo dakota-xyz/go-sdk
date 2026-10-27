@@ -4158,6 +4158,10 @@ paths:
               - reversed
               - rejected
               - broadcasted
+              - pending_return
+              - returned
+              - pending_reversal
+              - paused_credits
         - name: type
           in: query
           description: Filter transactions by type

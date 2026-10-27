@@ -306,6 +306,7 @@ Typed payloads live in `webhook/types`; decode with `webhook.EventDataAs[T](even
 - `customer.rfi.responded` → `types.CustomerRFIRespondedData`. Stop chasing. No `rfi.resolved` exists: the decision arrives as `customer.kyb_status.updated`.
 - `customer.application.withdrawn` → `types.CustomerApplicationWithdrawnData`. Terminal. `Reason` omitted when none was recorded.
 - `customer.capability_status.updated` → `types.CustomerCapabilityStatusUpdatedData`. A rail's standing changed; `Requirements` is what still gates it (empty array, never absent).
+- `wallet.transaction.created` / `wallet.transaction.updated` → `types.WalletTransactionData`. Branch on `StatusCode` (a `gen.TransactionStatusCode` value, e.g. `completed`), never on `Status`, which is a display label (`Success`). Treat a code you don't recognise like `unknown`. No value is final: keep consuming updates, and never send a payment again only because it reads `failed`.
 - `fee_payout_destination.updated` → `types.FeePayoutDestinationUpdatedData` (`Type` only); `fee_payout_destination.deleted` → empty object; `rd_payout_destination.updated` → `types.RDPayoutDestinationUpdatedData` (`PreviousAddress` empty on first registration, always present).
 
 ## Supported Networks
@@ -434,3 +435,4 @@ gen.RecipientRequest{
 7. **Don't forget Capabilities** - Account creation requires `Capabilities` field
 8. **Don't forget Rail for off-ramp** - Off-ramp accounts require `Rail` field
 9. **Don't skip Address on Recipients** - Recipients for fiat destinations need an address
+10. **Don't branch on a transaction's `Status`** - On wallet transactions, `wallet.transaction.*` events and `GET /transactions` it is a display label; branch on `StatusCode`, and compare a cancelled auto transaction against `gen.TransactionStatusCancelled`

@@ -13,7 +13,8 @@ hunks of platform ENG-3254 (`5edd8b1`, platform v0.3.129): the
 additions, the `GET /auto-transactions` `status` filter and the wallet
 examples. The `cancelled` value and the `canceled` note of platform ENG-4163
 come along, because the new `TransactionStatus` enum carries them. The FX
-transaction schemas are left for the full sync.
+transaction schemas are left for the full sync, so the `FXPageKnownTransaction`
+and `FXTransaction` objects the generated docs mention arrive with it.
 
 - `status` is unchanged on the wire. On wallet transactions, the
   `wallet.transaction.*` events and the auto-account transactions listed by
@@ -36,6 +37,10 @@ transaction schemas are left for the full sync.
   name. The `GET /auto-transactions` `status` filter is still a
   `*gen.TransactionStatus`, accepts `paused_credits`, and refuses display
   labels with a 400: pass a snake_case value.
+- A cancelled auto transaction's status is `cancelled`: compare against
+  `gen.TransactionStatusCancelled`. `gen.TransactionStatusCanceled` is only an
+  accepted filter spelling and never matches a returned status, so code that
+  compared against it never saw a cancelled transaction.
 
 ### Added — API key names, last-used time and scopes (ENG-4792)
 
