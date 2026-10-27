@@ -4,6 +4,39 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — status_code beside status (ENG-3254)
+
+A partial sync: `client/gen/openapi.yaml` takes the `openapi.public.yaml`
+hunks of platform ENG-3254 (`5edd8b1`, platform v0.3.129): the
+`TransactionStatusCode` schema, `status_code` on `Transaction`,
+`NestedTransaction` and `WalletTransaction`, the `TransactionStatus`
+additions, the `GET /auto-transactions` `status` filter and the wallet
+examples. The `cancelled` value and the `canceled` note of platform ENG-4163
+come along, because the new `TransactionStatus` enum carries them. The FX
+transaction schemas are left for the full sync.
+
+- `status` is unchanged on the wire. On wallet transactions, the
+  `wallet.transaction.*` events and the auto-account transactions listed by
+  `GET /transactions`, it is a display label such as `Waiting For Signature`
+  or `Success`, meant for showing to people.
+- `gen.Transaction`, `gen.NestedTransaction` and `gen.WalletTransaction` have
+  `StatusCode`, the machine-readable status. Branch on it instead of
+  `Status`. Its 17 values are the `gen.TransactionStatusCode*` constants, for
+  example `gen.TransactionStatusCodeCompleted` where `status` reads `Success`.
+- `types.WalletTransactionData` has `StatusCode` for the
+  `wallet.transaction.created` and `wallet.transaction.updated` events.
+- New values may be added: treat a value you don't recognise like `unknown`.
+  No value is final. A `completed` payout can later be returned or reversed,
+  and a `failed` or `returned` one can be sent again and complete, so keep
+  consuming updates and never send a payment again only because it reads
+  `failed`.
+- `gen.TransactionStatus` also lists the display labels
+  (`gen.TransactionStatusLabel*`), `gen.TransactionStatusCancelled` and
+  `gen.TransactionStatusPausedCredits`. Every existing constant keeps its
+  name. The `GET /auto-transactions` `status` filter is still a
+  `*gen.TransactionStatus`, accepts `paused_credits`, and refuses display
+  labels with a 400: pass a snake_case value.
+
 ### Added — API key names, last-used time and scopes (ENG-4792)
 
 A partial sync: `client/gen/openapi.yaml` takes the `/api-keys` paths and the

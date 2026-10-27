@@ -1005,7 +1005,8 @@ func TestEventDataAs_WalletTransactionData(t *testing.T) {
 	payload := `{
 		"id":"wtxn_1",
 		"wallet_id":"w_1",
-		"status":"pending",
+		"status":"Waiting For Signature",
+		"status_code":"waiting_for_signature",
 		"intent":{
 			"wallet_id":"w_1",
 			"caip2":"eip155:1",
@@ -1025,6 +1026,16 @@ func TestEventDataAs_WalletTransactionData(t *testing.T) {
 	)
 	if data.ID != "wtxn_1" {
 		t.Errorf("ID = %q, want %q", data.ID, "wtxn_1")
+	}
+	if data.Status != "Waiting For Signature" {
+		t.Errorf("Status = %q, want %q", data.Status, "Waiting For Signature")
+	}
+	if data.StatusCode != "waiting_for_signature" {
+		t.Errorf(
+			"StatusCode = %q, want %q",
+			data.StatusCode,
+			"waiting_for_signature",
+		)
 	}
 	if data.Intent.Caip2 != "eip155:1" {
 		t.Errorf("Intent.Caip2 = %q, want %q", data.Intent.Caip2, "eip155:1")
