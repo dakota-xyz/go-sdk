@@ -111,10 +111,16 @@ type WalletAsset struct {
 
 // WalletTransactionData is the event payload for wallet.transaction.created
 // and wallet.transaction.updated events.
+//
+// Status is a display label meant for showing to people, such as "Success".
+// StatusCode is the machine-readable code beside it, such as "completed", and
+// is one of the gen.TransactionStatusCode values; branch on StatusCode, and
+// treat a value you don't recognise like "unknown".
 type WalletTransactionData struct {
 	ID          string                  `json:"id"`
 	WalletID    string                  `json:"wallet_id"`
 	Status      string                  `json:"status"`
+	StatusCode  string                  `json:"status_code"`
 	ExternalID  *string                 `json:"external_id,omitempty"`
 	Hash        *string                 `json:"hash,omitempty"`
 	ConfirmedAt *int64                  `json:"confirmed_at,omitempty"`

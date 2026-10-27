@@ -1191,22 +1191,62 @@ const (
 
 // Defines values for TransactionStatus.
 const (
-	TransactionStatusAwaitingConfirmation TransactionStatus = "awaiting_confirmation"
-	TransactionStatusBroadcasted          TransactionStatus = "broadcasted"
-	TransactionStatusCanceled             TransactionStatus = "canceled"
-	TransactionStatusCompleted            TransactionStatus = "completed"
-	TransactionStatusFailed               TransactionStatus = "failed"
-	TransactionStatusInProgress           TransactionStatus = "in_progress"
-	TransactionStatusInvalid              TransactionStatus = "invalid"
-	TransactionStatusNotStarted           TransactionStatus = "not_started"
-	TransactionStatusPending              TransactionStatus = "pending"
-	TransactionStatusPendingReturn        TransactionStatus = "pending_return"
-	TransactionStatusPendingReversal      TransactionStatus = "pending_reversal"
-	TransactionStatusProcessing           TransactionStatus = "processing"
-	TransactionStatusRejected             TransactionStatus = "rejected"
-	TransactionStatusReturned             TransactionStatus = "returned"
-	TransactionStatusReversed             TransactionStatus = "reversed"
-	TransactionStatusTimedOut             TransactionStatus = "timed_out"
+	TransactionStatusAwaitingConfirmation      TransactionStatus = "awaiting_confirmation"
+	TransactionStatusBroadcasted               TransactionStatus = "broadcasted"
+	TransactionStatusCanceled                  TransactionStatus = "canceled"
+	TransactionStatusCancelled                 TransactionStatus = "cancelled"
+	TransactionStatusCompleted                 TransactionStatus = "completed"
+	TransactionStatusFailed                    TransactionStatus = "failed"
+	TransactionStatusInProgress                TransactionStatus = "in_progress"
+	TransactionStatusInvalid                   TransactionStatus = "invalid"
+	TransactionStatusLabelAwaitingConfirmation TransactionStatus = "Awaiting Confirmation"
+	TransactionStatusLabelBroadcasted          TransactionStatus = "Broadcasted"
+	TransactionStatusLabelCancelled            TransactionStatus = "Cancelled"
+	TransactionStatusLabelFailed               TransactionStatus = "Failed"
+	TransactionStatusLabelInProgress           TransactionStatus = "In Progress"
+	TransactionStatusLabelInvalid              TransactionStatus = "Invalid"
+	TransactionStatusLabelNeedsManualInput     TransactionStatus = "Needs Manual Input"
+	TransactionStatusLabelNotStarted           TransactionStatus = "Not Started"
+	TransactionStatusLabelPendingReturn        TransactionStatus = "Pending Return"
+	TransactionStatusLabelPendingReversal      TransactionStatus = "Pending Reversal"
+	TransactionStatusLabelRejected             TransactionStatus = "Rejected"
+	TransactionStatusLabelReturned             TransactionStatus = "Returned"
+	TransactionStatusLabelReversed             TransactionStatus = "Reversed"
+	TransactionStatusLabelSuccess              TransactionStatus = "Success"
+	TransactionStatusLabelTimedOut             TransactionStatus = "Timed Out"
+	TransactionStatusLabelUnknown              TransactionStatus = "Unknown"
+	TransactionStatusLabelWaitingForSignature  TransactionStatus = "Waiting For Signature"
+	TransactionStatusNotStarted                TransactionStatus = "not_started"
+	TransactionStatusPausedCredits             TransactionStatus = "paused_credits"
+	TransactionStatusPending                   TransactionStatus = "pending"
+	TransactionStatusPendingReturn             TransactionStatus = "pending_return"
+	TransactionStatusPendingReversal           TransactionStatus = "pending_reversal"
+	TransactionStatusProcessing                TransactionStatus = "processing"
+	TransactionStatusRejected                  TransactionStatus = "rejected"
+	TransactionStatusReturned                  TransactionStatus = "returned"
+	TransactionStatusReversed                  TransactionStatus = "reversed"
+	TransactionStatusTimedOut                  TransactionStatus = "timed_out"
+)
+
+// Defines values for TransactionStatusCode.
+const (
+	TransactionStatusCodeAwaitingConfirmation TransactionStatusCode = "awaiting_confirmation"
+	TransactionStatusCodeBroadcasted          TransactionStatusCode = "broadcasted"
+	TransactionStatusCodeCancelled            TransactionStatusCode = "cancelled"
+	TransactionStatusCodeCompleted            TransactionStatusCode = "completed"
+	TransactionStatusCodeFailed               TransactionStatusCode = "failed"
+	TransactionStatusCodeInProgress           TransactionStatusCode = "in_progress"
+	TransactionStatusCodeInvalid              TransactionStatusCode = "invalid"
+	TransactionStatusCodeNeedsManualInput     TransactionStatusCode = "needs_manual_input"
+	TransactionStatusCodeNotStarted           TransactionStatusCode = "not_started"
+	TransactionStatusCodePendingReturn        TransactionStatusCode = "pending_return"
+	TransactionStatusCodePendingReversal      TransactionStatusCode = "pending_reversal"
+	TransactionStatusCodeRejected             TransactionStatusCode = "rejected"
+	TransactionStatusCodeReturned             TransactionStatusCode = "returned"
+	TransactionStatusCodeReversed             TransactionStatusCode = "reversed"
+	TransactionStatusCodeTimedOut             TransactionStatusCode = "timed_out"
+	TransactionStatusCodeUnknown              TransactionStatusCode = "unknown"
+	TransactionStatusCodeWaitingForSignature  TransactionStatusCode = "waiting_for_signature"
 )
 
 // Defines values for TransactionType.
@@ -3160,6 +3200,12 @@ type AutoAccountTransaction struct {
 	SenderDetails *SenderDetails `json:"sender_details,omitempty"`
 
 	// Status Current status of a transaction.
+	//
+	// Auto-account transactions (`GET /auto-transactions` and the `transaction.auto.*` events) return the snake_case values.
+	//
+	// Wallet transactions, the `wallet.transaction.*` events and the auto-account transactions listed by `GET /transactions` (the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects) return a display label such as `Waiting For Signature` or `Success`, meant for showing to people. Branch on their `status_code` instead.
+	//
+	// `canceled` is a legacy spelling and is never returned.
 	Status TransactionStatus `json:"status"`
 
 	// Type Type of transaction.
@@ -5849,7 +5895,16 @@ type NestedTransaction struct {
 	Settlement *TransactionSettlement `json:"settlement,omitempty"`
 
 	// Status Current status of a transaction.
+	//
+	// Auto-account transactions (`GET /auto-transactions` and the `transaction.auto.*` events) return the snake_case values.
+	//
+	// Wallet transactions, the `wallet.transaction.*` events and the auto-account transactions listed by `GET /transactions` (the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects) return a display label such as `Waiting For Signature` or `Success`, meant for showing to people. Branch on their `status_code` instead.
+	//
+	// `canceled` is a legacy spelling and is never returned.
 	Status TransactionStatus `json:"status"`
+
+	// StatusCode Machine-readable status. Branch on this value; `status` is its display label.
+	StatusCode TransactionStatusCode `json:"status_code"`
 
 	// SubtotalAmount An amount of money with its asset.
 	SubtotalAmount TransactionAmount `json:"subtotalAmount"`
@@ -7465,7 +7520,16 @@ type Transaction struct {
 	Settlement *TransactionSettlement `json:"settlement,omitempty"`
 
 	// Status Current status of a transaction.
+	//
+	// Auto-account transactions (`GET /auto-transactions` and the `transaction.auto.*` events) return the snake_case values.
+	//
+	// Wallet transactions, the `wallet.transaction.*` events and the auto-account transactions listed by `GET /transactions` (the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects) return a display label such as `Waiting For Signature` or `Success`, meant for showing to people. Branch on their `status_code` instead.
+	//
+	// `canceled` is a legacy spelling and is never returned.
 	Status TransactionStatus `json:"status"`
+
+	// StatusCode Machine-readable status. Branch on this value; `status` is its display label.
+	StatusCode TransactionStatusCode `json:"status_code"`
 
 	// SubtotalAmount An amount of money with its asset.
 	SubtotalAmount TransactionAmount `json:"subtotalAmount"`
@@ -7622,7 +7686,40 @@ type TransactionSettlement struct {
 }
 
 // TransactionStatus Current status of a transaction.
+//
+// Auto-account transactions (`GET /auto-transactions` and the `transaction.auto.*` events) return the snake_case values.
+//
+// Wallet transactions, the `wallet.transaction.*` events and the auto-account transactions listed by `GET /transactions` (the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects) return a display label such as `Waiting For Signature` or `Success`, meant for showing to people. Branch on their `status_code` instead.
+//
+// `canceled` is a legacy spelling and is never returned.
 type TransactionStatus string
+
+// TransactionStatusCode Machine-readable status of a wallet transaction or of an auto-account transaction listed by `GET /transactions`. It is returned as `status_code` on the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects and in `wallet.transaction.*` events. Branch on this value; the `status` beside it is a display label.
+//
+// - `not_started`: created; processing has not begun.
+// - `in_progress`: being processed.
+// - `waiting_for_signature`: waiting for the required signatures before it can be sent.
+// - `broadcasted`: sent to the blockchain and not yet confirmed.
+// - `awaiting_confirmation`: waiting for confirmation from an external system, such as a blockchain or a bank.
+// - `needs_manual_input`: waiting for manual action from Dakota or from you.
+// - `timed_out`: timed out with an uncertain outcome; it may still confirm later.
+// - `pending_return`: a return has been initiated and has not settled yet.
+// - `pending_reversal`: a reversal has been initiated and has not settled yet.
+// - `completed`: finished successfully.
+// - `failed`: failed.
+// - `invalid`: refused because the request was invalid.
+// - `cancelled`: cancelled.
+// - `reversed`: reversed or rolled back, such as a reverted on-chain transaction.
+// - `rejected`: rejected by the recipient's bank.
+// - `returned`: the return completed and the funds came back.
+// - `unknown`: the status could not be determined.
+//
+// Do not treat any value as final. A `completed` payout can later be returned or reversed, a `failed` or `returned` one can be sent again and complete, and a `cancelled` one can still be returned. Keep consuming updates, and never send a payment again only because its status reads `failed`.
+//
+// For an auto-account transaction, `pending` on `GET /auto-transactions` reads `not_started` here, and `processing` and `paused_credits` both read `in_progress`.
+//
+// New values may be added. Treat a value you don't recognise like `unknown`.
+type TransactionStatusCode string
 
 // TransactionType Type of transaction.
 type TransactionType string
@@ -7861,7 +7958,16 @@ type WalletTransaction struct {
 	ResourceType TransactionResourceType `json:"resource_type"`
 
 	// Status Current status of a transaction.
+	//
+	// Auto-account transactions (`GET /auto-transactions` and the `transaction.auto.*` events) return the snake_case values.
+	//
+	// Wallet transactions, the `wallet.transaction.*` events and the auto-account transactions listed by `GET /transactions` (the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects) return a display label such as `Waiting For Signature` or `Success`, meant for showing to people. Branch on their `status_code` instead.
+	//
+	// `canceled` is a legacy spelling and is never returned.
 	Status TransactionStatus `json:"status"`
+
+	// StatusCode Machine-readable status. Branch on this value; `status` is its display label.
+	StatusCode TransactionStatusCode `json:"status_code"`
 
 	// To The destination address
 	To *string `json:"to,omitempty"`
@@ -8462,7 +8568,10 @@ type ListAutoTransactionsParams struct {
 	// DestinationId Filter transactions by destination ID
 	DestinationId *KSUID `form:"destination_id,omitempty" json:"destination_id,omitempty"`
 
-	// Status Filter transactions by status
+	// Status Filter transactions by status. A cancelled auto transaction has the
+	// status `cancelled`. The legacy spelling `canceled` is also accepted
+	// and filters on `cancelled`. Display labels such as `Success` are
+	// not accepted.
 	Status *TransactionStatus `form:"status,omitempty" json:"status,omitempty"`
 
 	// Type Filter transactions by type

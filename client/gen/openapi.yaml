@@ -1440,7 +1440,8 @@ paths:
                 transaction_type: transfer
                 amount: '100.56'
                 asset: USD
-                status: completed
+                status: Broadcasted
+                status_code: broadcasted
         '400':
           description: Bad request - invalid input data
           content:
@@ -4133,10 +4134,34 @@ paths:
             $ref: '#/components/schemas/KSUID'
         - name: status
           in: query
-          description: Filter transactions by status
+          description: |
+            Filter transactions by status. A cancelled auto transaction has the
+            status `cancelled`. The legacy spelling `canceled` is also accepted
+            and filters on `cancelled`. Display labels such as `Success` are
+            not accepted.
           required: false
           schema:
-            $ref: '#/components/schemas/TransactionStatus'
+            type: string
+            x-go-type: TransactionStatus
+            enum:
+              - timed_out
+              - not_started
+              - in_progress
+              - awaiting_confirmation
+              - pending
+              - processing
+              - completed
+              - invalid
+              - failed
+              - cancelled
+              - canceled
+              - reversed
+              - rejected
+              - broadcasted
+              - pending_return
+              - returned
+              - pending_reversal
+              - paused_credits
         - name: type
           in: query
           description: Filter transactions by type
@@ -12646,6 +12671,7 @@ paths:
                             id: 1NFHrqBHb3cTfLVkFSGmHZqdDQJ
                             wallet_id: 1NFHrqBHb3cTfLVkFSGmHZqdDQD
                             status: Waiting For Signature
+                            status_code: waiting_for_signature
                       - id: 1NFHrqBHb3cTfLVkFSGmHZqdDQJ
                         type: wallet.transaction.updated
                         created: 1735689637
@@ -12655,6 +12681,7 @@ paths:
                             id: 1NFHrqBHb3cTfLVkFSGmHZqdDQJ
                             wallet_id: 1NFHrqBHb3cTfLVkFSGmHZqdDQD
                             status: Broadcasted
+                            status_code: broadcasted
                       - id: 1NFHrqBHb3cTfLVkFSGmHZqdDQY
                         type: wallet.transaction.updated
                         created: 1735689637
@@ -12664,6 +12691,7 @@ paths:
                             id: 1NFHrqBHb3cTfLVkFSGmHZqdDQJ
                             wallet_id: 1NFHrqBHb3cTfLVkFSGmHZqdDQD
                             status: Success
+                            status_code: completed
                       - id: 1NFHrqBHb3cTfLVkFSGmHZqdDQK
                         type: wallet.deposit
                         created: 1735689638
@@ -21839,7 +21867,14 @@ components:
     TransactionStatus:
       type: string
       title: Transaction Status
-      description: Current status of a transaction.
+      description: |
+        Current status of a transaction.
+
+        Auto-account transactions (`GET /auto-transactions` and the `transaction.auto.*` events) return the snake_case values.
+
+        Wallet transactions, the `wallet.transaction.*` events and the auto-account transactions listed by `GET /transactions` (the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects) return a display label such as `Waiting For Signature` or `Success`, meant for showing to people. Branch on their `status_code` instead.
+
+        `canceled` is a legacy spelling and is never returned.
       enum:
         - timed_out
         - not_started
@@ -21850,6 +21885,7 @@ components:
         - completed
         - invalid
         - failed
+        - cancelled
         - canceled
         - reversed
         - rejected
@@ -21857,6 +21893,107 @@ components:
         - pending_return
         - returned
         - pending_reversal
+        - paused_credits
+        - Timed Out
+        - Not Started
+        - In Progress
+        - Awaiting Confirmation
+        - Success
+        - Invalid
+        - Failed
+        - Cancelled
+        - Reversed
+        - Rejected
+        - Needs Manual Input
+        - Waiting For Signature
+        - Broadcasted
+        - Pending Return
+        - Returned
+        - Pending Reversal
+        - Unknown
+      x-enum-varnames:
+        - TimedOut
+        - NotStarted
+        - InProgress
+        - AwaitingConfirmation
+        - Pending
+        - Processing
+        - Completed
+        - Invalid
+        - Failed
+        - Cancelled
+        - Canceled
+        - Reversed
+        - Rejected
+        - Broadcasted
+        - PendingReturn
+        - Returned
+        - PendingReversal
+        - PausedCredits
+        - LabelTimedOut
+        - LabelNotStarted
+        - LabelInProgress
+        - LabelAwaitingConfirmation
+        - LabelSuccess
+        - LabelInvalid
+        - LabelFailed
+        - LabelCancelled
+        - LabelReversed
+        - LabelRejected
+        - LabelNeedsManualInput
+        - LabelWaitingForSignature
+        - LabelBroadcasted
+        - LabelPendingReturn
+        - LabelReturned
+        - LabelPendingReversal
+        - LabelUnknown
+    TransactionStatusCode:
+      type: string
+      title: Transaction Status Code
+      description: |
+        Machine-readable status of a wallet transaction or of an auto-account transaction listed by `GET /transactions`. It is returned as `status_code` on the `WalletTransaction`, `Transaction`, `NestedTransaction`, `FXPageKnownTransaction` and `FXTransaction` objects and in `wallet.transaction.*` events. Branch on this value; the `status` beside it is a display label.
+
+        - `not_started`: created; processing has not begun.
+        - `in_progress`: being processed.
+        - `waiting_for_signature`: waiting for the required signatures before it can be sent.
+        - `broadcasted`: sent to the blockchain and not yet confirmed.
+        - `awaiting_confirmation`: waiting for confirmation from an external system, such as a blockchain or a bank.
+        - `needs_manual_input`: waiting for manual action from Dakota or from you.
+        - `timed_out`: timed out with an uncertain outcome; it may still confirm later.
+        - `pending_return`: a return has been initiated and has not settled yet.
+        - `pending_reversal`: a reversal has been initiated and has not settled yet.
+        - `completed`: finished successfully.
+        - `failed`: failed.
+        - `invalid`: refused because the request was invalid.
+        - `cancelled`: cancelled.
+        - `reversed`: reversed or rolled back, such as a reverted on-chain transaction.
+        - `rejected`: rejected by the recipient's bank.
+        - `returned`: the return completed and the funds came back.
+        - `unknown`: the status could not be determined.
+
+        Do not treat any value as final. A `completed` payout can later be returned or reversed, a `failed` or `returned` one can be sent again and complete, and a `cancelled` one can still be returned. Keep consuming updates, and never send a payment again only because its status reads `failed`.
+
+        For an auto-account transaction, `pending` on `GET /auto-transactions` reads `not_started` here, and `processing` and `paused_credits` both read `in_progress`.
+
+        New values may be added. Treat a value you don't recognise like `unknown`.
+      enum:
+        - not_started
+        - in_progress
+        - waiting_for_signature
+        - broadcasted
+        - awaiting_confirmation
+        - needs_manual_input
+        - timed_out
+        - pending_return
+        - pending_reversal
+        - completed
+        - failed
+        - invalid
+        - cancelled
+        - reversed
+        - rejected
+        - returned
+        - unknown
     TransactionType:
       type: string
       title: Transaction Type
@@ -22699,6 +22836,7 @@ components:
         - resource_type
         - type
         - status
+        - status_code
         - description
         - inputAmount
         - subtotalAmount
@@ -22718,6 +22856,11 @@ components:
           $ref: '#/components/schemas/TransactionType'
         status:
           $ref: '#/components/schemas/TransactionStatus'
+        status_code:
+          allOf:
+            - $ref: '#/components/schemas/TransactionStatusCode'
+          description: Machine-readable status. Branch on this value; `status` is its display label.
+          example: completed
         description:
           type: string
           description: Human-readable description of the transaction.
@@ -22828,6 +22971,7 @@ components:
         - id
         - type
         - status
+        - status_code
         - description
         - inputAmount
         - subtotalAmount
@@ -22842,6 +22986,11 @@ components:
           $ref: '#/components/schemas/TransactionType'
         status:
           $ref: '#/components/schemas/TransactionStatus'
+        status_code:
+          allOf:
+            - $ref: '#/components/schemas/TransactionStatusCode'
+          description: Machine-readable status. Branch on this value; `status` is its display label.
+          example: completed
         description:
           type: string
         inputAmount:
@@ -23847,6 +23996,7 @@ components:
         - resource_type
         - wallet_id
         - status
+        - status_code
       properties:
         id:
           $ref: '#/components/schemas/KSUID'
@@ -23879,6 +24029,11 @@ components:
           $ref: '#/components/schemas/Asset'
         status:
           $ref: '#/components/schemas/TransactionStatus'
+        status_code:
+          allOf:
+            - $ref: '#/components/schemas/TransactionStatusCode'
+          description: Machine-readable status. Branch on this value; `status` is its display label.
+          example: completed
         created_at:
           type: integer
           format: int64
