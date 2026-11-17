@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -115,7 +116,11 @@ func (g *fakeGovernedGroup) handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
-	require.NoError(g.t, err)
+	if err != nil {
+		g.t.Errorf("fake could not rebuild the intent: %v", err)
+		w.WriteHeader(500)
+		return
+	}
 
 	endorsers := map[string]bool{}
 	for _, s := range sigs {
@@ -212,7 +217,9 @@ func TestSignedMembershipChanges(t *testing.T) {
 		keys := newKeys(t, 3)
 		g, c := newGovernedGroup(t, 2, keys[0], keys[1])
 
-		_, err := c.AddSignerToGroupSigned(ctx, g.id, keys[2].PublicKeyBase64(), ES256IntentSigner(keys[0]))
+		// The same governor twice is two signatures but one endorser: the
+		// SDK's count check passes and the platform refuses.
+		_, err := c.AddSignerToGroupSigned(ctx, g.id, keys[2].PublicKeyBase64(), ES256IntentSigner(keys[0]), ES256IntentSigner(keys[0]))
 		require.ErrorIs(t, err, ErrInsufficientEndorsements)
 
 		grp, err := c.AddSignerToGroupSigned(ctx, g.id, keys[2].PublicKeyBase64(), ES256IntentSigner(keys[0]), ES256IntentSigner(keys[1]))
@@ -284,7 +291,7 @@ func TestSignedMembershipChanges(t *testing.T) {
 		// An unset setting is absent from the body, matching the signed intent.
 		require.NotContains(t, g.seen[0].body, "governance_signer_group_id")
 
-		grp, err = c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{}, ES256IntentSigner(keys[0]))
+		grp, err = c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{AllowClearing: true}, ES256IntentSigner(keys[0]), ES256IntentSigner(keys[1]))
 		require.NoError(t, err)
 		require.Nil(t, grp.GovernanceThreshold)
 		require.NotContains(t, g.seen[1].body, "governance_threshold")
@@ -311,6 +318,138 @@ func TestSignedMembershipChanges(t *testing.T) {
 		require.Error(t, err)
 		require.Empty(t, g.seen)
 	})
+}
+
+func TestGovernanceIntentGuards(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("Sign refuses canonical bytes that disagree with the fields", func(t *testing.T) {
+		keys := newKeys(t, 3)
+		g, c := newGovernedGroup(t, 1, keys[0])
+		intent, err := c.PrepareAddSignerToGroup(ctx, g.id, keys[1].PublicKeyBase64())
+		require.NoError(t, err)
+
+		// A relay swaps the bytes the signers see for another change.
+		other, err := AddSignersToGroupIntent(g.id, intent.SignerGroupVersion, intent.IdempotencyKey, []string{keys[2].PublicKeyBase64()})
+		require.NoError(t, err)
+		intent.Canonical = other
+		_, err = intent.Sign(ctx, ES256IntentSigner(keys[0]))
+		require.ErrorContains(t, err, "do not match its canonical bytes")
+	})
+
+	t.Run("Submit refuses fewer signatures than the quorum", func(t *testing.T) {
+		keys := newKeys(t, 3)
+		g, c := newGovernedGroup(t, 2, keys[0], keys[1])
+		intent, err := c.PrepareAddSignerToGroup(ctx, g.id, keys[2].PublicKeyBase64())
+		require.NoError(t, err)
+		require.Equal(t, 2, intent.RequiredSignatures)
+		sigs, err := intent.Sign(ctx, ES256IntentSigner(keys[0]))
+		require.NoError(t, err)
+		_, err = c.SubmitGovernanceIntent(ctx, intent, sigs)
+		require.ErrorContains(t, err, "needs 2 signatures, got 1")
+		require.Empty(t, g.seen, "nothing may reach the platform")
+	})
+
+	t.Run("Submit refuses a stored intent of another format", func(t *testing.T) {
+		keys := newKeys(t, 2)
+		g, c := newGovernedGroup(t, 1, keys[0])
+		intent, err := c.PrepareAddSignerToGroup(ctx, g.id, keys[1].PublicKeyBase64())
+		require.NoError(t, err)
+		sigs, err := intent.Sign(ctx, ES256IntentSigner(keys[0]))
+		require.NoError(t, err)
+		intent.Format = 0
+		_, err = c.SubmitGovernanceIntent(ctx, intent, sigs)
+		require.ErrorContains(t, err, "prepare it again")
+	})
+
+	t.Run("a threshold-only update does not silently drop the governing group", func(t *testing.T) {
+		keys := newKeys(t, 2)
+		g, c := newGovernedGroup(t, 1, keys[0], keys[1])
+		other := "3MF5pokUeizBfGkQF0N4qhUgRve"
+		g.settings.GovernanceSignerGroupID = &other
+		three := int32(1)
+
+		_, err := c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{GovernanceThreshold: &three}, ES256IntentSigner(keys[0]))
+		require.ErrorContains(t, err, "would clear the group's governing group")
+		require.Empty(t, g.seen)
+
+		grp, err := c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{GovernanceThreshold: &three, AllowClearing: true}, ES256IntentSigner(keys[0]))
+		require.NoError(t, err)
+		require.Nil(t, grp.GovernanceSignerGroupId)
+	})
+
+	t.Run("a group cannot name itself as its governing group", func(t *testing.T) {
+		keys := newKeys(t, 1)
+		g, c := newGovernedGroup(t, 1, keys[0])
+		self := g.id
+		_, err := c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{GovernanceSignerGroupID: &self}, ES256IntentSigner(keys[0]))
+		require.ErrorContains(t, err, "cannot name itself")
+	})
+
+	t.Run("bad input is refused before the group is read", func(t *testing.T) {
+		keys := newKeys(t, 1)
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}))
+		defer srv.Close()
+		c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+		require.NoError(t, err)
+		_, err = c.AddSignerToGroupSigned(ctx, "g", " pk", ES256IntentSigner(keys[0]))
+		require.ErrorContains(t, err, "whitespace")
+		_, err = c.RemoveSignersFromGroupSigned(ctx, "", []string{"pk"}, ES256IntentSigner(keys[0]))
+		require.ErrorContains(t, err, "signer group id is required")
+	})
+
+	for name, tc := range map[string]struct {
+		status int
+		body   string
+		want   string
+	}{
+		"group not found":    {404, `{"type":"https://docs.dakota.xyz/api-reference/errors#not-found","title":"Signer Group not found","status":404}`, "read signer group"},
+		"no version on read": {200, `{"id":"g","client_id":"c","name":"n","members":[]}`, "did not return the group's version"},
+	} {
+		t.Run("prepare fails: "+name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer srv.Close()
+			c, err := New(WithBaseURL(srv.URL), WithAPIKey("test"))
+			require.NoError(t, err)
+			_, err = c.PrepareAddSignerToGroup(ctx, "g", "pk")
+			require.ErrorContains(t, err, tc.want)
+		})
+	}
+}
+
+// unhashableErr is a comparable-looking error whose dynamic type cannot be a
+// map key (it holds a slice), like validator-style multi-errors.
+type unhashableErr struct{ fields []string }
+
+func (u unhashableErr) Error() string { return "invalid" }
+
+func TestAPIErrorIsMatching(t *testing.T) {
+	t.Parallel()
+	stale := &APIError{StatusCode: 409, Code: "stale-signer-group-version"}
+
+	require.True(t, errors.Is(stale, ErrStaleSignerGroupVersion))
+	require.False(t, errors.Is(stale, ErrInsufficientEndorsements))
+	// Must not panic on an unhashable target, and must not match it.
+	require.NotPanics(t, func() { require.False(t, errors.Is(stale, unhashableErr{[]string{"x"}})) })
+	require.False(t, errors.Is(stale, io.EOF))
+	// The code alone is not enough: the status must match too.
+	require.False(t, errors.Is(&APIError{StatusCode: 400, Code: "stale_signer_group_version"}, ErrStaleSignerGroupVersion))
+	// A body "code" is read when the type fragment is something else.
+	require.True(t, errors.Is(&APIError{StatusCode: 403, Code: "forbidden", RawBody: []byte(`{"code":"insufficient_endorsements"}`)}, ErrInsufficientEndorsements))
+	// An ordinary conflict is not a stale version.
+	require.False(t, errors.Is(&APIError{StatusCode: 409, Code: "conflict", RawBody: []byte(`{"code":"conflict","reason":"stale_signer_group_version"}`)}, ErrStaleSignerGroupVersion))
+	// Wrapped, as the helpers return it.
+	require.ErrorIs(t, fmt.Errorf("add signer to group: %w", stale), ErrStaleSignerGroupVersion)
 }
 
 // TestGovernanceErrorsFromPlatformBodies maps the problem bodies the sandbox

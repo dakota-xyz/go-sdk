@@ -170,7 +170,10 @@ Groups with governance settings (and every group of a client with governance enf
 - `c.PrepareAddSignerToGroup` / `c.PrepareRemoveSignersFromGroup` / `c.PrepareUpdateSignerGroupGovernance` then `intent.Sign(ctx, signers...)` or per-signer `SignIntent(ctx, intent.Canonical)`, then `c.SubmitGovernanceIntent(ctx, intent, signatures)` - for quorums signed over time
 - Signers: `client.ES256IntentSigner(p256Signer)`, `client.WebAuthnSigner(assertFunc)` (challenge = the raw canonical intent, NOT its hash), `client.EncodeWebAuthnAssertion(canonical, assertionJSON)`
 - Builders: `AddSignersToGroupIntent`, `RemoveSignersFromGroupIntent` (key is `group_id`; member order is signed), `UpdateSignerGroupGovernanceIntent` (nil setting = absent = cleared), `CreateCryptoDestinationIntent`
-- Errors: `errors.Is(err, client.ErrStaleSignerGroupVersion | ErrInsufficientEndorsements | ErrBelowThreshold | ErrEndorsementRequired)`
+- Errors: `errors.Is(err, client.ErrStaleSignerGroupVersion)`; likewise `client.ErrInsufficientEndorsements`, `client.ErrBelowThreshold`, `client.ErrEndorsementRequired`
+- `GovernanceSettings` replaces both settings (nil clears); clearing a setting the group has now needs `AllowClearing: true`
+- A refused submit uses up the intent (the key is signed): prepare and sign again. After a lost response, resubmit the same intent, do not call a `*Signed` helper again
+- `CreateCryptoDestinationIntent` is a builder only: send with `c.Raw().CreateDestinationWithResponse` and the same key
 - Gotchas: the idempotency key must be a lowercase UUID and equal the X-Idempotency-Key header; `signer_group_version` is the group's current `version`, always sent, including 0
 
 ### Policies (Transaction Rules)

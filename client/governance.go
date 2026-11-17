@@ -29,11 +29,9 @@ package client
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -42,63 +40,39 @@ import (
 
 // Typed governance errors. Match them with errors.Is on an error returned by
 // the helpers below (or by CheckResponse on a raw call); errors.As to *APIError
-// gives the status, detail and request id.
+// gives the detail and request id.
 var (
 	// ErrEndorsementRequired (400): the change was sent without signatures,
 	// but the group has governance settings or the client has governance
 	// enforcement on. Send it signed.
-	ErrEndorsementRequired = errors.New("endorsement_required: this change needs signatures from the group's governance")
+	ErrEndorsementRequired = &ProblemCodeError{Status: 400, Code: "endorsement_required", Message: "this change needs signatures from the group's governance"}
 	// ErrInsufficientEndorsements (403): the signatures did not meet the
 	// group's governance quorum (too few distinct governing members verified).
-	ErrInsufficientEndorsements = errors.New("insufficient_endorsements: the signatures do not meet the group's governance quorum")
+	ErrInsufficientEndorsements = &ProblemCodeError{Status: 403, Code: "insufficient_endorsements", Message: "the signatures do not meet the group's governance quorum"}
 	// ErrStaleSignerGroupVersion (409): the group changed since the
-	// signatures were made. Read the group's version again and re-sign.
-	ErrStaleSignerGroupVersion = errors.New("stale_signer_group_version: the group changed since the signatures were made; prepare and sign again")
+	// signatures were made. Prepare again and re-sign.
+	ErrStaleSignerGroupVersion = &ProblemCodeError{Status: 409, Code: "stale_signer_group_version", Message: "the group changed since the signatures were made; prepare and sign again"}
 	// ErrBelowThreshold (422): the removal would leave the group below a
 	// threshold it must keep (at least one member, its governance quorum, or
 	// a governed group's threshold).
-	ErrBelowThreshold = errors.New("below_threshold: the removal would leave the group below a threshold it must keep")
+	ErrBelowThreshold = &ProblemCodeError{Status: 422, Code: "below_threshold", Message: "the removal would leave the group below a threshold it must keep"}
 )
 
-var governanceErrorCodes = map[error]string{
-	ErrEndorsementRequired:      "endorsement_required",
-	ErrInsufficientEndorsements: "insufficient_endorsements",
-	ErrStaleSignerGroupVersion:  "stale_signer_group_version",
-	ErrBelowThreshold:           "below_threshold",
-}
-
-// Is lets errors.Is match an APIError against the typed governance errors
-// (ErrStaleSignerGroupVersion and friends) by the platform's problem code.
-func (e *APIError) Is(target error) bool {
-	code, ok := governanceErrorCodes[target]
-	if !ok || e == nil {
-		return false
-	}
-	return slices.Contains(e.problemCodes(), code)
-}
-
-// problemCodes returns the error's machine codes in snake_case: Code (which
-// for a problem+json body is the type URI's fragment, e.g.
-// "stale-signer-group-version") and the body's "code" and "reason" fields.
-func (e *APIError) problemCodes() []string {
-	norm := func(s string) string { return strings.ReplaceAll(strings.ToLower(s), "-", "_") }
-	codes := []string{norm(e.Code)}
-	var body struct {
-		Code   string `json:"code"`
-		Reason string `json:"reason"`
-	}
-	if len(e.RawBody) > 0 && json.Unmarshal(e.RawBody, &body) == nil {
-		codes = append(codes, norm(body.Code), norm(body.Reason))
-	}
-	return codes
-}
+// GovernanceIntentFormat is the version of GovernanceIntent's JSON form. A
+// stored intent in another format is refused: prepare it again.
+const GovernanceIntentFormat = 1
 
 // GovernanceIntent is a prepared, not yet submitted, signer-group change: the
 // canonical bytes to sign and everything needed to send the matching request.
+// It marshals to JSON (format GovernanceIntentFormat), so it can be stored
+// while a quorum signs. An SDK upgrade between prepare and submit may require
+// preparing again.
 type GovernanceIntent struct {
+	// Format is GovernanceIntentFormat.
+	Format int `json:"format"`
 	// Type is IntentAddSignersToGroup, IntentRemoveSignersFromGroup or
 	// IntentUpdateSignerGroupGovernance.
-	Type string `json:"type"`
+	Type GovernanceIntentType `json:"type"`
 	// SignerGroupID is the group being changed.
 	SignerGroupID string `json:"signer_group_id"`
 	// SignerGroupVersion is the group's version the signatures are made over.
@@ -109,18 +83,21 @@ type GovernanceIntent struct {
 	// in the order signed and sent.
 	MemberKeys []string `json:"member_keys,omitempty"`
 	// Settings is the governance to set (update only).
-	Settings GovernanceSettings `json:"settings"`
+	Settings GovernanceSettings `json:"settings,omitzero"`
+	// RequiredSignatures is the group's effective_governance_threshold when
+	// the change was prepared: the fewest signatures Submit will send.
+	RequiredSignatures int `json:"required_signatures"`
 	// Canonical is what every signer signs (for a passkey, the challenge).
 	Canonical []byte `json:"canonical"`
 }
 
 // canonical rebuilds the intent's canonical bytes from its fields.
 func (g *GovernanceIntent) canonical() ([]byte, error) {
+	if g.Format != GovernanceIntentFormat {
+		return nil, fmt.Errorf("governance intent format %d is not %d; prepare it again", g.Format, GovernanceIntentFormat)
+	}
 	switch g.Type {
 	case IntentAddSignersToGroup:
-		if len(g.MemberKeys) != 1 {
-			return nil, fmt.Errorf("an add carries exactly one member key, got %d", len(g.MemberKeys))
-		}
 		return AddSignersToGroupIntent(g.SignerGroupID, g.SignerGroupVersion, g.IdempotencyKey, g.MemberKeys)
 	case IntentRemoveSignersFromGroup:
 		return RemoveSignersFromGroupIntent(g.SignerGroupID, g.SignerGroupVersion, g.IdempotencyKey, g.MemberKeys)
@@ -131,20 +108,48 @@ func (g *GovernanceIntent) canonical() ([]byte, error) {
 	}
 }
 
-// Sign collects one signature per signer over the intent, in signer order.
-func (g *GovernanceIntent) Sign(ctx context.Context, signers ...IntentSigner) ([]string, error) {
-	if len(signers) == 0 {
-		return nil, errors.New("at least one signer is required")
+// verified returns the canonical bytes after checking that they are exactly
+// what the intent's fields describe, so nobody signs or sends a Canonical that
+// says something other than the fields (e.g. a stored intent edited by
+// whoever relays it to the signers).
+func (g *GovernanceIntent) verified() ([]byte, error) {
+	if g == nil {
+		return nil, errors.New("nil governance intent")
 	}
 	if len(g.Canonical) == 0 {
 		return nil, errors.New("governance intent has no canonical bytes; create it with a Prepare* method")
 	}
+	rebuilt, err := g.canonical()
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(rebuilt, g.Canonical) {
+		return nil, errors.New("governance intent fields do not match its canonical bytes; refusing to sign or send it (prepare again)")
+	}
+	return rebuilt, nil
+}
+
+// Sign collects one signature per signer over the intent, in signer order.
+// It first checks that Canonical matches the intent's fields. A signer UI
+// should show the person what they are signing, ideally parsed from
+// Canonical itself.
+func (g *GovernanceIntent) Sign(ctx context.Context, signers ...IntentSigner) ([]string, error) {
+	canonical, err := g.verified()
+	if err != nil {
+		return nil, err
+	}
+	if len(signers) == 0 {
+		return nil, errors.New("at least one signer is required")
+	}
 	sigs := make([]string, 0, len(signers))
 	for i, s := range signers {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if s == nil {
 			return nil, fmt.Errorf("signer %d is nil", i)
 		}
-		sig, err := s.SignIntent(ctx, g.Canonical)
+		sig, err := s.SignIntent(ctx, bytes.Clone(canonical))
 		if err != nil {
 			return nil, fmt.Errorf("signer %d: %w", i, err)
 		}
@@ -153,24 +158,39 @@ func (g *GovernanceIntent) Sign(ctx context.Context, signers ...IntentSigner) ([
 	return sigs, nil
 }
 
-// prepare reads the group's current version and builds the intent around a
-// fresh lowercase UUID key.
-func (c *Client) prepare(ctx context.Context, g *GovernanceIntent) (*GovernanceIntent, error) {
-	if g.SignerGroupID == "" {
-		return nil, errors.New("signer group id is required")
+// prepare reads the group and builds the intent around its current version
+// and a fresh lowercase UUID key. check, when set, vets the change against the
+// group's current state before anything is signed.
+func (c *Client) prepare(ctx context.Context, g *GovernanceIntent, check func(*gen.SignerGroup) error) (*GovernanceIntent, error) {
+	g.Format = GovernanceIntentFormat
+	// Validate the caller's input before the network read: the version and
+	// key are placeholders here.
+	g.SignerGroupVersion, g.IdempotencyKey = 0, "00000000-0000-4000-8000-000000000000"
+	if _, err := g.canonical(); err != nil {
+		return nil, err
 	}
 	resp, err := CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, g.SignerGroupID, nil))
 	if err != nil {
-		return nil, fmt.Errorf("read signer group version: %w", err)
+		return nil, fmt.Errorf("read signer group: %w", err)
 	}
-	if resp.JSON200 == nil {
-		return nil, errors.New("read signer group version: empty response body")
+	grp := resp.JSON200
+	if grp == nil {
+		return nil, errors.New("read signer group: empty response body")
 	}
-	if resp.JSON200.Version == nil {
-		return nil, errors.New("read signer group version: the platform did not return the group's version")
+	if grp.Version == nil {
+		return nil, errors.New("read signer group: the platform did not return the group's version")
 	}
-	g.SignerGroupVersion = *resp.JSON200.Version
+	if check != nil {
+		if err := check(grp); err != nil {
+			return nil, err
+		}
+	}
+	g.SignerGroupVersion = *grp.Version
 	g.IdempotencyKey = uuid.NewString() // lowercase canonical form
+	g.RequiredSignatures = 1
+	if t := grp.EffectiveGovernanceThreshold; t != nil && *t > 1 {
+		g.RequiredSignatures = int(*t)
+	}
 	if g.Canonical, err = g.canonical(); err != nil {
 		return nil, err
 	}
@@ -181,74 +201,104 @@ func (c *Client) prepare(ctx context.Context, g *GovernanceIntent) (*GovernanceI
 // public key) to the group: reads the group's version and builds the
 // add_signers_to_group intent to sign.
 func (c *Client) PrepareAddSignerToGroup(ctx context.Context, signerGroupID, memberKey string) (*GovernanceIntent, error) {
-	return c.prepare(ctx, &GovernanceIntent{Type: IntentAddSignersToGroup, SignerGroupID: signerGroupID, MemberKeys: []string{memberKey}})
+	return c.prepare(ctx, &GovernanceIntent{Type: IntentAddSignersToGroup, SignerGroupID: signerGroupID, MemberKeys: []string{memberKey}}, nil)
 }
 
 // PrepareRemoveSignersFromGroup prepares removing members (public keys as the
 // group lists them, in the order given) from the group.
 func (c *Client) PrepareRemoveSignersFromGroup(ctx context.Context, signerGroupID string, memberKeys []string) (*GovernanceIntent, error) {
-	return c.prepare(ctx, &GovernanceIntent{Type: IntentRemoveSignersFromGroup, SignerGroupID: signerGroupID, MemberKeys: slices.Clone(memberKeys)})
+	return c.prepare(ctx, &GovernanceIntent{Type: IntentRemoveSignersFromGroup, SignerGroupID: signerGroupID, MemberKeys: slices.Clone(memberKeys)}, nil)
 }
 
 // PrepareUpdateSignerGroupGovernance prepares replacing the group's governance
-// settings (a nil field clears it; see GovernanceSettings). The group's
-// CURRENT governance signs it.
+// settings. The group's CURRENT governance signs it.
+//
+// The update replaces both settings, and a nil one clears it. Because clearing
+// the governing group or the threshold loosens who controls the group, this
+// refuses to clear a setting the group has now unless settings.AllowClearing
+// is set: to change only the threshold of a group governed by another group,
+// pass both. A group cannot govern itself by id: leave
+// GovernanceSignerGroupID nil for that.
 func (c *Client) PrepareUpdateSignerGroupGovernance(ctx context.Context, signerGroupID string, settings GovernanceSettings) (*GovernanceIntent, error) {
-	return c.prepare(ctx, &GovernanceIntent{Type: IntentUpdateSignerGroupGovernance, SignerGroupID: signerGroupID, Settings: settings})
+	settings = settings.clone()
+	if id := settings.GovernanceSignerGroupID; id != nil && *id == signerGroupID {
+		return nil, errors.New("a group cannot name itself as its governing group; leave GovernanceSignerGroupID nil to let it govern itself")
+	}
+	check := func(grp *gen.SignerGroup) error {
+		if settings.AllowClearing {
+			return nil
+		}
+		if grp.GovernanceSignerGroupId != nil && settings.GovernanceSignerGroupID == nil {
+			return fmt.Errorf("this would clear the group's governing group %s (the update replaces both settings); pass it to keep it, or set AllowClearing", *grp.GovernanceSignerGroupId)
+		}
+		if grp.GovernanceThreshold != nil && settings.GovernanceThreshold == nil {
+			return fmt.Errorf("this would clear the group's governance threshold %d back to the default (the update replaces both settings); pass it to keep it, or set AllowClearing", *grp.GovernanceThreshold)
+		}
+		return nil
+	}
+	return c.prepare(ctx, &GovernanceIntent{Type: IntentUpdateSignerGroupGovernance, SignerGroupID: signerGroupID, Settings: settings}, check)
 }
 
-// SubmitGovernanceIntent sends a prepared change with its signatures. It first
-// rebuilds the canonical bytes from the intent's fields and refuses to send if
-// they differ from intent.Canonical, so a request never goes out that does not
-// match what was signed.
+// SubmitGovernanceIntent sends a prepared change with its signatures. It
+// refuses to send when the intent's Canonical does not match its fields, or
+// with fewer signatures than the group's quorum at prepare time.
+//
+// Any refusal by the platform's governance check (bad or too few signatures,
+// a stale version) is final for this intent: the idempotency key is signed
+// into the intent and the platform remembers the outcome per key, so prepare
+// and sign again. A transport failure (no response) is different: resubmit
+// the SAME intent and signatures, which the platform deduplicates by key.
 //
 // Typed failures: ErrInsufficientEndorsements, ErrStaleSignerGroupVersion,
 // ErrBelowThreshold (removals), ErrEndorsementRequired.
 func (c *Client) SubmitGovernanceIntent(ctx context.Context, intent *GovernanceIntent, signatures []string) (*gen.SignerGroup, error) {
-	if intent == nil {
-		return nil, errors.New("nil governance intent")
+	if _, err := intent.verified(); err != nil {
+		return nil, err
 	}
 	if len(signatures) == 0 {
 		return nil, errors.New("at least one signature is required")
 	}
-	rebuilt, err := intent.canonical()
-	if err != nil {
-		return nil, err
+	if slices.Contains(signatures, "") {
+		return nil, errors.New("a signature is empty")
 	}
-	if !bytes.Equal(rebuilt, intent.Canonical) {
-		return nil, errors.New("governance intent fields do not match its signed canonical bytes; prepare and sign again")
+	if len(signatures) < intent.RequiredSignatures {
+		return nil, fmt.Errorf("the group needs %d signatures, got %d (sending fewer would use up this intent)", intent.RequiredSignatures, len(signatures))
 	}
-	key, err := uuid.Parse(intent.IdempotencyKey)
+	// Send from a snapshot, so the request matches what was just checked.
+	snap := *intent
+	snap.MemberKeys = slices.Clone(intent.MemberKeys)
+	snap.Settings = intent.Settings.clone()
+	key, err := uuid.Parse(snap.IdempotencyKey)
 	if err != nil {
 		return nil, fmt.Errorf("idempotency key: %w", err)
 	}
 	sigs := slices.Clone(signatures)
-	version := intent.SignerGroupVersion
+	version := snap.SignerGroupVersion
 
 	var group *gen.SignerGroup
-	switch intent.Type {
+	switch snap.Type {
 	case IntentAddSignersToGroup:
-		resp, err := CheckResponse(c.Raw().CreateSignerGroupSignerWithResponse(ctx, intent.SignerGroupID,
+		resp, err := CheckResponse(c.Raw().CreateSignerGroupSignerWithResponse(ctx, snap.SignerGroupID,
 			&gen.CreateSignerGroupSignerParams{XIdempotencyKey: key},
-			gen.CreateSignerGroupSignerRequest{MemberKey: intent.MemberKeys[0], Signatures: &sigs, SignerGroupVersion: &version}))
+			gen.CreateSignerGroupSignerRequest{MemberKey: snap.MemberKeys[0], Signatures: &sigs, SignerGroupVersion: &version}))
 		if err != nil {
 			return nil, fmt.Errorf("add signer to group: %w", err)
 		}
 		group = resp.JSON200
 	case IntentRemoveSignersFromGroup:
-		resp, err := CheckResponse(c.Raw().RemoveSignerGroupSignersWithResponse(ctx, intent.SignerGroupID,
+		resp, err := CheckResponse(c.Raw().RemoveSignerGroupSignersWithResponse(ctx, snap.SignerGroupID,
 			&gen.RemoveSignerGroupSignersParams{XIdempotencyKey: key},
-			gen.RemoveSignerGroupSignersRequest{MembersToRemove: slices.Clone(intent.MemberKeys), Signatures: sigs, SignerGroupVersion: version}))
+			gen.RemoveSignerGroupSignersRequest{MembersToRemove: snap.MemberKeys, Signatures: sigs, SignerGroupVersion: version}))
 		if err != nil {
 			return nil, fmt.Errorf("remove signers from group: %w", err)
 		}
 		group = resp.JSON200
 	case IntentUpdateSignerGroupGovernance:
-		resp, err := CheckResponse(c.Raw().UpdateSignerGroupGovernanceWithResponse(ctx, intent.SignerGroupID,
+		resp, err := CheckResponse(c.Raw().UpdateSignerGroupGovernanceWithResponse(ctx, snap.SignerGroupID,
 			&gen.UpdateSignerGroupGovernanceParams{XIdempotencyKey: key},
 			gen.UpdateSignerGroupGovernanceRequest{
-				GovernanceThreshold:     intent.Settings.GovernanceThreshold,
-				GovernanceSignerGroupId: intent.Settings.GovernanceSignerGroupID,
+				GovernanceThreshold:     snap.Settings.GovernanceThreshold,
+				GovernanceSignerGroupId: snap.Settings.GovernanceSignerGroupID,
 				Signatures:              sigs,
 				SignerGroupVersion:      version,
 			}))
@@ -256,9 +306,11 @@ func (c *Client) SubmitGovernanceIntent(ctx context.Context, intent *GovernanceI
 			return nil, fmt.Errorf("update signer group governance: %w", err)
 		}
 		group = resp.JSON200
+	default:
+		return nil, fmt.Errorf("unsupported governance intent type %q", snap.Type)
 	}
 	if group == nil {
-		return nil, fmt.Errorf("%s: empty response body", intent.Type)
+		return nil, fmt.Errorf("%s: empty response body", snap.Type)
 	}
 	return group, nil
 }
@@ -281,6 +333,10 @@ func (c *Client) prepareSignSubmit(ctx context.Context, prepare func() (*Governa
 // AddSignerToGroupSigned adds memberKey to the group with signatures from
 // signers, in one call: reads the version, builds and signs the intent, sends
 // it. Pass as many signers as the group's effective_governance_threshold.
+//
+// Each call mints a new idempotency key. If a call fails without a response,
+// do not call it again blindly: read the group to see whether the change
+// landed, or use Prepare*/SubmitGovernanceIntent and resubmit the same intent.
 func (c *Client) AddSignerToGroupSigned(ctx context.Context, signerGroupID, memberKey string, signers ...IntentSigner) (*gen.SignerGroup, error) {
 	return c.prepareSignSubmit(ctx, func() (*GovernanceIntent, error) {
 		return c.PrepareAddSignerToGroup(ctx, signerGroupID, memberKey)
@@ -289,6 +345,7 @@ func (c *Client) AddSignerToGroupSigned(ctx context.Context, signerGroupID, memb
 
 // RemoveSignersFromGroupSigned removes memberKeys from the group with
 // signatures from signers, in one call (POST /signer-groups/{id}/signer-removals).
+// The retry note on AddSignerToGroupSigned applies.
 func (c *Client) RemoveSignersFromGroupSigned(ctx context.Context, signerGroupID string, memberKeys []string, signers ...IntentSigner) (*gen.SignerGroup, error) {
 	return c.prepareSignSubmit(ctx, func() (*GovernanceIntent, error) {
 		return c.PrepareRemoveSignersFromGroup(ctx, signerGroupID, memberKeys)
@@ -296,7 +353,9 @@ func (c *Client) RemoveSignersFromGroupSigned(ctx context.Context, signerGroupID
 }
 
 // UpdateSignerGroupGovernanceSigned replaces the group's governance settings
-// with signatures from its current governance, in one call.
+// with signatures from its current governance, in one call. See
+// PrepareUpdateSignerGroupGovernance for how settings are replaced, and the
+// retry note on AddSignerToGroupSigned.
 func (c *Client) UpdateSignerGroupGovernanceSigned(ctx context.Context, signerGroupID string, settings GovernanceSettings, signers ...IntentSigner) (*gen.SignerGroup, error) {
 	return c.prepareSignSubmit(ctx, func() (*GovernanceIntent, error) {
 		return c.PrepareUpdateSignerGroupGovernance(ctx, signerGroupID, settings)

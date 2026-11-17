@@ -150,6 +150,33 @@
       "want": "{\"address\":\"0x52908400098527886E0F7030069857D2E4169EE7\",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"network_id\":\"ethereum-mainnet\",\"recipient_id\":\"3MF9wAqM2HQHe7eiQ1OU1ovUuWt\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"type\":\"create_crypto_destination\"}"
     },
     {
+      "name": "crypto destination, characters JSON escapes (<>& and non-ASCII)",
+      "intent": "create_crypto_destination",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 0,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "recipient_id": "rec<1>",
+        "network_id": "ethereum-mainnet",
+        "address": "0xé&<> "
+      },
+      "want": "{\"address\":\"0xé&<> \",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"network_id\":\"ethereum-mainnet\",\"recipient_id\":\"rec<1>\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"type\":\"create_crypto_destination\"}"
+    },
+    {
+      "name": "remove, characters JSON escapes in keys",
+      "intent": "remove_signers_from_group",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 2,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027",
+        "member_keys": [
+          "pk<&>",
+          "clé"
+        ]
+      },
+      "want": "{\"group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"members_to_remove\":[\"pk<&>\",\"clé\"],\"signer_group_version\":2,\"type\":\"remove_signers_from_group\"}"
+    },
+    {
       "name": "crypto destination, Solana address",
       "intent": "create_crypto_destination",
       "input": {

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // IntentSigner produces one signatures[] entry over a canonical governance
@@ -42,12 +43,28 @@ func (f IntentSignerFunc) SignIntent(ctx context.Context, canonicalIntent []byte
 // or your own HSM/KMS-backed implementation): base64 ASN.1 DER over
 // SHA-256(canonical intent). The signer's public key must be a member of the
 // group's governance.
+//
+// Each signature is verified locally against the signer's PublicKeyBase64
+// before it is returned, so a custody backend that returns another encoding
+// (raw r‖s instead of ASN.1 DER, say) fails here rather than at the platform,
+// where a refused change uses up its idempotency key and every signature
+// collected for it.
 func ES256IntentSigner(s Signer) IntentSigner {
 	return IntentSignerFunc(func(_ context.Context, canonicalIntent []byte) (string, error) {
 		if s == nil {
 			return "", errors.New("nil ES256 signer")
 		}
-		return s.Sign(canonicalIntent)
+		if p, ok := s.(*P256Signer); ok && (p == nil || p.priv == nil) {
+			return "", errors.New("nil ES256 signer")
+		}
+		sig, err := s.Sign(canonicalIntent)
+		if err != nil {
+			return "", err
+		}
+		if err := VerifyMandateSignature(s.PublicKeyBase64(), canonicalIntent, sig); err != nil {
+			return "", fmt.Errorf("ES256 signer produced a signature that does not verify against its own public key (want base64 ASN.1 DER over SHA-256 of the intent): %w", err)
+		}
+		return sig, nil
 	})
 }
 
@@ -114,44 +131,73 @@ type WebAuthnAssertionResponse struct {
 // when assertions are collected outside WebAuthnSigner, e.g. from several
 // people's browsers for a quorum.
 //
-// It refuses an assertion that could not verify, before the platform does:
-// clientDataJSON must be of type webauthn.get and its challenge must decode to
-// exactly canonicalIntent (catching a hashed challenge or one signed over a
-// different intent or version), and the credential id, authenticatorData and
-// signature must be present. It does not verify the signature itself: the SDK
-// does not know the credential's public key.
+// It refuses, before the platform does, an assertion the platform's WebAuthn
+// parser would reject or that answers another challenge:
+//   - id is present and unpadded base64url, and type is "public-key";
+//   - rawId, clientDataJSON, authenticatorData, signature and userHandle are
+//     base64url (standard base64 with + or / is refused);
+//   - authenticatorData is at least 37 bytes (RP ID hash, flags, counter);
+//   - clientDataJSON is of type webauthn.get, and its challenge decodes to
+//     exactly canonicalIntent (catching a hashed challenge, or one signed over
+//     another intent or an old group version).
+//
+// It cannot verify the signature itself: the SDK does not know the
+// credential's public key. A refused change uses up its idempotency key and
+// every signature collected for it, which is why the shape is checked here.
 func EncodeWebAuthnAssertion(canonicalIntent, assertionJSON []byte) (string, error) {
 	var a WebAuthnAssertion
 	if err := json.Unmarshal(assertionJSON, &a); err != nil {
 		return "", fmt.Errorf("webauthn assertion is not JSON: %w", err)
 	}
-	switch {
-	case a.ID == "" && a.RawID == "":
-		return "", errors.New("webauthn assertion has no credential id")
-	case a.Response.AuthenticatorData == "":
-		return "", errors.New("webauthn assertion has no authenticatorData")
-	case a.Response.Signature == "":
-		return "", errors.New("webauthn assertion has no signature")
-	case a.Response.ClientDataJSON == "":
-		return "", errors.New("webauthn assertion has no clientDataJSON")
+	if a.ID == "" {
+		return "", errors.New("webauthn assertion has no id")
 	}
-	cdRaw, err := decodeBase64Any(a.Response.ClientDataJSON)
-	if err != nil {
-		return "", fmt.Errorf("webauthn clientDataJSON: %w", err)
+	if _, err := base64.RawURLEncoding.DecodeString(a.ID); err != nil {
+		return "", errors.New("webauthn assertion id is not unpadded base64url")
+	}
+	if a.Type != "public-key" {
+		return "", fmt.Errorf("webauthn assertion type is %q, want public-key", a.Type)
+	}
+	fields := []struct {
+		name, value string
+		required    bool
+	}{
+		{"rawId", a.RawID, false},
+		{"clientDataJSON", a.Response.ClientDataJSON, true},
+		{"authenticatorData", a.Response.AuthenticatorData, true},
+		{"signature", a.Response.Signature, true},
+		{"userHandle", a.Response.UserHandle, false},
+	}
+	decoded := map[string][]byte{}
+	for _, f := range fields {
+		if f.value == "" {
+			if f.required {
+				return "", fmt.Errorf("webauthn assertion has no %s", f.name)
+			}
+			continue
+		}
+		b, err := decodeBase64URL(f.value)
+		if err != nil {
+			return "", fmt.Errorf("webauthn assertion %s is not base64url: %w", f.name, err)
+		}
+		decoded[f.name] = b
+	}
+	if n := len(decoded["authenticatorData"]); n < 37 {
+		return "", fmt.Errorf("webauthn authenticatorData is %d bytes, want at least 37", n)
 	}
 	var cd struct {
 		Type      string `json:"type"`
 		Challenge string `json:"challenge"`
 	}
-	if err := json.Unmarshal(cdRaw, &cd); err != nil {
+	if err := json.Unmarshal(decoded["clientDataJSON"], &cd); err != nil {
 		return "", fmt.Errorf("webauthn clientDataJSON is not JSON: %w", err)
 	}
 	if cd.Type != "webauthn.get" {
 		return "", fmt.Errorf("webauthn clientDataJSON type is %q, want webauthn.get (an assertion, not a registration)", cd.Type)
 	}
-	challenge, err := decodeBase64Any(cd.Challenge)
+	challenge, err := decodeBase64URL(cd.Challenge)
 	if err != nil {
-		return "", fmt.Errorf("webauthn challenge: %w", err)
+		return "", fmt.Errorf("webauthn challenge is not base64url: %w", err)
 	}
 	if !bytes.Equal(challenge, canonicalIntent) {
 		return "", errors.New("webauthn challenge is not the canonical intent: pass the intent bytes themselves as the challenge (not their hash), and re-sign after any change to the intent or the group's version")
@@ -163,13 +209,8 @@ func EncodeWebAuthnAssertion(canonicalIntent, assertionJSON []byte) (string, err
 	return base64.RawURLEncoding.EncodeToString(compact.Bytes()), nil
 }
 
-// decodeBase64Any accepts the base64 spellings WebAuthn libraries emit:
-// base64url with or without padding, and standard base64.
-func decodeBase64Any(s string) ([]byte, error) {
-	for _, enc := range []*base64.Encoding{base64.RawURLEncoding, base64.URLEncoding, base64.RawStdEncoding, base64.StdEncoding} {
-		if b, err := enc.DecodeString(s); err == nil {
-			return b, nil
-		}
-	}
-	return nil, errors.New("not base64 or base64url")
+// decodeBase64URL decodes base64url with or without padding, as the
+// platform's WebAuthn parser does. Standard base64 (+ or /) is refused.
+func decodeBase64URL(s string) ([]byte, error) {
+	return base64.RawURLEncoding.DecodeString(strings.TrimRight(s, "="))
 }

@@ -1,6 +1,6 @@
 // Generates go-sdk client/testdata/governance_intents.json from policy-engine's
-// own intent.CanonicalIntentBytes. Not committed to go-sdk (policy-engine is a
-// private module); the testdata README documents how to re-run it.
+// own intent.CanonicalIntentBytes. It sits under testdata, outside the go-sdk
+// build, because policy-engine is a private module; README.md says how to run it.
 package main
 
 import (
@@ -78,6 +78,8 @@ func main() {
 	gov("governance, both cleared, version 0", input{SignerGroupID: grp, SignerGroupVersion: 0, IdempotencyKey: key2})
 	gov("governance, large version", input{SignerGroupID: grp, SignerGroupVersion: 4294967296, IdempotencyKey: key1, GovernanceThreshold: i32(3)})
 	dest("crypto destination, EVM mixed-case address", input{RecipientID: "3MF9wAqM2HQHe7eiQ1OU1ovUuWt", NetworkID: "ethereum-mainnet", Address: "0x52908400098527886E0F7030069857D2E4169EE7", SignerGroupID: grp, IdempotencyKey: key1})
+	dest("crypto destination, characters JSON escapes (<>& and non-ASCII)", input{RecipientID: "rec<1>", NetworkID: "ethereum-mainnet", Address: "0xé&<>\u2028", SignerGroupID: grp, IdempotencyKey: key1})
+	rm("remove, characters JSON escapes in keys", input{SignerGroupID: grp, SignerGroupVersion: 2, IdempotencyKey: key2, MemberKeys: []string{"pk<&>", "clé"}})
 	dest("crypto destination, Solana address", input{RecipientID: "3MF9wAqM2HQHe7eiQ1OU1ovUuWt", NetworkID: "solana-mainnet", Address: "7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV", SignerGroupID: grp2, IdempotencyKey: key2})
 
 	enc := json.NewEncoder(os.Stdout)

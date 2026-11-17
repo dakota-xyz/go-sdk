@@ -37,9 +37,15 @@ those changes.
   `UpdateSignerGroupGovernanceSigned` read the group's version, generate the
   idempotency key, sign and send in one call. `Prepare*` +
   `SubmitGovernanceIntent` split the flow for quorums signed over time.
+- **Guards** — `Sign` and `SubmitGovernanceIntent` refuse an intent whose
+  canonical bytes disagree with its fields; Submit refuses fewer signatures
+  than the group's quorum; a governance update refuses to clear a setting the
+  group has now unless `AllowClearing` is set; member keys with surrounding
+  whitespace are refused (the platform trims them before verifying).
 - **Typed errors** — `ErrEndorsementRequired`, `ErrInsufficientEndorsements`,
-  `ErrStaleSignerGroupVersion`, `ErrBelowThreshold`, matched with `errors.Is`
-  on the returned `*APIError`.
+  `ErrStaleSignerGroupVersion`, `ErrBelowThreshold` (`*ProblemCodeError`
+  sentinels), matched with `errors.Is` on the returned `*APIError` by status
+  and problem code.
 - **Example** — `cmd/signer-group-governance` runs the flow against sandbox.
 
 ### Added — status_code beside status (ENG-3254)

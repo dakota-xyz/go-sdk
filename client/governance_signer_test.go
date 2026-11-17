@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -81,6 +82,47 @@ func TestES256IntentSigner(t *testing.T) {
 	require.NoError(t, err)
 	// The platform's ES256 format: base64 ASN.1 DER over SHA-256(intent).
 	require.NoError(t, VerifyMandateSignature(key.PublicKeyBase64(), []byte(testIntent), sig))
+
+	t.Run("refuses a custody signer that returns raw r||s", func(t *testing.T) {
+		_, err := ES256IntentSigner(rawRSSigner{key}).SignIntent(context.Background(), []byte(testIntent))
+		require.ErrorContains(t, err, "does not verify against its own public key")
+	})
+
+	t.Run("refuses a nil *P256Signer instead of panicking", func(t *testing.T) {
+		var nilSigner *P256Signer
+		_, err := ES256IntentSigner(nilSigner).SignIntent(context.Background(), []byte(testIntent))
+		require.ErrorContains(t, err, "nil ES256 signer")
+	})
+}
+
+// rawRSSigner mimics a KMS that returns a fixed-width r‖s signature instead
+// of ASN.1 DER.
+type rawRSSigner struct{ k *P256Signer }
+
+func (r rawRSSigner) PublicKeyBase64() string { return r.k.PublicKeyBase64() }
+
+func (r rawRSSigner) Sign(payload []byte) (string, error) {
+	h := sha256.Sum256(payload)
+	rr, ss, err := ecdsa.Sign(rand.Reader, r.k.priv, h[:])
+	if err != nil {
+		return "", err
+	}
+	out := append(rr.FillBytes(make([]byte, 32)), ss.FillBytes(make([]byte, 32))...)
+	return base64.StdEncoding.EncodeToString(out), nil
+}
+
+func toStdB64(t *testing.T, rawURL string) string {
+	t.Helper()
+	b, err := base64.RawURLEncoding.DecodeString(rawURL)
+	require.NoError(t, err)
+	// Keep encoding until the standard form actually differs (contains + or /).
+	for i := 0; ; i++ {
+		s := base64.StdEncoding.EncodeToString(b)
+		if strings.ContainsAny(s, "+/") {
+			return s
+		}
+		b = append(b, byte(i))
+	}
 }
 
 func TestWebAuthnSigner(t *testing.T) {
@@ -143,17 +185,54 @@ func TestWebAuthnSigner(t *testing.T) {
 		})
 	}
 
-	t.Run("refuses an assertion without a signature", func(t *testing.T) {
+	// Shapes the platform's WebAuthn parser (go-webauthn
+	// CredentialAssertionResponse.Parse) rejects: refused locally so they do
+	// not use up the change's idempotency key.
+	shapes := map[string]struct {
+		spoil func(a *WebAuthnAssertion)
+		want  string
+	}{
+		"no signature":      {func(a *WebAuthnAssertion) { a.Response.Signature = "" }, "no signature"},
+		"rawId only, no id": {func(a *WebAuthnAssertion) { a.ID = "" }, "no id"},
+		"padded id":         {func(a *WebAuthnAssertion) { a.ID += "=" }, "id is not unpadded base64url"},
+		"type missing":      {func(a *WebAuthnAssertion) { a.Type = "" }, "want public-key"},
+		"short authenticator": {func(a *WebAuthnAssertion) {
+			a.Response.AuthenticatorData = base64.RawURLEncoding.EncodeToString(make([]byte, 36))
+		}, "at least 37"},
+		"standard-base64 sig":  {func(a *WebAuthnAssertion) { a.Response.Signature = "ab+/" }, "signature is not base64url"},
+		"standard-base64 data": {func(a *WebAuthnAssertion) { a.Response.AuthenticatorData = toStdB64(t, a.Response.AuthenticatorData) }, "authenticatorData is not base64url"},
+	}
+	for name, tc := range shapes {
+		t.Run("refuses "+name, func(t *testing.T) {
+			pk := newSyntheticPasskey(t)
+			raw, err := pk.assert(context.Background(), []byte(testIntent))
+			require.NoError(t, err)
+			var a WebAuthnAssertion
+			require.NoError(t, json.Unmarshal(raw, &a))
+			tc.spoil(&a)
+			spoiled, err := json.Marshal(a)
+			require.NoError(t, err)
+			_, err = EncodeWebAuthnAssertion([]byte(testIntent), spoiled)
+			require.ErrorContains(t, err, tc.want)
+		})
+	}
+
+	t.Run("accepts padded base64url fields", func(t *testing.T) {
 		pk := newSyntheticPasskey(t)
 		raw, err := pk.assert(context.Background(), []byte(testIntent))
 		require.NoError(t, err)
 		var a WebAuthnAssertion
 		require.NoError(t, json.Unmarshal(raw, &a))
-		a.Response.Signature = ""
-		stripped, err := json.Marshal(a)
+		pad := func(s string) string {
+			b, _ := base64.RawURLEncoding.DecodeString(s)
+			return base64.URLEncoding.EncodeToString(b)
+		}
+		a.Response.ClientDataJSON = pad(a.Response.ClientDataJSON)
+		a.Response.Signature = pad(a.Response.Signature)
+		padded, err := json.Marshal(a)
 		require.NoError(t, err)
-		_, err = EncodeWebAuthnAssertion([]byte(testIntent), stripped)
-		require.Error(t, err)
+		_, err = EncodeWebAuthnAssertion([]byte(testIntent), padded)
+		require.NoError(t, err)
 	})
 
 	t.Run("accepts an assertion collected elsewhere (browser JSON with whitespace)", func(t *testing.T) {

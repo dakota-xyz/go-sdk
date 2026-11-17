@@ -9,10 +9,16 @@
 //	DAKOTA_API_KEY=... go run ./cmd/signer-group-governance
 //
 // The passkey here is a software authenticator, so the example runs without a
-// browser. In a real integration the passkey lives in the user's browser or
-// device: WebAuthnSigner's assert function calls navigator.credentials.get with
-// the challenge it is given (see the README's "Signer-group governance"
-// section). Note that the platform may restrict which RP IDs it accepts.
+// browser. NEVER use a software authenticator outside a test: it claims "user
+// present and verified" with no user. In a real integration the passkey lives
+// in the user's browser or device, and WebAuthnSigner's assert function calls
+// navigator.credentials.get with the challenge it is given (see the README's
+// "Signer-group governance" section).
+//
+// The example also holds the governing keys in the same process as the API
+// key, and uses a quorum of 1, to stay short. In production, keep governing
+// keys away from the service that holds the API key (governance exists to
+// limit what an API key alone can do) and prefer a quorum of 2 or more.
 package main
 
 import (
@@ -90,11 +96,34 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("create signer group: %w", err)
 	}
+	if created.JSON201 == nil {
+		return errors.New("create signer group: empty response body")
+	}
 	groupID := created.JSON201.Id
 	fmt.Printf("group %s created, version %d\n", groupID, deref(created.JSON201.Version))
 
 	viaPasskey := client.WebAuthnSigner(passkey.assert)
 	viaES256 := client.ES256IntentSigner(esGov)
+
+	// Best effort, also on failure: take the throwaway members back out, so
+	// the group is left with its two governing members.
+	defer func() {
+		cur, err := client.CheckResponse(c.Raw().GetSignerGroupWithResponse(ctx, groupID, nil))
+		if err != nil || cur.JSON200 == nil {
+			return
+		}
+		var extra []string
+		for _, m := range cur.JSON200.Members {
+			if m.PublicKey == esNew1.PublicKeyBase64() || m.PublicKey == esNew2.PublicKeyBase64() {
+				extra = append(extra, m.PublicKey)
+			}
+		}
+		if len(extra) > 0 {
+			if _, err := c.RemoveSignersFromGroupSigned(ctx, groupID, extra, viaES256); err != nil {
+				fmt.Fprintln(os.Stderr, "cleanup: could not remove throwaway members:", err)
+			}
+		}
+	}()
 
 	// 1. Unsigned add: refused.
 	_, err = client.CheckResponse(c.Raw().CreateSignerGroupSignerWithResponse(ctx, groupID,
@@ -146,11 +175,6 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("stale submit: want ErrStaleSignerGroupVersion, got %v", err)
 	}
 	fmt.Printf("6. signatures over version %d refused after a change: stale_signer_group_version\n", stale.SignerGroupVersion)
-
-	// Leave the group with its two governing members.
-	if _, err := c.RemoveSignersFromGroupSigned(ctx, groupID, []string{esNew2.PublicKeyBase64()}, viaPasskey); err != nil {
-		return fmt.Errorf("cleanup removal: %w", err)
-	}
 	return nil
 }
 

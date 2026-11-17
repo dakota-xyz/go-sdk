@@ -23,14 +23,18 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 )
+
+// GovernanceIntentType is an intent's "type" key.
+type GovernanceIntentType string
 
 // Intent types, as they appear in the canonical intent's "type" key.
 const (
-	IntentAddSignersToGroup           = "add_signers_to_group"
-	IntentRemoveSignersFromGroup      = "remove_signers_from_group"
-	IntentUpdateSignerGroupGovernance = "update_signer_group_governance"
-	IntentCreateCryptoDestination     = "create_crypto_destination"
+	IntentAddSignersToGroup           GovernanceIntentType = "add_signers_to_group"
+	IntentRemoveSignersFromGroup      GovernanceIntentType = "remove_signers_from_group"
+	IntentUpdateSignerGroupGovernance GovernanceIntentType = "update_signer_group_governance"
+	IntentCreateCryptoDestination     GovernanceIntentType = "create_crypto_destination"
 )
 
 // GovernanceSettings is a signer group's complete governance state, as sent to
@@ -46,6 +50,23 @@ type GovernanceSettings struct {
 	// members endorse governance changes of this group, or nil when the group
 	// governs itself.
 	GovernanceSignerGroupID *string `json:"governance_signer_group_id,omitempty"`
+	// AllowClearing lets PrepareUpdateSignerGroupGovernance clear a setting
+	// the group has now (by leaving it nil). Without it, clearing is refused,
+	// so a threshold-only update cannot silently drop the governing group.
+	// It is not sent or signed.
+	AllowClearing bool `json:"-"`
+}
+
+func (s GovernanceSettings) clone() GovernanceSettings {
+	if s.GovernanceThreshold != nil {
+		t := *s.GovernanceThreshold
+		s.GovernanceThreshold = &t
+	}
+	if s.GovernanceSignerGroupID != nil {
+		g := *s.GovernanceSignerGroupID
+		s.GovernanceSignerGroupID = &g
+	}
+	return s
 }
 
 // lowercaseUUID is the only idempotency-key spelling the platform accepts.
@@ -76,6 +97,11 @@ func checkKeys(what string, keys []string) error {
 		if k == "" {
 			return fmt.Errorf("%s %d is empty", what, i)
 		}
+		// The platform trims an added key before rebuilding the intent, so a
+		// key signed with surrounding whitespace never verifies.
+		if strings.TrimSpace(k) != k {
+			return fmt.Errorf("%s %d has leading or trailing whitespace", what, i)
+		}
 	}
 	return nil
 }
@@ -85,14 +111,18 @@ func checkKeys(what string, keys []string) error {
 //
 //	{"idempotency_key":…,"new_member_keys":[…],"signer_group_id":…,"signer_group_version":…,"type":"add_signers_to_group"}
 //
-// POST /signer-groups/{id}/signers adds one member, so pass its member_key as
-// the only element of newMemberKeys.
+// POST /signer-groups/{id}/signers adds one member, and the platform rebuilds
+// the intent with exactly that key, so newMemberKeys must hold exactly one key
+// (its member_key).
 func AddSignersToGroupIntent(signerGroupID string, signerGroupVersion int64, idempotencyKey string, newMemberKeys []string) ([]byte, error) {
 	if err := checkCommon(signerGroupID, signerGroupVersion, idempotencyKey); err != nil {
 		return nil, err
 	}
 	if err := checkKeys("new member key", newMemberKeys); err != nil {
 		return nil, err
+	}
+	if len(newMemberKeys) != 1 {
+		return nil, fmt.Errorf("an add carries exactly one member key (the endpoint adds one member), got %d", len(newMemberKeys))
 	}
 	return canonicalJSON(map[string]any{
 		"type":                 IntentAddSignersToGroup,
