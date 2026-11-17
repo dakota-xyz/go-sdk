@@ -161,6 +161,17 @@ All methods are on `c.Raw()` and follow pattern: `<Action><Resource>WithResponse
 - `DeleteSignerGroupSignerWithResponse(ctx, signerGroupID, signerID)`
 - `UpsertWalletSignerGroupRelationshipWithResponse(ctx, walletID, params, request)`
 - `DeleteWalletSignerGroupRelationshipWithResponse(ctx, walletID, request)`
+- `RemoveSignerGroupSignersWithResponse(ctx, signerGroupID, params, request)` - signed removal (POST /signer-groups/{id}/signer-removals)
+- `UpdateSignerGroupGovernanceWithResponse(ctx, signerGroupID, params, request)` - signed governance update (PATCH /signer-groups/{id}/governance)
+
+### Signer-group governance helpers (signed changes)
+Groups with governance settings (and every group of a client with governance enforcement on) change members and governance only with signatures. Use the helpers; do not hand-build the canonical JSON.
+- `c.AddSignerToGroupSigned(ctx, groupID, memberKey, signers...)`, `c.RemoveSignersFromGroupSigned(ctx, groupID, memberKeys, signers...)`, `c.UpdateSignerGroupGovernanceSigned(ctx, groupID, settings, signers...)` - read the version, sign, send
+- `c.PrepareAddSignerToGroup` / `c.PrepareRemoveSignersFromGroup` / `c.PrepareUpdateSignerGroupGovernance` then `intent.Sign(ctx, signers...)` or per-signer `SignIntent(ctx, intent.Canonical)`, then `c.SubmitGovernanceIntent(ctx, intent, signatures)` - for quorums signed over time
+- Signers: `client.ES256IntentSigner(p256Signer)`, `client.WebAuthnSigner(assertFunc)` (challenge = the raw canonical intent, NOT its hash), `client.EncodeWebAuthnAssertion(canonical, assertionJSON)`
+- Builders: `AddSignersToGroupIntent`, `RemoveSignersFromGroupIntent` (key is `group_id`; member order is signed), `UpdateSignerGroupGovernanceIntent` (nil setting = absent = cleared), `CreateCryptoDestinationIntent`
+- Errors: `errors.Is(err, client.ErrStaleSignerGroupVersion | ErrInsufficientEndorsements | ErrBelowThreshold | ErrEndorsementRequired)`
+- Gotchas: the idempotency key must be a lowercase UUID and equal the X-Idempotency-Key header; `signer_group_version` is the group's current `version`, always sent, including 0
 
 ### Policies (Transaction Rules)
 - `CreatePolicyWithResponse(ctx, params, request)`

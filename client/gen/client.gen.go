@@ -4123,6 +4123,24 @@ type CreateScheduledPaymentsAction struct {
 type CreateSignerGroupSignerRequest struct {
 	// MemberKey Public key of the member to add to the signer group.
 	MemberKey string `json:"member_key"`
+
+	// Signatures Signatures over the canonical intent, each base64-encoded, in the
+	// format the endorsed policy routes use (ES256 ASN.1 DER, or a
+	// WebAuthn assertion whose challenge is the canonical intent).
+	// Policy-engine verifies them against the signer group's governance:
+	// the members of its governing group (`governance_signer_group_id`,
+	// else the group itself), at least `effective_governance_threshold`
+	// distinct members. Payment-agent and card-settlement keys never
+	// count: a signature by one of them is refused.
+	// The canonical intent is
+	// `{"idempotency_key":"<X-Idempotency-Key>","new_member_keys":["<member_key>"],"signer_group_id":"<id>","signer_group_version":<version>,"type":"add_signers_to_group"}`.
+	// Without signatures the member is added unendorsed, which a client
+	// with governance enforcement on is refused (400
+	// `endorsement_required`).
+	Signatures *[]string `json:"signatures,omitempty"`
+
+	// SignerGroupVersion The group's `version` the signatures were made over. Required with `signatures`.
+	SignerGroupVersion *int64 `json:"signer_group_version,omitempty"`
 }
 
 // CryptoDestinationRequest defines model for CryptoDestinationRequest.
@@ -4135,6 +4153,19 @@ type CryptoDestinationRequest struct {
 
 	// NetworkId Identifier for a blockchain network
 	NetworkId *NetworkId `json:"network_id,omitempty"`
+
+	// Signatures Optional. Signatures from the governance of `signer_group_id`
+	// over the canonical intent
+	// `{"address":"<crypto_address>","idempotency_key":"<X-Idempotency-Key>","network_id":"<network_id>","recipient_id":"<id>","signer_group_id":"<id>","type":"create_crypto_destination"}`.
+	// With them, an `operate` API key of a client under governance
+	// enforcement may create the destination,
+	// the group must be attached to a wallet of the recipient's
+	// customer, and `network_id` is required (the signed intent
+	// names it). Only on creation; ignored on update.
+	Signatures *[]string `json:"signatures,omitempty"`
+
+	// SignerGroupId The signer group whose governance signed `signatures`. Required with `signatures`.
+	SignerGroupId *string `json:"signer_group_id,omitempty"`
 }
 
 // CryptoDestinationRequestDestinationType defines model for CryptoDestinationRequest.DestinationType.
@@ -6653,6 +6684,28 @@ type RemovePolicyRuleIntent struct {
 // RemovePolicyRuleIntentType defines model for RemovePolicyRuleIntent.Type.
 type RemovePolicyRuleIntentType string
 
+// RemoveSignerGroupSignersRequest A signed removal of members from a signer group. Policy-engine verifies
+// the signatures against the group's governance (the members of its
+// governing group, `governance_signer_group_id`, else the group itself;
+// at least `effective_governance_threshold` distinct members, never
+// counting payment-agent or card-settlement keys) and refuses a removal
+// that would leave the group below a threshold it must keep.
+type RemoveSignerGroupSignersRequest struct {
+	// MembersToRemove Public keys of the members to remove, as the group lists them.
+	MembersToRemove []string `json:"members_to_remove"`
+
+	// Signatures Signatures over the canonical intent, each base64-encoded, in the
+	// format the endorsed policy routes use (ES256 ASN.1 DER, or a
+	// WebAuthn assertion whose challenge is the canonical intent).
+	// The canonical intent is
+	// `{"group_id":"<id>","idempotency_key":"<X-Idempotency-Key>","members_to_remove":["<public_key>"],"signer_group_version":<version>,"type":"remove_signers_from_group"}`,
+	// with `members_to_remove` in the order sent.
+	Signatures []string `json:"signatures"`
+
+	// SignerGroupVersion The group's `version` the signatures were made over.
+	SignerGroupVersion int64 `json:"signer_group_version"`
+}
+
 // RiskConfig Configuration parameters used during risk calculation
 type RiskConfig struct {
 	// ThresholdHigh Medium to high risk threshold percentage
@@ -7230,6 +7283,21 @@ type SignerGroup struct {
 	// ClientId KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	ClientId KSUID `json:"client_id"`
 
+	// EffectiveGovernanceThreshold The number of distinct endorsers a governance change of the group
+	// needs now: `governance_threshold` when set, else the default (1,
+	// or 2 for a group of 3 or more members when the client has
+	// governance enforcement on), capped at the members that can
+	// endorse and never below 1. Keys of payment agents and card
+	// settlement signers are members for spending only: they never
+	// endorse governance changes.
+	EffectiveGovernanceThreshold *int32 `json:"effective_governance_threshold,omitempty"`
+
+	// GovernanceSignerGroupId The signer group whose members endorse governance changes of this group instead of its own members, or null when the group governs itself.
+	GovernanceSignerGroupId *string `json:"governance_signer_group_id"`
+
+	// GovernanceThreshold The explicit number of distinct endorsers a governance change of the group needs, or null for the default.
+	GovernanceThreshold *int32 `json:"governance_threshold"`
+
 	// Id KSUID is a 27-character globally unique ID that combines a timestamp with a random component. Used for all entity identifiers in the Dakota platform.
 	Id KSUID `json:"id"`
 
@@ -7243,10 +7311,31 @@ type SignerGroup struct {
 	// Populated only when the request sets `include_removed=true`; each
 	// entry carries its `removed_at` timestamp. Omitted otherwise.
 	RemovedMembers *[]Signer `json:"removed_members,omitempty"`
+
+	// Version The group's version. It increases by 1 with every membership or
+	// governance change. Endorsements of a membership or governance
+	// change sign over it as `signer_group_version`, so a signature made
+	// before a change cannot be replayed after it.
+	Version *int64 `json:"version,omitempty"`
 }
 
 // SignerGroupCreateRequest Request to create a new signer group
 type SignerGroupCreateRequest struct {
+	// GovernanceSignerGroupId Optional. Another signer group of the same client whose members
+	// endorse governance changes of this group instead of its own
+	// members. It must not be spend-scoped, deleted, or governed by
+	// another group itself.
+	GovernanceSignerGroupId *string `json:"governance_signer_group_id,omitempty"`
+
+	// GovernanceThreshold Optional. The number of distinct endorsers a governance change of
+	// the group needs (membership, governance settings, and the rules of
+	// the policies it governs). At most the member count of the group
+	// whose members endorse: the governing group when
+	// `governance_signer_group_id` is set, else this group. Keys of
+	// payment agents and card settlement signers never endorse
+	// governance changes and are not counted.
+	GovernanceThreshold *int32 `json:"governance_threshold,omitempty"`
+
 	// MemberKeys Public keys of the members that make up the signer group. At most
 	// 64 keys: each key is parsed and checked against the platform's
 	// managed signing identities before the group is created, so an
@@ -7789,6 +7878,34 @@ type UpdatePolicyRuleIntent struct {
 
 // UpdatePolicyRuleIntentType defines model for UpdatePolicyRuleIntent.Type.
 type UpdatePolicyRuleIntentType string
+
+// UpdateSignerGroupGovernanceRequest The group's complete governance settings, endorsed by its current
+// governance. A field left out clears that setting: no
+// `governance_threshold` means the default quorum, and no
+// `governance_signer_group_id` means the group governs itself.
+type UpdateSignerGroupGovernanceRequest struct {
+	// GovernanceSignerGroupId Another signer group of the same client whose members endorse governance changes of this group.
+	GovernanceSignerGroupId *string `json:"governance_signer_group_id,omitempty"`
+
+	// GovernanceThreshold The number of distinct endorsers a governance change of the group needs.
+	GovernanceThreshold *int32 `json:"governance_threshold,omitempty"`
+
+	// Signatures Signatures over the canonical intent, each base64-encoded, in the
+	// format the endorsed policy routes use (ES256 ASN.1 DER, or a
+	// WebAuthn assertion whose challenge is the canonical intent).
+	// Policy-engine verifies them against the signer group's governance:
+	// the members of its governing group (`governance_signer_group_id`,
+	// else the group itself), at least `effective_governance_threshold`
+	// distinct members. Payment-agent and card-settlement keys never
+	// count: a signature by one of them is refused.
+	// The canonical intent is
+	// `{"governance_signer_group_id":"<id>","governance_threshold":<n>,"idempotency_key":"<X-Idempotency-Key>","signer_group_id":"<id>","signer_group_version":<version>,"type":"update_signer_group_governance"}`,
+	// with each optional field absent when it is not sent.
+	Signatures []string `json:"signatures"`
+
+	// SignerGroupVersion The group's `version` the signatures were made over.
+	SignerGroupVersion int64 `json:"signer_group_version"`
+}
 
 // UploadedDocument Simplified document information for application entities
 type UploadedDocument struct {
@@ -9307,6 +9424,18 @@ type GetSignerGroupParams struct {
 	IncludeRemoved *bool `form:"include_removed,omitempty" json:"include_removed,omitempty"`
 }
 
+// UpdateSignerGroupGovernanceParams defines parameters for UpdateSignerGroupGovernance.
+type UpdateSignerGroupGovernanceParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
+// RemoveSignerGroupSignersParams defines parameters for RemoveSignerGroupSigners.
+type RemoveSignerGroupSignersParams struct {
+	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
+	XIdempotencyKey IdempotencyKeyHeader `json:"x-idempotency-key"`
+}
+
 // CreateSignerGroupSignerParams defines parameters for CreateSignerGroupSigner.
 type CreateSignerGroupSignerParams struct {
 	// XIdempotencyKey Unique key to ensure request idempotency. If the same key is used within a certain time window, the original response will be returned instead of executing the request again.
@@ -9738,6 +9867,12 @@ type CreateSelfServeCreditsPurchaseJSONRequestBody = SelfServeCreditsPurchaseReq
 
 // CreateSignerGroupJSONRequestBody defines body for CreateSignerGroup for application/json ContentType.
 type CreateSignerGroupJSONRequestBody = SignerGroupCreateRequest
+
+// UpdateSignerGroupGovernanceJSONRequestBody defines body for UpdateSignerGroupGovernance for application/json ContentType.
+type UpdateSignerGroupGovernanceJSONRequestBody = UpdateSignerGroupGovernanceRequest
+
+// RemoveSignerGroupSignersJSONRequestBody defines body for RemoveSignerGroupSigners for application/json ContentType.
+type RemoveSignerGroupSignersJSONRequestBody = RemoveSignerGroupSignersRequest
 
 // CreateSignerGroupSignerJSONRequestBody defines body for CreateSignerGroupSigner for application/json ContentType.
 type CreateSignerGroupSignerJSONRequestBody = CreateSignerGroupSignerRequest
@@ -11241,6 +11376,16 @@ type ClientInterface interface {
 
 	// GetSignerGroup request
 	GetSignerGroup(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSignerGroupGovernanceWithBody request with any body
+	UpdateSignerGroupGovernanceWithBody(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateSignerGroupGovernance(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, body UpdateSignerGroupGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveSignerGroupSignersWithBody request with any body
+	RemoveSignerGroupSignersWithBody(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RemoveSignerGroupSigners(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, body RemoveSignerGroupSignersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateSignerGroupSignerWithBody request with any body
 	CreateSignerGroupSignerWithBody(ctx context.Context, signerGroupId KSUID, params *CreateSignerGroupSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -13490,6 +13635,54 @@ func (c *APIClient) CreateSignerGroup(ctx context.Context, params *CreateSignerG
 
 func (c *APIClient) GetSignerGroup(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSignerGroupRequest(c.Server, signerGroupId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateSignerGroupGovernanceWithBody(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSignerGroupGovernanceRequestWithBody(c.Server, signerGroupId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) UpdateSignerGroupGovernance(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, body UpdateSignerGroupGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSignerGroupGovernanceRequest(c.Server, signerGroupId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) RemoveSignerGroupSignersWithBody(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveSignerGroupSignersRequestWithBody(c.Server, signerGroupId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *APIClient) RemoveSignerGroupSigners(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, body RemoveSignerGroupSignersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveSignerGroupSignersRequest(c.Server, signerGroupId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -21587,6 +21780,126 @@ func NewGetSignerGroupRequest(server string, signerGroupId KSUID, params *GetSig
 	return req, nil
 }
 
+// NewUpdateSignerGroupGovernanceRequest calls the generic UpdateSignerGroupGovernance builder with application/json body
+func NewUpdateSignerGroupGovernanceRequest(server string, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, body UpdateSignerGroupGovernanceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateSignerGroupGovernanceRequestWithBody(server, signerGroupId, params, "application/json", bodyReader)
+}
+
+// NewUpdateSignerGroupGovernanceRequestWithBody generates requests for UpdateSignerGroupGovernance with any type of body
+func NewUpdateSignerGroupGovernanceRequestWithBody(server string, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "signer_group_id", runtime.ParamLocationPath, signerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/signer-groups/%s/governance", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewRemoveSignerGroupSignersRequest calls the generic RemoveSignerGroupSigners builder with application/json body
+func NewRemoveSignerGroupSignersRequest(server string, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, body RemoveSignerGroupSignersJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveSignerGroupSignersRequestWithBody(server, signerGroupId, params, "application/json", bodyReader)
+}
+
+// NewRemoveSignerGroupSignersRequestWithBody generates requests for RemoveSignerGroupSigners with any type of body
+func NewRemoveSignerGroupSignersRequestWithBody(server string, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "signer_group_id", runtime.ParamLocationPath, signerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/signer-groups/%s/signer-removals", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-idempotency-key", runtime.ParamLocationHeader, params.XIdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-idempotency-key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewCreateSignerGroupSignerRequest calls the generic CreateSignerGroupSigner builder with application/json body
 func NewCreateSignerGroupSignerRequest(server string, signerGroupId KSUID, params *CreateSignerGroupSignerParams, body CreateSignerGroupSignerJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -24116,6 +24429,16 @@ type ClientWithResponsesInterface interface {
 
 	// GetSignerGroupWithResponse request
 	GetSignerGroupWithResponse(ctx context.Context, signerGroupId KSUID, params *GetSignerGroupParams, reqEditors ...RequestEditorFn) (*GetSignerGroupResponse, error)
+
+	// UpdateSignerGroupGovernanceWithBodyWithResponse request with any body
+	UpdateSignerGroupGovernanceWithBodyWithResponse(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSignerGroupGovernanceResponse, error)
+
+	UpdateSignerGroupGovernanceWithResponse(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, body UpdateSignerGroupGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSignerGroupGovernanceResponse, error)
+
+	// RemoveSignerGroupSignersWithBodyWithResponse request with any body
+	RemoveSignerGroupSignersWithBodyWithResponse(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveSignerGroupSignersResponse, error)
+
+	RemoveSignerGroupSignersWithResponse(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, body RemoveSignerGroupSignersJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveSignerGroupSignersResponse, error)
 
 	// CreateSignerGroupSignerWithBodyWithResponse request with any body
 	CreateSignerGroupSignerWithBodyWithResponse(ctx context.Context, signerGroupId KSUID, params *CreateSignerGroupSignerParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSignerGroupSignerResponse, error)
@@ -27619,6 +27942,66 @@ func (r GetSignerGroupResponse) StatusCode() int {
 	return 0
 }
 
+type UpdateSignerGroupGovernanceResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SignerGroup
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateSignerGroupGovernanceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateSignerGroupGovernanceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveSignerGroupSignersResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SignerGroup
+	ApplicationproblemJSON400 *ProblemDetails
+	ApplicationproblemJSON401 *ProblemDetails
+	ApplicationproblemJSON403 *ProblemDetails
+	ApplicationproblemJSON404 *ProblemDetails
+	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
+	ApplicationproblemJSON500 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveSignerGroupSignersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveSignerGroupSignersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreateSignerGroupSignerResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -27628,7 +28011,9 @@ type CreateSignerGroupSignerResponse struct {
 	ApplicationproblemJSON403 *ProblemDetails
 	ApplicationproblemJSON404 *ProblemDetails
 	ApplicationproblemJSON409 *ProblemDetails
+	ApplicationproblemJSON422 *ProblemDetails
 	ApplicationproblemJSON500 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -27657,6 +28042,7 @@ type DeleteSignerGroupSignerResponse struct {
 	ApplicationproblemJSON404 *ProblemDetails
 	ApplicationproblemJSON409 *ProblemDetails
 	ApplicationproblemJSON500 *ProblemDetails
+	ApplicationproblemJSON503 *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -29959,6 +30345,40 @@ func (c *ClientWithResponses) GetSignerGroupWithResponse(ctx context.Context, si
 		return nil, err
 	}
 	return ParseGetSignerGroupResponse(rsp)
+}
+
+// UpdateSignerGroupGovernanceWithBodyWithResponse request with arbitrary body returning *UpdateSignerGroupGovernanceResponse
+func (c *ClientWithResponses) UpdateSignerGroupGovernanceWithBodyWithResponse(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSignerGroupGovernanceResponse, error) {
+	rsp, err := c.UpdateSignerGroupGovernanceWithBody(ctx, signerGroupId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSignerGroupGovernanceResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateSignerGroupGovernanceWithResponse(ctx context.Context, signerGroupId KSUID, params *UpdateSignerGroupGovernanceParams, body UpdateSignerGroupGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSignerGroupGovernanceResponse, error) {
+	rsp, err := c.UpdateSignerGroupGovernance(ctx, signerGroupId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSignerGroupGovernanceResponse(rsp)
+}
+
+// RemoveSignerGroupSignersWithBodyWithResponse request with arbitrary body returning *RemoveSignerGroupSignersResponse
+func (c *ClientWithResponses) RemoveSignerGroupSignersWithBodyWithResponse(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveSignerGroupSignersResponse, error) {
+	rsp, err := c.RemoveSignerGroupSignersWithBody(ctx, signerGroupId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveSignerGroupSignersResponse(rsp)
+}
+
+func (c *ClientWithResponses) RemoveSignerGroupSignersWithResponse(ctx context.Context, signerGroupId KSUID, params *RemoveSignerGroupSignersParams, body RemoveSignerGroupSignersJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveSignerGroupSignersResponse, error) {
+	rsp, err := c.RemoveSignerGroupSigners(ctx, signerGroupId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveSignerGroupSignersResponse(rsp)
 }
 
 // CreateSignerGroupSignerWithBodyWithResponse request with arbitrary body returning *CreateSignerGroupSignerResponse
@@ -37158,6 +37578,170 @@ func ParseGetSignerGroupResponse(rsp *http.Response) (*GetSignerGroupResponse, e
 	return response, nil
 }
 
+// ParseUpdateSignerGroupGovernanceResponse parses an HTTP response from a UpdateSignerGroupGovernanceWithResponse call
+func ParseUpdateSignerGroupGovernanceResponse(rsp *http.Response) (*UpdateSignerGroupGovernanceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateSignerGroupGovernanceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SignerGroup
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveSignerGroupSignersResponse parses an HTTP response from a RemoveSignerGroupSignersWithResponse call
+func ParseRemoveSignerGroupSignersResponse(rsp *http.Response) (*RemoveSignerGroupSignersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveSignerGroupSignersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SignerGroup
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateSignerGroupSignerResponse parses an HTTP response from a CreateSignerGroupSignerWithResponse call
 func ParseCreateSignerGroupSignerResponse(rsp *http.Response) (*CreateSignerGroupSignerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -37214,12 +37798,26 @@ func ParseCreateSignerGroupSignerResponse(rsp *http.Response) (*CreateSignerGrou
 		}
 		response.ApplicationproblemJSON409 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
 
 	}
 
@@ -37288,6 +37886,13 @@ func ParseDeleteSignerGroupSignerResponse(rsp *http.Response) (*DeleteSignerGrou
 			return nil, err
 		}
 		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
 
 	}
 

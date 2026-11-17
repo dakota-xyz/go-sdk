@@ -4,6 +4,44 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+### Added — signed signer-group governance changes, ES256 and passkey (ENG-6468)
+
+Signer groups with governance settings (and every group of a client with
+governance enforcement on) change their members and governance only with
+signatures from the group's governance. The SDK now builds, signs and sends
+those changes.
+
+- **Partial spec sync.** `client/gen/openapi.yaml` takes the governance hunks
+  of platform's `openapi.public.yaml` (`93cb530b7`), checked against the
+  platform's internal `openapi.yaml` and served routes:
+  `POST /signer-groups/{id}/signer-removals`,
+  `PATCH /signer-groups/{id}/governance`, `signatures` and
+  `signer_group_version` on `POST /signer-groups/{id}/signers`,
+  `version` / `governance_threshold` / `effective_governance_threshold` /
+  `governance_signer_group_id` on `SignerGroup`, the governance fields on
+  group create, and `signatures` / `signer_group_id` on crypto destination
+  create. Other drift from the platform spec is left for the full sync.
+- **Canonical intent builders** — `AddSignersToGroupIntent`,
+  `RemoveSignersFromGroupIntent`, `UpdateSignerGroupGovernanceIntent`,
+  `CreateCryptoDestinationIntent` — byte-equal to policy-engine's
+  `intent.CanonicalIntentBytes` (golden vectors in `client/testdata`). They
+  refuse an idempotency key that is not a lowercase UUID, which the platform
+  would refuse anyway.
+- **Signers** — `IntentSigner`, `ES256IntentSigner` (over the existing
+  `Signer` / `P256Signer`) and `WebAuthnSigner` for passkeys: the challenge is
+  the raw canonical intent, and the signature entry is base64url of the
+  assertion JSON. `EncodeWebAuthnAssertion` packages an assertion collected
+  elsewhere and refuses one whose challenge is not the intent (a hashed
+  challenge, or one over another version).
+- **Helpers** — `AddSignerToGroupSigned`, `RemoveSignersFromGroupSigned`,
+  `UpdateSignerGroupGovernanceSigned` read the group's version, generate the
+  idempotency key, sign and send in one call. `Prepare*` +
+  `SubmitGovernanceIntent` split the flow for quorums signed over time.
+- **Typed errors** — `ErrEndorsementRequired`, `ErrInsufficientEndorsements`,
+  `ErrStaleSignerGroupVersion`, `ErrBelowThreshold`, matched with `errors.Is`
+  on the returned `*APIError`.
+- **Example** — `cmd/signer-group-governance` runs the flow against sandbox.
+
 ### Added — status_code beside status (ENG-3254)
 
 A partial sync: `client/gen/openapi.yaml` takes the `openapi.public.yaml`
