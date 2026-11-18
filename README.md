@@ -431,6 +431,90 @@ payload, err := client.MandateAmendSignPayload(m, *m.Version+1, next)
 
 The payload commits to the version it creates, so a signature collected for v2 can never be replayed to append v3. The amend endpoint takes the rule **verbatim** — it must already be canonical (`window` present, `targets` as recipient ids, `asset` uppercase), and `MandateSignPayload` refuses the amend verb outright.
 
+## Signer-group governance (signed member changes)
+
+A signer group with governance settings changes its members or its governance only with signatures from its governance: the members of its governing group (`governance_signer_group_id`, else the group itself), at least `effective_governance_threshold` of them. A client with governance enforcement on needs signatures for every group. Without them the platform answers `400 endorsement_required`.
+
+Each change is signed over a canonical intent that names the group's current `version` and the request's `X-Idempotency-Key`. The SDK builds that intent byte for byte as the platform verifies it, signs it, and sends the request with the same key and version:
+
+```go
+// Signers: an ES256 key you hold (P256Signer, or your HSM/KMS behind client.Signer)...
+viaKey := client.ES256IntentSigner(signer)
+
+// ...and/or a passkey. The SDK calls your function with the challenge to sign;
+// pass it to navigator.credentials.get unchanged (it is the canonical intent
+// itself, not a hash) and return the PublicKeyCredential JSON (credential.toJSON()).
+viaPasskey := client.WebAuthnSigner(func(ctx context.Context, challenge []byte) ([]byte, error) {
+    return askBrowserForAssertion(ctx, challenge) // your front end
+})
+
+group, err := c.AddSignerToGroupSigned(ctx, groupID, newMemberPublicKey, viaPasskey)
+group, err = c.RemoveSignersFromGroupSigned(ctx, groupID, []string{memberPublicKey}, viaKey)
+
+two := int32(2)
+group, err = c.UpdateSignerGroupGovernanceSigned(ctx, groupID,
+    client.GovernanceSettings{GovernanceThreshold: &two}, // a nil field clears that setting
+    viaKey)
+```
+
+Pass as many signers as the group's quorum. Keep the governing keys and passkeys away from the service that holds your API key: governance exists so that an API key alone cannot change who controls a wallet.
+
+`GovernanceSettings` replaces the group's whole governance, and a nil field clears that setting. So that a threshold-only update cannot silently drop a governing group, the SDK refuses to clear a setting the group has now unless you set `AllowClearing: true`. When the signatures come from different people at different times, prepare the change, collect the signatures, then submit. The prepared change marshals to JSON, so you can store it in the meantime:
+
+```go
+intent, err := c.PrepareRemoveSignersFromGroup(ctx, groupID, []string{memberPublicKey})
+// Give intent.Canonical to each signer (for a passkey, it is the challenge;
+// client.WebAuthnChallenge(intent.Canonical) is its base64url form).
+sig1, err := client.ES256IntentSigner(alice).SignIntent(ctx, intent.Canonical)
+sig2, err := client.EncodeWebAuthnAssertion(intent.Canonical, bobsAssertionJSON)
+group, err := c.SubmitGovernanceIntent(ctx, intent, []string{sig1, sig2})
+```
+
+A signer UI should show the person what they are about to sign; `intent.Canonical` is the exact JSON. `Sign` and `SubmitGovernanceIntent` refuse an intent whose `Canonical` does not match its fields, and `SubmitGovernanceIntent` refuses fewer signatures than the group's quorum.
+
+The idempotency key is part of what is signed, and the platform remembers the outcome per key. So a governance refusal (stale version, too few or bad signatures) is final for that intent: prepare and sign again. If a submit fails without any response, resubmit the same intent and signatures rather than calling a `*Signed` helper again (each call mints a new key).
+
+Governance refusals are typed:
+
+```go
+switch {
+case errors.Is(err, client.ErrStaleSignerGroupVersion):
+    // The group changed since the signatures were made: prepare and sign again.
+    // (The SDK does not re-sign on its own: for a passkey that is a new prompt.)
+case errors.Is(err, client.ErrInsufficientEndorsements):
+    // Too few governing members signed.
+case errors.Is(err, client.ErrBelowThreshold):
+    // The removal would leave the group below a threshold it must keep.
+case errors.Is(err, client.ErrEndorsementRequired):
+    // Sent without signatures.
+}
+```
+
+To build the canonical bytes yourself, use `AddSignersToGroupIntent`, `RemoveSignersFromGroupIntent` and `UpdateSignerGroupGovernanceIntent`. The idempotency key you sign must be the lowercase UUID you send as `X-Idempotency-Key`; the builders refuse anything else.
+
+A signed crypto destination has a builder but no one-call helper yet. Build, sign and send it through the raw client with the same key:
+
+```go
+key := uuid.New()
+network := gen.NetworkId("ethereum-mainnet")
+intent, err := client.CreateCryptoDestinationIntent(recipientID, string(network), address, signerGroupID, key.String())
+sig, err := client.ES256IntentSigner(signer).SignIntent(ctx, intent)
+
+var body gen.CreateDestinationJSONRequestBody
+err = body.FromCryptoDestinationRequest(gen.CryptoDestinationRequest{
+    DestinationType: gen.CryptoDestinationRequestDestinationTypeCrypto,
+    Name:            "Treasury",
+    CryptoAddress:   address,  // exactly as signed
+    NetworkId:       &network, // required with signatures
+    SignerGroupId:   &signerGroupID,
+    Signatures:      &[]string{sig},
+})
+resp, err := client.CheckResponse(c.Raw().CreateDestinationWithResponse(ctx, recipientID,
+    &gen.CreateDestinationParams{XIdempotencyKey: key}, body))
+```
+
+A runnable sandbox walk-through is in [`cmd/signer-group-governance`](cmd/signer-group-governance).
+
 ## Handling Webhooks
 
 Dakota sends webhooks for all status changes. Set up a handler:

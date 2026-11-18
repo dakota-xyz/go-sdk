@@ -1,0 +1,193 @@
+{
+  "source": "policy-engine pkg/intent.CanonicalIntentBytes at dde0d46 (v0.0.41 line), generated 2026-11-17",
+  "vectors": [
+    {
+      "name": "add, ES256 key, version 0",
+      "intent": "add_signers_to_group",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 0,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "member_keys": [
+          "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMbuCXgirK7R0SD7rp7e/YLTYbw0ceCI/WA31TtTcZ//y3CNkqgXkKdwHBa3N4S5BI+8pSx1NLYnyfihfmELCgw=="
+        ]
+      },
+      "want": "{\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"new_member_keys\":[\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMbuCXgirK7R0SD7rp7e/YLTYbw0ceCI/WA31TtTcZ//y3CNkqgXkKdwHBa3N4S5BI+8pSx1NLYnyfihfmELCgw==\"],\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":0,\"type\":\"add_signers_to_group\"}"
+    },
+    {
+      "name": "add, passkey (COSE) key, version 7",
+      "intent": "add_signers_to_group",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 7,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027",
+        "member_keys": [
+          "pQECAyYgASFYIONPBSOpT1b1GhA42/UncK14mua0wlAqa3rifDVE+dNIIlggkoBPQr6PDtfwTEhVgmvlrYauaafB3MLQ3AIGo7OEvYo="
+        ]
+      },
+      "want": "{\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"new_member_keys\":[\"pQECAyYgASFYIONPBSOpT1b1GhA42/UncK14mua0wlAqa3rifDVE+dNIIlggkoBPQr6PDtfwTEhVgmvlrYauaafB3MLQ3AIGo7OEvYo=\"],\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":7,\"type\":\"add_signers_to_group\"}"
+    },
+    {
+      "name": "add, policy-engine pinned case",
+      "intent": "add_signers_to_group",
+      "input": {
+        "signer_group_id": "sg-1",
+        "signer_group_version": 3,
+        "idempotency_key": "6f1c2d3e-0000-4000-8000-000000000001",
+        "member_keys": [
+          "pk-1"
+        ]
+      },
+      "want": "{\"idempotency_key\":\"6f1c2d3e-0000-4000-8000-000000000001\",\"new_member_keys\":[\"pk-1\"],\"signer_group_id\":\"sg-1\",\"signer_group_version\":3,\"type\":\"add_signers_to_group\"}"
+    },
+    {
+      "name": "remove one, version 1",
+      "intent": "remove_signers_from_group",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 1,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "member_keys": [
+          "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMbuCXgirK7R0SD7rp7e/YLTYbw0ceCI/WA31TtTcZ//y3CNkqgXkKdwHBa3N4S5BI+8pSx1NLYnyfihfmELCgw=="
+        ]
+      },
+      "want": "{\"group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"members_to_remove\":[\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMbuCXgirK7R0SD7rp7e/YLTYbw0ceCI/WA31TtTcZ//y3CNkqgXkKdwHBa3N4S5BI+8pSx1NLYnyfihfmELCgw==\"],\"signer_group_version\":1,\"type\":\"remove_signers_from_group\"}"
+    },
+    {
+      "name": "remove two, order kept (not sorted)",
+      "intent": "remove_signers_from_group",
+      "input": {
+        "signer_group_id": "3MF5pokUeizBfGkQF0N4qhUgRve",
+        "signer_group_version": 12,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027",
+        "member_keys": [
+          "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyrrHNsQMwUxGIWthOdpPCAwRwJ2b0vY0rD8m8b6Yw3cQ2F3n0h1m5k7e9P1w8b0gYt7c9xZ4vQ2a1s5d6f7g8h==",
+          "pQECAyYgASFYIONPBSOpT1b1GhA42/UncK14mua0wlAqa3rifDVE+dNIIlggkoBPQr6PDtfwTEhVgmvlrYauaafB3MLQ3AIGo7OEvYo=",
+          "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMbuCXgirK7R0SD7rp7e/YLTYbw0ceCI/WA31TtTcZ//y3CNkqgXkKdwHBa3N4S5BI+8pSx1NLYnyfihfmELCgw=="
+        ]
+      },
+      "want": "{\"group_id\":\"3MF5pokUeizBfGkQF0N4qhUgRve\",\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"members_to_remove\":[\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyrrHNsQMwUxGIWthOdpPCAwRwJ2b0vY0rD8m8b6Yw3cQ2F3n0h1m5k7e9P1w8b0gYt7c9xZ4vQ2a1s5d6f7g8h==\",\"pQECAyYgASFYIONPBSOpT1b1GhA42/UncK14mua0wlAqa3rifDVE+dNIIlggkoBPQr6PDtfwTEhVgmvlrYauaafB3MLQ3AIGo7OEvYo=\",\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMbuCXgirK7R0SD7rp7e/YLTYbw0ceCI/WA31TtTcZ//y3CNkqgXkKdwHBa3N4S5BI+8pSx1NLYnyfihfmELCgw==\"],\"signer_group_version\":12,\"type\":\"remove_signers_from_group\"}"
+    },
+    {
+      "name": "remove, version 0",
+      "intent": "remove_signers_from_group",
+      "input": {
+        "signer_group_id": "3MF5pokUeizBfGkQF0N4qhUgRve",
+        "signer_group_version": 0,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "member_keys": [
+          "pQECAyYgASFYIONPBSOpT1b1GhA42/UncK14mua0wlAqa3rifDVE+dNIIlggkoBPQr6PDtfwTEhVgmvlrYauaafB3MLQ3AIGo7OEvYo="
+        ]
+      },
+      "want": "{\"group_id\":\"3MF5pokUeizBfGkQF0N4qhUgRve\",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"members_to_remove\":[\"pQECAyYgASFYIONPBSOpT1b1GhA42/UncK14mua0wlAqa3rifDVE+dNIIlggkoBPQr6PDtfwTEhVgmvlrYauaafB3MLQ3AIGo7OEvYo=\"],\"signer_group_version\":0,\"type\":\"remove_signers_from_group\"}"
+    },
+    {
+      "name": "governance, both set",
+      "intent": "update_signer_group_governance",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 3,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "governance_threshold": 2,
+        "governance_signer_group_id": "3MF5pokUeizBfGkQF0N4qhUgRve"
+      },
+      "want": "{\"governance_signer_group_id\":\"3MF5pokUeizBfGkQF0N4qhUgRve\",\"governance_threshold\":2,\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":3,\"type\":\"update_signer_group_governance\"}"
+    },
+    {
+      "name": "governance, threshold only",
+      "intent": "update_signer_group_governance",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 4,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027",
+        "governance_threshold": 1
+      },
+      "want": "{\"governance_threshold\":1,\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":4,\"type\":\"update_signer_group_governance\"}"
+    },
+    {
+      "name": "governance, governing group only",
+      "intent": "update_signer_group_governance",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 5,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "governance_signer_group_id": "3MF5pokUeizBfGkQF0N4qhUgRve"
+      },
+      "want": "{\"governance_signer_group_id\":\"3MF5pokUeizBfGkQF0N4qhUgRve\",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":5,\"type\":\"update_signer_group_governance\"}"
+    },
+    {
+      "name": "governance, both cleared, version 0",
+      "intent": "update_signer_group_governance",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 0,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027"
+      },
+      "want": "{\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":0,\"type\":\"update_signer_group_governance\"}"
+    },
+    {
+      "name": "governance, large version",
+      "intent": "update_signer_group_governance",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 4294967296,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "governance_threshold": 3
+      },
+      "want": "{\"governance_threshold\":3,\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"signer_group_version\":4294967296,\"type\":\"update_signer_group_governance\"}"
+    },
+    {
+      "name": "crypto destination, EVM mixed-case address",
+      "intent": "create_crypto_destination",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 0,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "recipient_id": "3MF9wAqM2HQHe7eiQ1OU1ovUuWt",
+        "network_id": "ethereum-mainnet",
+        "address": "0x52908400098527886E0F7030069857D2E4169EE7"
+      },
+      "want": "{\"address\":\"0x52908400098527886E0F7030069857D2E4169EE7\",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"network_id\":\"ethereum-mainnet\",\"recipient_id\":\"3MF9wAqM2HQHe7eiQ1OU1ovUuWt\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"type\":\"create_crypto_destination\"}"
+    },
+    {
+      "name": "crypto destination, characters JSON escapes (<>& and non-ASCII)",
+      "intent": "create_crypto_destination",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 0,
+        "idempotency_key": "047caa77-8cec-4e96-994c-a12b655231de",
+        "recipient_id": "rec<1>",
+        "network_id": "ethereum-mainnet",
+        "address": "0xé&<> "
+      },
+      "want": "{\"address\":\"0xé&<> \",\"idempotency_key\":\"047caa77-8cec-4e96-994c-a12b655231de\",\"network_id\":\"ethereum-mainnet\",\"recipient_id\":\"rec<1>\",\"signer_group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"type\":\"create_crypto_destination\"}"
+    },
+    {
+      "name": "remove, characters JSON escapes in keys",
+      "intent": "remove_signers_from_group",
+      "input": {
+        "signer_group_id": "3MF5pRlAIRFYkOAd3TstqUKMOpp",
+        "signer_group_version": 2,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027",
+        "member_keys": [
+          "pk<&>",
+          "clé"
+        ]
+      },
+      "want": "{\"group_id\":\"3MF5pRlAIRFYkOAd3TstqUKMOpp\",\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"members_to_remove\":[\"pk<&>\",\"clé\"],\"signer_group_version\":2,\"type\":\"remove_signers_from_group\"}"
+    },
+    {
+      "name": "crypto destination, Solana address",
+      "intent": "create_crypto_destination",
+      "input": {
+        "signer_group_id": "3MF5pokUeizBfGkQF0N4qhUgRve",
+        "signer_group_version": 0,
+        "idempotency_key": "6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027",
+        "recipient_id": "3MF9wAqM2HQHe7eiQ1OU1ovUuWt",
+        "network_id": "solana-mainnet",
+        "address": "7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV"
+      },
+      "want": "{\"address\":\"7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV\",\"idempotency_key\":\"6d41757e-fcb9-4ecb-ac1b-b8a6eed5d027\",\"network_id\":\"solana-mainnet\",\"recipient_id\":\"3MF9wAqM2HQHe7eiQ1OU1ovUuWt\",\"signer_group_id\":\"3MF5pokUeizBfGkQF0N4qhUgRve\",\"type\":\"create_crypto_destination\"}"
+    }
+  ]
+}

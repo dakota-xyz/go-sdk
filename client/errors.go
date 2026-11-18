@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"slices"
+	"strings"
 )
 
 // APIError represents a structured Dakota Platform API error response.
@@ -303,4 +305,38 @@ func parseBodyError(body []byte) (string, string, map[string]any, bool) {
 		parsed.Details = nil
 	}
 	return parsed.Code, parsed.Message, parsed.Details, true
+}
+
+// ProblemCodeError is a sentinel for one platform problem code at one HTTP
+// status, such as ErrStaleSignerGroupVersion. errors.Is(err, sentinel) is true
+// when err wraps an *APIError with that status and code.
+type ProblemCodeError struct {
+	Status  int
+	Code    string // snake_case, e.g. "stale_signer_group_version"
+	Message string
+}
+
+func (e *ProblemCodeError) Error() string { return e.Code + ": " + e.Message }
+
+// Is lets errors.Is match an APIError against a *ProblemCodeError sentinel.
+// The code is read from the problem type URI's fragment (APIError.Code, e.g.
+// "stale-signer-group-version") or the body's "code" field.
+func (e *APIError) Is(target error) bool {
+	pc, ok := target.(*ProblemCodeError)
+	if !ok || pc == nil || e == nil || e.StatusCode != pc.Status {
+		return false
+	}
+	return slices.Contains(e.problemCodes(), pc.Code)
+}
+
+func (e *APIError) problemCodes() []string {
+	norm := func(s string) string { return strings.ReplaceAll(strings.ToLower(s), "-", "_") }
+	codes := []string{norm(e.Code)}
+	var body struct {
+		Code string `json:"code"`
+	}
+	if len(e.RawBody) > 0 && json.Unmarshal(e.RawBody, &body) == nil && body.Code != "" {
+		codes = append(codes, norm(body.Code))
+	}
+	return codes
 }
