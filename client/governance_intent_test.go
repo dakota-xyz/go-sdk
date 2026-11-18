@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -114,6 +115,16 @@ func TestGovernanceIntentRefusesBadInput(t *testing.T) {
 	cases["two keys on an add"] = refusal{func() ([]byte, error) {
 		return AddSignersToGroupIntent("sg", 0, key, []string{"pk1", "pk2"})
 	}, "exactly one member key"}
+	cases["duplicate key on a removal"] = refusal{func() ([]byte, error) {
+		return RemoveSignersFromGroupIntent("sg", 0, key, []string{"pk1", "pk2", "pk1"})
+	}, "repeats an earlier key"}
+	cases["more than 100 keys on a removal"] = refusal{func() ([]byte, error) {
+		many := make([]string, 101)
+		for i := range many {
+			many[i] = fmt.Sprintf("pk%d", i)
+		}
+		return RemoveSignersFromGroupIntent("sg", 0, key, many)
+	}, "at most 100 keys"}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			got, err := tc.build()

@@ -323,6 +323,11 @@ func (c *Client) prepareSignSubmit(ctx context.Context, prepare func() (*Governa
 	if err != nil {
 		return nil, err
 	}
+	// Refuse before anyone is asked to sign (a passkey signer prompts a
+	// person), not after every signature is collected.
+	if len(signers) < intent.RequiredSignatures {
+		return nil, fmt.Errorf("the group needs %d signatures, but only %d signer(s) were passed", intent.RequiredSignatures, len(signers))
+	}
 	sigs, err := intent.Sign(ctx, signers...)
 	if err != nil {
 		return nil, err

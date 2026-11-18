@@ -39,9 +39,12 @@ those changes.
   `SubmitGovernanceIntent` split the flow for quorums signed over time.
 - **Guards** — `Sign` and `SubmitGovernanceIntent` refuse an intent whose
   canonical bytes disagree with its fields; Submit refuses fewer signatures
-  than the group's quorum; a governance update refuses to clear a setting the
-  group has now unless `AllowClearing` is set; member keys with surrounding
-  whitespace are refused (the platform trims them before verifying).
+  than the group's quorum, and the one-call helpers refuse too few signers
+  before anyone is asked to sign; a governance update refuses to clear a
+  setting the group has now unless `AllowClearing` is set; member keys with
+  surrounding whitespace, duplicate keys and more than 100 keys are refused
+  (the platform refuses them too); a passkey assertion without the
+  user-present flag is refused locally, as the platform always refuses it.
 - **Typed errors** — `ErrEndorsementRequired`, `ErrInsufficientEndorsements`,
   `ErrStaleSignerGroupVersion`, `ErrBelowThreshold` (`*ProblemCodeError`
   sentinels), matched with `errors.Is` on the returned `*APIError` by status

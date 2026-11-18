@@ -511,7 +511,9 @@ err = body.FromCryptoDestinationRequest(gen.CryptoDestinationRequest{
 })
 resp, err := client.CheckResponse(c.Raw().CreateDestinationWithResponse(ctx, recipientID,
     &gen.CreateDestinationParams{XIdempotencyKey: key}, body))
-``` A runnable sandbox walk-through is in [`cmd/signer-group-governance`](cmd/signer-group-governance).
+```
+
+A runnable sandbox walk-through is in [`cmd/signer-group-governance`](cmd/signer-group-governance).
 
 ## Handling Webhooks
 

@@ -199,6 +199,13 @@ func TestWebAuthnSigner(t *testing.T) {
 		"short authenticator": {func(a *WebAuthnAssertion) {
 			a.Response.AuthenticatorData = base64.RawURLEncoding.EncodeToString(make([]byte, 36))
 		}, "at least 37"},
+		// The platform refuses an assertion without the user-present flag
+		// under every passkey policy.
+		"no user-present flag": {func(a *WebAuthnAssertion) {
+			b, _ := base64.RawURLEncoding.DecodeString(a.Response.AuthenticatorData)
+			b[32] = 0x04 // user verified, but not user present
+			a.Response.AuthenticatorData = base64.RawURLEncoding.EncodeToString(b)
+		}, "user-present (UP) flag"},
 		"standard-base64 sig":  {func(a *WebAuthnAssertion) { a.Response.Signature = "ab+/" }, "signature is not base64url"},
 		"standard-base64 data": {func(a *WebAuthnAssertion) { a.Response.AuthenticatorData = toStdB64(t, a.Response.AuthenticatorData) }, "authenticatorData is not base64url"},
 	}

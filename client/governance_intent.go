@@ -89,14 +89,26 @@ func checkCommon(signerGroupID string, signerGroupVersion int64, idempotencyKey 
 	return checkIdempotencyKey(idempotencyKey)
 }
 
+// maxMembershipKeys is the most keys one membership change may name; the
+// platform refuses more.
+const maxMembershipKeys = 100
+
 func checkKeys(what string, keys []string) error {
 	if len(keys) == 0 {
 		return fmt.Errorf("at least one %s is required", what)
 	}
+	if len(keys) > maxMembershipKeys {
+		return fmt.Errorf("at most %d keys per change, got %d (the platform refuses more)", maxMembershipKeys, len(keys))
+	}
+	seen := make(map[string]bool, len(keys))
 	for i, k := range keys {
 		if k == "" {
 			return fmt.Errorf("%s %d is empty", what, i)
 		}
+		if seen[k] {
+			return fmt.Errorf("%s %d repeats an earlier key (the platform refuses duplicates)", what, i)
+		}
+		seen[k] = true
 		// The platform trims an added key before rebuilding the intent, so a
 		// key signed with surrounding whitespace never verifies.
 		if strings.TrimSpace(k) != k {

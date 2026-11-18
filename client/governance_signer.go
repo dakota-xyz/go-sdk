@@ -136,13 +136,16 @@ type WebAuthnAssertionResponse struct {
 //   - id is present and unpadded base64url, and type is "public-key";
 //   - rawId, clientDataJSON, authenticatorData, signature and userHandle are
 //     base64url (standard base64 with + or / is refused);
-//   - authenticatorData is at least 37 bytes (RP ID hash, flags, counter);
+//   - authenticatorData is at least 37 bytes (RP ID hash, flags, counter)
+//     and has the user-present (UP) flag set;
 //   - clientDataJSON is of type webauthn.get, and its challenge decodes to
 //     exactly canonicalIntent (catching a hashed challenge, or one signed over
 //     another intent or an old group version).
 //
 // It cannot verify the signature itself: the SDK does not know the
-// credential's public key. A refused change uses up its idempotency key and
+// credential's public key. Nor does it apply the checks the platform can be
+// configured to enforce per client (user verification, RP ID, origin): an
+// assertion that passes here can still be refused for those. A refused change uses up its idempotency key and
 // every signature collected for it, which is why the shape is checked here.
 func EncodeWebAuthnAssertion(canonicalIntent, assertionJSON []byte) (string, error) {
 	var a WebAuthnAssertion
@@ -182,8 +185,14 @@ func EncodeWebAuthnAssertion(canonicalIntent, assertionJSON []byte) (string, err
 		}
 		decoded[f.name] = b
 	}
-	if n := len(decoded["authenticatorData"]); n < 37 {
+	authData := decoded["authenticatorData"]
+	if n := len(authData); n < 37 {
 		return "", fmt.Errorf("webauthn authenticatorData is %d bytes, want at least 37", n)
+	}
+	// Byte 32 is the flags byte. The platform refuses every assertion without
+	// the user-present (UP) flag, whatever its passkey policy.
+	if authData[32]&webAuthnFlagUserPresent == 0 {
+		return "", errors.New("webauthn authenticatorData does not have the user-present (UP) flag set: the platform refuses such an assertion")
 	}
 	var cd struct {
 		Type      string `json:"type"`
@@ -208,6 +217,10 @@ func EncodeWebAuthnAssertion(canonicalIntent, assertionJSON []byte) (string, err
 	}
 	return base64.RawURLEncoding.EncodeToString(compact.Bytes()), nil
 }
+
+// webAuthnFlagUserPresent is the UP bit of the authenticatorData flags byte
+// (WebAuthn Level 3, section 6.1).
+const webAuthnFlagUserPresent = 0x01
 
 // decodeBase64URL decodes base64url with or without padding, as the
 // platform's WebAuthn parser does. Standard base64 (+ or /) is refused.

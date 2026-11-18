@@ -307,7 +307,7 @@ func TestSignedMembershipChanges(t *testing.T) {
 
 		intent.MemberKeys = []string{keys[2].PublicKeyBase64()}
 		_, err = c.SubmitGovernanceIntent(ctx, intent, sigs)
-		require.Error(t, err)
+		require.ErrorContains(t, err, "do not match its canonical bytes")
 		require.Empty(t, g.seen, "nothing may reach the platform")
 	})
 
@@ -377,6 +377,35 @@ func TestGovernanceIntentGuards(t *testing.T) {
 		grp, err := c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{GovernanceThreshold: &three, AllowClearing: true}, ES256IntentSigner(keys[0]))
 		require.NoError(t, err)
 		require.Nil(t, grp.GovernanceSignerGroupId)
+	})
+
+	t.Run("an update does not silently clear the threshold", func(t *testing.T) {
+		keys := newKeys(t, 1)
+		g, c := newGovernedGroup(t, 1, keys[0])
+		one := int32(1)
+		g.settings.GovernanceThreshold = &one
+
+		_, err := c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{}, ES256IntentSigner(keys[0]))
+		require.ErrorContains(t, err, "would clear the group's governance threshold 1")
+		require.Empty(t, g.seen)
+
+		grp, err := c.UpdateSignerGroupGovernanceSigned(ctx, g.id, GovernanceSettings{AllowClearing: true}, ES256IntentSigner(keys[0]))
+		require.NoError(t, err)
+		require.Nil(t, grp.GovernanceThreshold)
+	})
+
+	t.Run("too few signers is refused before anyone signs", func(t *testing.T) {
+		keys := newKeys(t, 3)
+		g, c := newGovernedGroup(t, 2, keys[0], keys[1])
+		prompted := 0
+		counting := IntentSignerFunc(func(ctx context.Context, canonical []byte) (string, error) {
+			prompted++
+			return ES256IntentSigner(keys[0]).SignIntent(ctx, canonical)
+		})
+		_, err := c.AddSignerToGroupSigned(ctx, g.id, keys[2].PublicKeyBase64(), counting)
+		require.ErrorContains(t, err, "needs 2 signatures, but only 1 signer(s)")
+		require.Zero(t, prompted, "no signer may be asked")
+		require.Empty(t, g.seen)
 	})
 
 	t.Run("a group cannot name itself as its governing group", func(t *testing.T) {
