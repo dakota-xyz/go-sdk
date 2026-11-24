@@ -264,17 +264,24 @@ func (h recordingHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 func (h recordingHandler) WithGroup(string) slog.Handler { return h }
 
-// recordLogs returns a handler option that logs to a recorder, and a function
+// recordingLogger returns a logger that records what it logs, and a function
 // returning what was logged so far.
-func recordLogs() (webhook.HandlerOption, func() []logRecord) {
+func recordingLogger() (log.Logger, func() []logRecord) {
 	var mu sync.Mutex
 	var records []logRecord
 	logger := log.FromSlog(slog.New(recordingHandler{mu: &mu, records: &records}))
-	return webhook.WithLogger(logger), func() []logRecord {
+	return logger, func() []logRecord {
 		mu.Lock()
 		defer mu.Unlock()
 		return append([]logRecord(nil), records...)
 	}
+}
+
+// recordLogs returns a handler option that logs to a recorder, and a function
+// returning what was logged so far.
+func recordLogs() (webhook.HandlerOption, func() []logRecord) {
+	logger, logs := recordingLogger()
+	return webhook.WithLogger(logger), logs
 }
 
 func warnings(records []logRecord) []string {
@@ -506,4 +513,53 @@ func TestHandler_NoConfigWarningWhenNewHandlerFails(t *testing.T) {
 	if got := warnings(logs()); len(got) != 0 {
 		t.Errorf("got warnings %q, want none", got)
 	}
+}
+
+// A listener's logger reaches its handler, so listener users see the warning
+// about an ignored WithPublicKey; a logger given to the handler itself wins.
+func TestListener_HandlerLogsThroughListenerLogger(t *testing.T) {
+	retired, current := newRotationKey(t), newRotationKey(t)
+	keys := []webhook.HandlerOption{
+		webhook.WithPublicKey(retired.hex),
+		webhook.WithPublicKeys(current.hex),
+	}
+	want := "Dakota webhook handler: ignoring the WithPublicKey option (key id " +
+		retired.id + ") because WithPublicKeys is set; " +
+		"add that key to WithPublicKeys if you still need it"
+
+	t.Run("listener logger only", func(t *testing.T) {
+		listenerLogger, listenerLogs := recordingLogger()
+		l, err := webhook.NewListener(
+			webhook.WithAddr("127.0.0.1:0"),
+			webhook.WithListenerLogger(listenerLogger),
+			webhook.WithHandlerOptions(keys...),
+		)
+		if err != nil {
+			t.Fatalf("NewListener: %v", err)
+		}
+		defer l.Close()
+		if got := warnings(listenerLogs()); len(got) != 1 || got[0] != want {
+			t.Errorf("listener logger warnings:\n got %q\nwant [%q]", got, want)
+		}
+	})
+
+	t.Run("handler logger set too", func(t *testing.T) {
+		listenerLogger, listenerLogs := recordingLogger()
+		handlerLog, handlerLogs := recordLogs()
+		l, err := webhook.NewListener(
+			webhook.WithAddr("127.0.0.1:0"),
+			webhook.WithHandlerOptions(append(keys, handlerLog)...),
+			webhook.WithListenerLogger(listenerLogger),
+		)
+		if err != nil {
+			t.Fatalf("NewListener: %v", err)
+		}
+		defer l.Close()
+		if got := warnings(handlerLogs()); len(got) != 1 || got[0] != want {
+			t.Errorf("handler logger warnings:\n got %q\nwant [%q]", got, want)
+		}
+		if got := warnings(listenerLogs()); len(got) != 0 {
+			t.Errorf("listener logger got %q, want nothing", got)
+		}
+	})
 }

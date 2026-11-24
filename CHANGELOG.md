@@ -28,8 +28,14 @@ before upgrading, or deliveries signed with it get 401.
   `DAKOTA_WEBHOOK_PUBLIC_KEYS`): `WithPublicKey` works exactly as before,
   including failing `NewHandler` on a malformed key.
 - `NewVerifier` and `ParsePublicKeys` are unchanged. `NewListener` passes its
-  handler options to `NewHandler`, so the same rules apply there; the warning
-  goes to the handler's `WithLogger`, not `WithListenerLogger`.
+  handler options to `NewHandler`, so the same rules apply there.
+
+### Changed — the listener's handler logs through `WithListenerLogger` (ENG-6720)
+
+- `NewListener` now gives its handler the `WithListenerLogger` logger, so
+  listener users see the warning above, and the handler's existing request
+  warnings (rejected signatures, bad timestamps, callback errors) that were
+  silent before. A `WithLogger` among `WithHandlerOptions` still wins.
 
 ## [0.5.0] - 2026-11-24
 

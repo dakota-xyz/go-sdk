@@ -66,7 +66,8 @@ type handlerConfig struct {
 // WithPublicKeys gives at least one key, so removing a retired key from
 // WithPublicKeys always stops trusting it; if that key is not also listed in
 // WithPublicKeys, [NewHandler] logs one warning naming its key id (never the
-// key) through the handler's logger ([WithLogger]; silent by default).
+// key) through the handler's logger ([WithLogger], or a listener's
+// [WithListenerLogger]; silent by default).
 // WithPublicKey is used only when WithPublicKeys is not given or is empty, for
 // example an unset environment variable. A malformed key fails [NewHandler]
 // only then; otherwise it is ignored with a warning that does not quote it.
