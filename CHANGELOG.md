@@ -4,6 +4,45 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-24
+
+### Added — webhook verification against several Dakota public keys (ENG-6685)
+
+Dakota is rotating its webhook signing key. An integration that trusts one
+public key stops verifying at cutover; one that trusts a list keeps working
+through the overlap, the cutover and the retirement of the old key.
+
+- **`webhook.WithPublicKeys(keys...)`** for the handler and listener, and
+  **`webhook.NewVerifier(keys...)`** with `Verify`, `VerifyHeaders`,
+  `ConstructEvent` and `KeyIDs` for everything else. Each argument may be one
+  hex key or a comma-separated list, so
+  `WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS"))` works as is.
+- **`X-Dakota-Webhook-Signatures`** (`webhook.SignaturesHeader`) is verified
+  as the live docs specify: split on `,`, trim, `<key id>:<base64 signature>`
+  with the key id the first 8 hex characters of the public key
+  (`webhook.KeyID`), compared in lowercase. Entries with an untrusted id or no
+  `:` are skipped; the first entry naming a trusted key is the only one
+  checked for it, even if malformed; any trusted key that verifies accepts.
+  Several header lines are joined, and empty lines ignored.
+  `X-Webhook-Signature` is used only when the new header is missing or empty;
+  a new header that is present but fails is rejected.
+- **`webhook.ParsePublicKeys`** refuses a malformed key without quoting it.
+- Tested against platform's golden vector (platform#2668).
+
+### Changed — `WithPublicKey` handlers read X-Dakota-Webhook-Signatures (ENG-6685)
+
+- `NewHandler` with `WithPublicKey` (one key) now verifies
+  `X-Dakota-Webhook-Signatures` first, like `WithPublicKeys`:
+  - a delivery that carries only that header is accepted (it got 400);
+  - a delivery whose `X-Dakota-Webhook-Signatures` is present but fails is
+    rejected with 401 even if `X-Webhook-Signature` is valid (it got 200).
+    Dakota always signs both headers with the current key, so real deliveries
+    are unaffected; a relay or test harness that rewrites only
+    `X-Webhook-Signature` must drop or re-sign the new header.
+- `VerifySignature` and the package-level `ConstructEvent` are unchanged.
+  They check `X-Webhook-Signature` with one key, so they stop verifying at a
+  key cutover; move to `Verifier.ConstructEvent`.
+
 ### Added — signed signer-group governance changes, ES256 and passkey (ENG-6468)
 
 Signer groups with governance settings (and every group of a client with
