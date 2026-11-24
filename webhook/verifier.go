@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/dakota-xyz/go-sdk/errors"
@@ -166,7 +167,9 @@ func (v *Verifier) KeyIDs() []string {
 //
 // It returns an error with code [errors.CodeMissingHeader] if both signature
 // values are blank, and [errors.CodeInvalidSignature] if no trusted key
-// verifies.
+// verifies. The message says whether the header named no trusted key (for
+// example, Dakota signs with a key you have not added yet) or a trusted key's
+// signature failed; it names only trusted key ids, which are safe to log.
 //
 // Prefer [Verifier.VerifyHeaders] or [Verifier.ConstructEvent], which read the
 // headers themselves: the three string arguments here are easy to swap.
@@ -202,9 +205,20 @@ func (v *Verifier) Verify(
 				break // every trusted key has had its one check
 			}
 		}
+		if len(checked) == 0 {
+			return errors.New(
+				errors.CodeInvalidSignature,
+				SignaturesHeader+" names none of the trusted keys "+v.trustedIDs(),
+			)
+		}
+		ids := make([]string, 0, len(checked))
+		for id := range checked {
+			ids = append(ids, id)
+		}
+		slices.Sort(ids)
 		return errors.New(
 			errors.CodeInvalidSignature,
-			"no trusted key signed this webhook",
+			"signature by trusted key "+strings.Join(ids, ", ")+" did not verify",
 		)
 	}
 
@@ -224,8 +238,14 @@ func (v *Verifier) Verify(
 	}
 	return errors.New(
 		errors.CodeInvalidSignature,
-		"no trusted key signed this webhook",
+		SignatureHeader+" did not verify with any trusted key "+v.trustedIDs(),
 	)
+}
+
+// trustedIDs names the trusted keys for an error message. It never names a
+// key id taken from the request, which an attacker controls.
+func (v *Verifier) trustedIDs() string {
+	return "(trusted key ids: " + strings.Join(v.KeyIDs(), ", ") + ")"
 }
 
 // VerifyHeaders is [Verifier.Verify] with the values read from header. Several

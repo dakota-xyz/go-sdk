@@ -16,14 +16,17 @@ import (
 )
 
 const (
-	listenAddr              = "WH_ADDR"
-	webhookPath             = "WH_PATH"
-	webhookSigningPublicKey = "WH_PUB_KEY"
-	readHeaderTimeout       = 5 * time.Second
-	readTimeout             = 15 * time.Second
-	writeTimeout            = 15 * time.Second
-	idleTimeout             = 60 * time.Second
-	shutdownTimeout         = 10 * time.Second
+	listenAddr  = "WH_ADDR"
+	webhookPath = "WH_PATH"
+	// webhookPublicKeysEnv names the environment variable holding every
+	// Dakota public key to trust, comma-separated hex. A list keeps
+	// verifying while Dakota rotates its signing key.
+	webhookPublicKeysEnv = "DAKOTA_WEBHOOK_PUBLIC_KEYS"
+	readHeaderTimeout    = 5 * time.Second
+	readTimeout          = 15 * time.Second
+	writeTimeout         = 15 * time.Second
+	idleTimeout          = 60 * time.Second
+	shutdownTimeout      = 10 * time.Second
 )
 
 func main() {
@@ -105,7 +108,7 @@ func newPlatformWebhookHandler(logger *slog.Logger) (http.Handler, error) {
 	}
 
 	return webhook.NewHandler(
-		webhook.WithPublicKey(webhookSigningPublicKey),
+		webhook.WithPublicKeys(os.Getenv(webhookPublicKeysEnv)),
 		webhook.On(webhook.EventTargetUpdated, eventHandler),
 		webhook.On(webhook.EventTargetDeleted, eventHandler),
 		webhook.On(webhook.EventTransactionAutoCreated, eventHandler),

@@ -84,12 +84,17 @@ func ptr[T any](v T) *T { return &v }
 
 ### Webhook Handler
 ```go
-handler, _ := webhook.NewHandler(
-    webhook.WithPublicKey("key"),
+// DAKOTA_WEBHOOK_PUBLIC_KEYS: every Dakota public key you trust, comma-separated
+// hex. A list keeps verifying while Dakota rotates its signing key.
+handler, err := webhook.NewHandler(
+    webhook.WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS")),
     webhook.OnDefault(func(ctx context.Context, e webhook.Event) error {
         return nil
     }),
 )
+if err != nil {
+    log.Fatal(err) // e.g. DAKOTA_WEBHOOK_PUBLIC_KEYS unset or malformed
+}
 ```
 
 ## Critical Notes

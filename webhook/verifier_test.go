@@ -568,3 +568,37 @@ func FuzzVerifier_Verify(f *testing.F) {
 		}
 	})
 }
+
+// Rejections say why, so an operator can tell a missing trusted key from a
+// failed signature. Only trusted key ids (safe to log) are named.
+func TestVerifier_RejectionReasons(t *testing.T) {
+	key, stranger := newRotationKey(t), newRotationKey(t)
+	ts := "1795430000"
+	body := []byte(`{"id":"evt_reasons"}`)
+	v := newVerifier(t, key.hex)
+
+	tests := []struct {
+		name       string
+		signatures string
+		legacy     string
+		want       string
+	}{
+		{"only untrusted ids", stranger.entry(ts, body), "", "names none of the trusted keys"},
+		{"trusted key fails", key.id + ":" + zeroSignature, "", "did not verify"},
+		{"legacy fails", "", zeroSignature, "did not verify"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := v.Verify(body, ts, tt.signatures, tt.legacy)
+			if !errors.Is(err, errors.ErrInvalidSignature) {
+				t.Fatalf("got %v, want ErrInvalidSignature", err)
+			}
+			if !strings.Contains(err.Error(), tt.want) || !strings.Contains(err.Error(), key.id) {
+				t.Errorf("error %q should contain %q and the trusted key id %s", err, tt.want, key.id)
+			}
+			if strings.Contains(err.Error(), stranger.id) {
+				t.Errorf("error %q names an untrusted key id from the request", err)
+			}
+		})
+	}
+}

@@ -207,3 +207,17 @@ func TestHandler_WithPublicKeyPlusUnsetPublicKeys(t *testing.T) {
 		t.Errorf("got status %d, want %d", got, http.StatusOK)
 	}
 }
+
+// The documented change for existing WithPublicKey handlers: a present but
+// failing X-Dakota-Webhook-Signatures is rejected even when
+// X-Webhook-Signature is valid.
+func TestHandler_WithPublicKeyNoFallbackWhenSignaturesHeaderFails(t *testing.T) {
+	key, stranger := newRotationKey(t), newRotationKey(t)
+	handler, err := webhook.NewHandler(webhook.WithPublicKey(key.hex))
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	if got := serve(t, handler, rotationRequest(t, rotationBody, &key, stranger)); got != http.StatusUnauthorized {
+		t.Errorf("got status %d, want %d", got, http.StatusUnauthorized)
+	}
+}
