@@ -323,7 +323,7 @@ if err != nil {
 http.Handle("/webhooks", handler)
 ```
 
-Key rotation: trust every key in `DAKOTA_WEBHOOK_PUBLIC_KEYS` (`WithPublicKeys`, or `webhook.NewVerifier(...)` then `v.ConstructEvent(body, r.Header)` outside a handler). The SDK checks `X-Dakota-Webhook-Signatures` (`<8-hex key id>:<base64 sig>` entries), each trusted key at most once, and falls back to `X-Webhook-Signature` only when that header is missing or empty. `WithPublicKey` (one key) still works but stops verifying at cutover.
+Key rotation: trust every key in `DAKOTA_WEBHOOK_PUBLIC_KEYS` (`WithPublicKeys`, or `webhook.NewVerifier(...)` then `v.ConstructEvent(body, r.Header)` outside a handler). The SDK checks `X-Dakota-Webhook-Signatures` (`<8-hex key id>:<base64 sig>` entries), each trusted key at most once, and falls back to `X-Webhook-Signature` only when that header is missing or empty. `WithPublicKey` (one key) still works but stops verifying at cutover. Once `WithPublicKeys` has at least one key, `WithPublicKey` is ignored (one warning naming its 8-hex key id if the list doesn't include it, logged through `WithLogger` (for a listener, `WithListenerLogger` unless the handler options set `WithLogger`) and silent by default; a malformed value is skipped with a warning that does not quote it), so removing a key from the list always stops trusting it; it applies only when the list is empty or absent.
 
 Typed payloads live in `webhook/types`; decode with `webhook.EventDataAs[T](event)`. Onboarding lifecycle events a client integration must handle:
 

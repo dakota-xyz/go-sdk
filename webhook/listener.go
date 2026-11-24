@@ -78,7 +78,8 @@ func WithShutdownTimeout(d time.Duration) ListenerOption {
 	}
 }
 
-// WithListenerLogger sets the logger for the listener.
+// WithListenerLogger sets the logger for the listener. The handler logs
+// through it too, unless [WithHandlerOptions] includes [WithLogger].
 func WithListenerLogger(l log.Logger) ListenerOption {
 	return func(c *listenerConfig) {
 		c.logger = l
@@ -172,7 +173,11 @@ func NewListener(opts ...ListenerOption) (*Listener, error) {
 		cfg.logger = log.Nop()
 	}
 
-	handler, err := NewHandler(cfg.handlerOpts...)
+	// The handler logs through the listener's logger unless the caller gave
+	// it its own: options apply in order, so a WithLogger among the caller's
+	// handler options replaces this one.
+	handlerOpts := append([]HandlerOption{WithLogger(cfg.logger)}, cfg.handlerOpts...)
+	handler, err := NewHandler(handlerOpts...)
 	if err != nil {
 		return nil, err
 	}

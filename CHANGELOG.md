@@ -4,6 +4,43 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-24
+
+### Changed — `WithPublicKeys` replaces `WithPublicKey` instead of adding to it (ENG-6720)
+
+In 0.5.0 a handler given both options trusted the keys from both. An
+integrator who removed a retired key from their key list but kept an old
+`WithPublicKey` setting kept trusting the retired key without noticing. The
+handler now follows the same rules as dakota-ts-sdk 3.5.0.
+
+**Action required if you pass your current key through `WithPublicKey` and
+only the next key through `WithPublicKeys`:** add the current key to the list
+before upgrading, or deliveries signed with it get 401.
+
+- **`WithPublicKeys` gives at least one key:** only those keys are trusted.
+  `WithPublicKey` is ignored; if its key is not in the list, `NewHandler` logs
+  one warning through the handler's logger (`WithLogger`; silent by default): "Dakota webhook handler: ignoring
+  the WithPublicKey option (key id `<8 hex>`) because WithPublicKeys is set;
+  add that key to WithPublicKeys if you still need it". A malformed
+  `WithPublicKey` value is skipped with a warning that never quotes it, instead
+  of failing `NewHandler`.
+- **`WithPublicKeys` empty or not given** (for example an unset
+  `DAKOTA_WEBHOOK_PUBLIC_KEYS`): `WithPublicKey` works exactly as before,
+  including failing `NewHandler` on a malformed key.
+- `NewVerifier` and `ParsePublicKeys` are unchanged. `NewListener` passes its
+  handler options to `NewHandler`, so the same rules apply there.
+
+### Changed — the listener's handler logs through `WithListenerLogger` (ENG-6720)
+
+- `NewListener` now gives its handler the `WithListenerLogger` logger, so
+  listener users see the warning above, and the handler's existing request
+  warnings (rejected signatures, bad timestamps, callback errors) that were
+  silent before. A `WithLogger` among `WithHandlerOptions` still wins.
+- A rejected delivery is logged with the reason only (error code and
+  message). The underlying JSON or timestamp parse error, which can quote a
+  character or number from the body or the timestamp header, is no longer
+  logged; the body and signature headers never were.
+
 ## [0.5.0] - 2026-11-24
 
 ### Added — webhook verification against several Dakota public keys (ENG-6685)

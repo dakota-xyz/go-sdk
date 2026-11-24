@@ -1,14 +1,18 @@
 package webhook_test
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/dakota-xyz/go-sdk/errors"
+	"github.com/dakota-xyz/go-sdk/log"
 	"github.com/dakota-xyz/go-sdk/webhook"
 )
 
@@ -56,9 +60,9 @@ func TestHandler_RotationWithPublicKeys(t *testing.T) {
 	configs := map[string][]webhook.HandlerOption{
 		"WithPublicKeys, two arguments": {webhook.WithPublicKeys(oldKey.hex, newKey.hex)},
 		"WithPublicKeys, one list":      {webhook.WithPublicKeys(oldKey.hex + "," + newKey.hex)},
-		"WithPublicKey plus WithPublicKeys": {
+		"WithPublicKey listed again in WithPublicKeys": {
 			webhook.WithPublicKey(oldKey.hex),
-			webhook.WithPublicKeys(newKey.hex),
+			webhook.WithPublicKeys(oldKey.hex, newKey.hex),
 		},
 	}
 	deliveries := []struct {
@@ -220,4 +224,348 @@ func TestHandler_WithPublicKeyNoFallbackWhenSignaturesHeaderFails(t *testing.T) 
 	if got := serve(t, handler, rotationRequest(t, rotationBody, &key, stranger)); got != http.StatusUnauthorized {
 		t.Errorf("got status %d, want %d", got, http.StatusUnauthorized)
 	}
+}
+
+// logRecord is one log line written through the handler's logger.
+type logRecord struct {
+	level slog.Level
+	text  string // the message followed by every attribute, as key=value
+}
+
+// recordingHandler is a slog.Handler that keeps every record it handles,
+// with any attributes added through With.
+type recordingHandler struct {
+	mu      *sync.Mutex
+	records *[]logRecord
+	attrs   []slog.Attr
+}
+
+func (h recordingHandler) Enabled(context.Context, slog.Level) bool { return true }
+
+func (h recordingHandler) Handle(_ context.Context, r slog.Record) error {
+	var b strings.Builder
+	b.WriteString(r.Message)
+	for _, a := range h.attrs {
+		fmt.Fprintf(&b, " %s=%v", a.Key, a.Value)
+	}
+	r.Attrs(func(a slog.Attr) bool {
+		fmt.Fprintf(&b, " %s=%v", a.Key, a.Value)
+		return true
+	})
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	*h.records = append(*h.records, logRecord{level: r.Level, text: b.String()})
+	return nil
+}
+
+func (h recordingHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	h.attrs = append(append([]slog.Attr(nil), h.attrs...), attrs...)
+	return h
+}
+func (h recordingHandler) WithGroup(string) slog.Handler { return h }
+
+// recordingLogger returns a logger that records what it logs, and a function
+// returning what was logged so far.
+func recordingLogger() (log.Logger, func() []logRecord) {
+	var mu sync.Mutex
+	var records []logRecord
+	logger := log.FromSlog(slog.New(recordingHandler{mu: &mu, records: &records}))
+	return logger, func() []logRecord {
+		mu.Lock()
+		defer mu.Unlock()
+		return append([]logRecord(nil), records...)
+	}
+}
+
+// recordLogs returns a handler option that logs to a recorder, and a function
+// returning what was logged so far.
+func recordLogs() (webhook.HandlerOption, func() []logRecord) {
+	logger, logs := recordingLogger()
+	return webhook.WithLogger(logger), logs
+}
+
+func warnings(records []logRecord) []string {
+	var out []string
+	for _, r := range records {
+		if r.level == slog.LevelWarn {
+			out = append(out, r.text)
+		}
+	}
+	return out
+}
+
+// Once WithPublicKeys has a key, a key given only through WithPublicKey is not
+// trusted: an integrator who removes a retired key from the list stops
+// trusting it even if an old WithPublicKey setting still names it.
+func TestHandler_WithPublicKeysOverridesWithPublicKey(t *testing.T) {
+	retired, current := newRotationKey(t), newRotationKey(t)
+	orders := map[string][]webhook.HandlerOption{
+		"WithPublicKey first":  {webhook.WithPublicKey(retired.hex), webhook.WithPublicKeys(current.hex)},
+		"WithPublicKeys first": {webhook.WithPublicKeys(current.hex), webhook.WithPublicKey(retired.hex)},
+	}
+	for name, opts := range orders {
+		t.Run(name, func(t *testing.T) {
+			testWithPublicKeysOverrides(t, retired, current, opts)
+		})
+	}
+}
+
+func testWithPublicKeysOverrides(
+	t *testing.T,
+	retired, current rotationKey,
+	opts []webhook.HandlerOption,
+) {
+	logOpt, logs := recordLogs()
+	handler, err := webhook.NewHandler(append(opts, logOpt)...)
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	want := "Dakota webhook handler: ignoring the WithPublicKey option (key id " +
+		retired.id + ") because WithPublicKeys is set; " +
+		"add that key to WithPublicKeys if you still need it"
+	// Logged by NewHandler, before any delivery.
+	if got := warnings(logs()); len(got) != 1 || got[0] != want {
+		t.Fatalf("warnings after NewHandler:\n got %q\nwant [%q]", got, want)
+	}
+
+	deliveries := []struct {
+		name    string
+		legacy  *rotationKey
+		signers []rotationKey
+		want    int
+	}{
+		{"retired key, X-Webhook-Signature only", &retired, nil, http.StatusUnauthorized},
+		{"retired key, X-Dakota-Webhook-Signatures only", nil, []rotationKey{retired}, http.StatusUnauthorized},
+		{"retired key, both headers", &retired, []rotationKey{retired}, http.StatusUnauthorized},
+		{"current key, X-Webhook-Signature only", &current, nil, http.StatusOK},
+		{"current key, X-Dakota-Webhook-Signatures only", nil, []rotationKey{current}, http.StatusOK},
+	}
+	for _, d := range deliveries {
+		t.Run(d.name, func(t *testing.T) {
+			req := rotationRequest(t, rotationBody, d.legacy, d.signers...)
+			if got := serve(t, handler, req); got != d.want {
+				t.Errorf("got status %d, want %d", got, d.want)
+			}
+		})
+	}
+
+	got := warnings(logs())
+	configWarnings := 0
+	for _, w := range got {
+		if strings.Contains(w, retired.hex) {
+			t.Errorf("a log line contains the full WithPublicKey key: %q", w)
+		}
+		if strings.HasPrefix(w, "Dakota webhook handler:") {
+			configWarnings++
+			if w != want {
+				t.Errorf("warning:\n got %q\nwant %q", w, want)
+			}
+		}
+	}
+	if configWarnings != 1 {
+		t.Errorf("got %d configuration warnings, want exactly 1: %q", configWarnings, got)
+	}
+}
+
+// A WithPublicKey key that WithPublicKeys also lists is still trusted, and
+// nothing is ignored, so there is nothing to warn about. Neither is there
+// without WithPublicKey.
+func TestHandler_NoConfigWarning(t *testing.T) {
+	key, other := newRotationKey(t), newRotationKey(t)
+	configs := map[string][]webhook.HandlerOption{
+		"WithPublicKey listed in WithPublicKeys": {
+			webhook.WithPublicKey(key.hex),
+			webhook.WithPublicKeys(other.hex + ", " + strings.ToUpper(key.hex)),
+		},
+		// The list ignores spaces around a key, so the same key with spaces
+		// around it is still the listed key.
+		"WithPublicKey with spaces, listed in WithPublicKeys": {
+			webhook.WithPublicKey(" " + key.hex + "\n"),
+			webhook.WithPublicKeys(key.hex),
+		},
+		"WithPublicKeys only":                     {webhook.WithPublicKeys(key.hex, other.hex)},
+		"WithPublicKey only":                      {webhook.WithPublicKey(key.hex)},
+		"WithPublicKey plus empty WithPublicKeys": {webhook.WithPublicKey(key.hex), webhook.WithPublicKeys("")},
+	}
+	for name, opts := range configs {
+		t.Run(name, func(t *testing.T) {
+			logOpt, logs := recordLogs()
+			handler, err := webhook.NewHandler(append(opts, logOpt)...)
+			if err != nil {
+				t.Fatalf("NewHandler: %v", err)
+			}
+			if got := serve(t, handler, rotationRequest(t, rotationBody, &key, key)); got != http.StatusOK {
+				t.Errorf("got status %d, want %d", got, http.StatusOK)
+			}
+			if got := warnings(logs()); len(got) != 0 {
+				t.Errorf("got warnings %q, want none", got)
+			}
+		})
+	}
+}
+
+// An empty WithPublicKeys (an unset environment variable) leaves
+// WithPublicKey in charge, exactly as before: its key is trusted through both
+// headers and no other key is.
+func TestHandler_EmptyWithPublicKeysFallsBackToWithPublicKey(t *testing.T) {
+	key, stranger := newRotationKey(t), newRotationKey(t)
+	for _, list := range []string{"", " , "} {
+		handler, err := webhook.NewHandler(
+			webhook.WithPublicKey(key.hex),
+			webhook.WithPublicKeys(list),
+		)
+		if err != nil {
+			t.Fatalf("list %q: NewHandler: %v", list, err)
+		}
+		cases := []struct {
+			name    string
+			legacy  *rotationKey
+			signers []rotationKey
+			want    int
+		}{
+			{"X-Webhook-Signature", &key, nil, http.StatusOK},
+			{"X-Dakota-Webhook-Signatures", nil, []rotationKey{key}, http.StatusOK},
+			{"another key", &stranger, []rotationKey{stranger}, http.StatusUnauthorized},
+		}
+		for _, c := range cases {
+			req := rotationRequest(t, rotationBody, c.legacy, c.signers...)
+			if got := serve(t, handler, req); got != c.want {
+				t.Errorf("list %q, %s: got status %d, want %d", list, c.name, got, c.want)
+			}
+		}
+	}
+}
+
+// A malformed WithPublicKey key is ignored, with a warning that never quotes
+// it, when WithPublicKeys has a key, as dakota-ts-sdk does. On its own it
+// still fails NewHandler.
+func TestHandler_MalformedWithPublicKey(t *testing.T) {
+	key := newRotationKey(t)
+	// Looks like a private key pasted by mistake: 64 bytes of hex.
+	malformed := strings.Repeat("ab", 64)
+
+	t.Run("with WithPublicKeys", func(t *testing.T) {
+		logOpt, logs := recordLogs()
+		handler, err := webhook.NewHandler(
+			webhook.WithPublicKey(malformed),
+			webhook.WithPublicKeys(key.hex),
+			logOpt,
+		)
+		if err != nil {
+			t.Fatalf("NewHandler: %v", err)
+		}
+		if got := serve(t, handler, rotationRequest(t, rotationBody, &key, key)); got != http.StatusOK {
+			t.Errorf("got status %d, want %d", got, http.StatusOK)
+		}
+		want := "Dakota webhook handler: ignoring the WithPublicKey option " +
+			"(the WithPublicKey key is not 64 hex characters); " +
+			"verifying with the 1 key(s) in WithPublicKeys"
+		got := warnings(logs())
+		if len(got) != 1 || got[0] != want {
+			t.Errorf("warnings:\n got %q\nwant [%q]", got, want)
+		}
+		for _, w := range got {
+			if strings.Contains(w, "abab") {
+				t.Errorf("warning quotes the WithPublicKey value: %q", w)
+			}
+		}
+	})
+
+	t.Run("not hex, with WithPublicKeys", func(t *testing.T) {
+		logOpt, logs := recordLogs()
+		_, err := webhook.NewHandler(
+			webhook.WithPublicKey("zz-secret-zz"),
+			webhook.WithPublicKeys(key.hex),
+			logOpt,
+		)
+		if err != nil {
+			t.Fatalf("NewHandler: %v", err)
+		}
+		got := warnings(logs())
+		if len(got) != 1 || strings.Contains(got[0], "zz") || strings.Contains(got[0], "secret") {
+			t.Errorf("want one warning that does not quote the value, got %q", got)
+		}
+	})
+
+	for name, opts := range map[string][]webhook.HandlerOption{
+		"alone":                     {webhook.WithPublicKey(malformed)},
+		"with empty WithPublicKeys": {webhook.WithPublicKey(malformed), webhook.WithPublicKeys("")},
+		"not hex, with empty list":  {webhook.WithPublicKey("not-hex"), webhook.WithPublicKeys()},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := webhook.NewHandler(opts...)
+			if !errors.Is(err, errors.ErrInvalidConfig) {
+				t.Errorf("got %v, want ErrInvalidConfig", err)
+			}
+		})
+	}
+}
+
+// A configuration that NewHandler rejects logs nothing about ignoring
+// WithPublicKey: there is no handler for the warning to describe.
+func TestHandler_NoConfigWarningWhenNewHandlerFails(t *testing.T) {
+	retired, current := newRotationKey(t), newRotationKey(t)
+	logOpt, logs := recordLogs()
+	_, err := webhook.NewHandler(
+		webhook.WithPublicKey(retired.hex),
+		webhook.WithPublicKeys(current.hex),
+		webhook.WithChannel(1),
+		webhook.OnDefault(func(context.Context, webhook.Event) error { return nil }),
+		logOpt,
+	)
+	if !errors.Is(err, errors.ErrInvalidConfig) {
+		t.Fatalf("got %v, want ErrInvalidConfig", err)
+	}
+	if got := warnings(logs()); len(got) != 0 {
+		t.Errorf("got warnings %q, want none", got)
+	}
+}
+
+// A listener's logger reaches its handler, so listener users see the warning
+// about an ignored WithPublicKey; a logger given to the handler itself wins.
+func TestListener_HandlerLogsThroughListenerLogger(t *testing.T) {
+	retired, current := newRotationKey(t), newRotationKey(t)
+	keys := []webhook.HandlerOption{
+		webhook.WithPublicKey(retired.hex),
+		webhook.WithPublicKeys(current.hex),
+	}
+	want := "Dakota webhook handler: ignoring the WithPublicKey option (key id " +
+		retired.id + ") because WithPublicKeys is set; " +
+		"add that key to WithPublicKeys if you still need it"
+
+	t.Run("listener logger only", func(t *testing.T) {
+		listenerLogger, listenerLogs := recordingLogger()
+		l, err := webhook.NewListener(
+			webhook.WithAddr("127.0.0.1:0"),
+			webhook.WithListenerLogger(listenerLogger),
+			webhook.WithHandlerOptions(keys...),
+		)
+		if err != nil {
+			t.Fatalf("NewListener: %v", err)
+		}
+		defer l.Close()
+		if got := warnings(listenerLogs()); len(got) != 1 || got[0] != want {
+			t.Errorf("listener logger warnings:\n got %q\nwant [%q]", got, want)
+		}
+	})
+
+	t.Run("handler logger set too", func(t *testing.T) {
+		listenerLogger, listenerLogs := recordingLogger()
+		handlerLog, handlerLogs := recordLogs()
+		l, err := webhook.NewListener(
+			webhook.WithAddr("127.0.0.1:0"),
+			webhook.WithHandlerOptions(append(keys, handlerLog)...),
+			webhook.WithListenerLogger(listenerLogger),
+		)
+		if err != nil {
+			t.Fatalf("NewListener: %v", err)
+		}
+		defer l.Close()
+		if got := warnings(handlerLogs()); len(got) != 1 || got[0] != want {
+			t.Errorf("handler logger warnings:\n got %q\nwant [%q]", got, want)
+		}
+		if got := warnings(listenerLogs()); len(got) != 0 {
+			t.Errorf("listener logger got %q, want nothing", got)
+		}
+	})
 }

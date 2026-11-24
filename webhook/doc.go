@@ -61,5 +61,6 @@
 // publishes it, and remove the old one as soon as Dakota retires it. The
 // handler and [Verifier] check X-Dakota-Webhook-Signatures, each trusted key at
 // most once, and fall back to X-Webhook-Signature only when that header is
-// missing or empty.
+// missing or empty. Once [WithPublicKeys] gives a key, [WithPublicKey] is
+// ignored, so a key removed from the list is no longer trusted.
 package webhook
