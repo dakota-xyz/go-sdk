@@ -377,6 +377,12 @@ func TestHandler_NoConfigWarning(t *testing.T) {
 			webhook.WithPublicKey(key.hex),
 			webhook.WithPublicKeys(other.hex + ", " + strings.ToUpper(key.hex)),
 		},
+		// The list ignores spaces around a key, so the same key with spaces
+		// around it is still the listed key.
+		"WithPublicKey with spaces, listed in WithPublicKeys": {
+			webhook.WithPublicKey(" " + key.hex + "\n"),
+			webhook.WithPublicKeys(key.hex),
+		},
 		"WithPublicKeys only":                     {webhook.WithPublicKeys(key.hex, other.hex)},
 		"WithPublicKey only":                      {webhook.WithPublicKey(key.hex)},
 		"WithPublicKey plus empty WithPublicKeys": {webhook.WithPublicKey(key.hex), webhook.WithPublicKeys("")},

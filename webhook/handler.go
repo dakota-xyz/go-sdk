@@ -315,7 +315,9 @@ func warnIgnoredPublicKey(
 	listed []ed25519.PublicKey,
 ) {
 	ctx := context.Background()
-	legacy, err := ParsePublicKey(publicKeyHex)
+	// Trim like the WithPublicKeys parser does, so the same key with spaces
+	// around it counts as listed.
+	legacy, err := ParsePublicKey(strings.TrimSpace(publicKeyHex))
 	if err != nil {
 		// ParsePublicKey's error can quote part of the value; give our own.
 		logger.Warn(ctx, fmt.Sprintf(
