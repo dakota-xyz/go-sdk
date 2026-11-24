@@ -123,7 +123,7 @@ func NewListener(opts ...ListenerOption) (*Listener, error) {
 	if len(cfg.handlerOpts) == 0 {
 		return nil, errors.New(
 			errors.CodeInvalidConfig,
-			"handler options are required (at minimum WithPublicKey)",
+			"handler options are required (at minimum WithPublicKeys or WithPublicKey)",
 		)
 	}
 	if !strings.HasPrefix(cfg.path, "/") {

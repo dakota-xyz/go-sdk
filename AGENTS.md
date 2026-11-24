@@ -302,17 +302,28 @@ if err != nil {
 ## Webhook Handling
 
 ```go
-import "github.com/dakota-xyz/go-sdk/webhook"
+import (
+    "log"
+    "os"
 
-handler, _ := webhook.NewHandler(
-    webhook.WithPublicKey("public_key_hex"),
+    "github.com/dakota-xyz/go-sdk/webhook"
+)
+
+handler, err := webhook.NewHandler(
+    // Comma-separated hex keys; a list survives Dakota's signing-key rotation.
+    webhook.WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS")),
     webhook.OnDefault(func(ctx context.Context, event webhook.Event) error {
         // Handle event
         return nil
     }),
 )
+if err != nil {
+    log.Fatal(err) // e.g. DAKOTA_WEBHOOK_PUBLIC_KEYS unset or malformed
+}
 http.Handle("/webhooks", handler)
 ```
+
+Key rotation: trust every key in `DAKOTA_WEBHOOK_PUBLIC_KEYS` (`WithPublicKeys`, or `webhook.NewVerifier(...)` then `v.ConstructEvent(body, r.Header)` outside a handler). The SDK checks `X-Dakota-Webhook-Signatures` (`<8-hex key id>:<base64 sig>` entries), each trusted key at most once, and falls back to `X-Webhook-Signature` only when that header is missing or empty. `WithPublicKey` (one key) still works but stops verifying at cutover.
 
 Typed payloads live in `webhook/types`; decode with `webhook.EventDataAs[T](event)`. Onboarding lifecycle events a client integration must handle:
 

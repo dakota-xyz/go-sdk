@@ -58,8 +58,11 @@ func IgnoringTolerance() ConstructOption {
 }
 
 // ConstructEvent verifies the signature, validates the timestamp, and parses
-// the event in a single call. This is the recommended all-in-one function for
-// processing incoming webhooks.
+// the event in a single call, with one public key and the
+// X-Webhook-Signature header only. That header switches to Dakota's new key
+// at a key cutover, with no overlap, so a single-key integration stops
+// verifying then. Prefer [Verifier.ConstructEvent], which trusts a list of
+// keys and reads X-Dakota-Webhook-Signatures.
 func ConstructEvent(
 	payload []byte,
 	signatureHeader string,

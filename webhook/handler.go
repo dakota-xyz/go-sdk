@@ -5,6 +5,8 @@ import (
 	"crypto/ed25519"
 	"io"
 	"net/http"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,6 +43,7 @@ const (
 
 type handlerConfig struct {
 	publicKeyHex   string
+	publicKeysHex  []string
 	tolerance      time.Duration
 	maxPayloadSize int64
 	ackPolicy      AckPolicy
@@ -51,13 +54,37 @@ type handlerConfig struct {
 	channelBuf     int
 	useChannel     bool
 	hasCallbacks   bool
+	hasPublicKeys  bool
 }
 
 // WithPublicKey sets the hex-encoded Ed25519 public key used for signature
-// verification. This option is required.
+// verification. WithPublicKey or [WithPublicKeys] is required.
+//
+// To keep verifying while Dakota rotates its signing key, use
+// [WithPublicKeys] with every key you trust. Keys given to both options are
+// all trusted.
 func WithPublicKey(hexKey string) HandlerOption {
 	return func(c *handlerConfig) {
 		c.publicKeyHex = hexKey
+	}
+}
+
+// WithPublicKeys adds hex-encoded Ed25519 public keys to trust. A delivery
+// is accepted if any trusted key signed it (see [Verifier.Verify]). Each
+// argument may be one key or a comma-separated list, so the value of a
+// DAKOTA_WEBHOOK_PUBLIC_KEYS environment variable can be passed as is:
+//
+//	webhook.WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS"))
+//
+// During a key rotation, trust the current key and the new one; remove the
+// old key once Dakota retires it. [NewHandler] fails if a key is malformed,
+// or if neither WithPublicKeys nor [WithPublicKey] gives a key. An empty list
+// alongside WithPublicKey is allowed, so a new variable can be added before it
+// is set.
+func WithPublicKeys(hexKeys ...string) HandlerOption {
+	return func(c *handlerConfig) {
+		c.publicKeysHex = append(c.publicKeysHex, hexKeys...)
+		c.hasPublicKeys = true
 	}
 }
 
@@ -125,7 +152,7 @@ func WithChannel(bufferSize int) HandlerOption {
 // Handler is an http.Handler that verifies, parses, and dispatches webhook
 // events.
 type Handler struct {
-	publicKey      ed25519.PublicKey
+	verifier       *Verifier
 	tolerance      time.Duration
 	maxPayloadSize int64
 	ackPolicy      AckPolicy
@@ -156,7 +183,7 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 		opt(cfg)
 	}
 
-	if cfg.publicKeyHex == "" {
+	if cfg.publicKeyHex == "" && !cfg.hasPublicKeys {
 		return nil, errors.New(
 			errors.CodeInvalidConfig,
 			"public key is required",
@@ -184,10 +211,38 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 		cfg.logger = log.Nop()
 	}
 
-	// Parse and validate public key eagerly.
-	pubKey, err := ParsePublicKey(cfg.publicKeyHex)
-	if err != nil {
-		return nil, err
+	// Parse and validate public keys eagerly.
+	var keys []ed25519.PublicKey
+	if cfg.publicKeyHex != "" {
+		pubKey, err := ParsePublicKey(cfg.publicKeyHex)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, pubKey)
+	}
+	if cfg.hasPublicKeys {
+		// An empty list (an unset environment variable) is allowed here as
+		// long as WithPublicKey gave a key; the check below requires one
+		// key overall.
+		more, err := parsePublicKeyList(cfg.publicKeysHex...)
+		if err != nil {
+			return nil, err
+		}
+		// parsePublicKeyList drops duplicates within the list; this also
+		// drops the WithPublicKey key if the list repeats it.
+		for _, key := range more {
+			if !slices.ContainsFunc(keys, func(k ed25519.PublicKey) bool {
+				return k.Equal(key)
+			}) {
+				keys = append(keys, key)
+			}
+		}
+	}
+	if len(keys) == 0 {
+		return nil, errors.New(
+			errors.CodeInvalidConfig,
+			"at least one webhook public key is required (WithPublicKeys was given none)",
+		)
 	}
 
 	if cfg.useChannel && cfg.hasCallbacks {
@@ -204,7 +259,7 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 	}
 
 	h := &Handler{
-		publicKey:      pubKey,
+		verifier:       newVerifierFromKeys(keys),
 		tolerance:      cfg.tolerance,
 		maxPayloadSize: cfg.maxPayloadSize,
 		ackPolicy:      cfg.ackPolicy,
@@ -278,9 +333,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Extract headers.
+	// 3. Extract headers. Several X-Dakota-Webhook-Signatures lines (a proxy
+	// may split the list) are joined into one list.
+	sigsHeader := signaturesHeaderValue(r.Header)
 	sigHeader := r.Header.Get(SignatureHeader)
-	if sigHeader == "" {
+	if strings.TrimSpace(sigsHeader) == "" && strings.TrimSpace(sigHeader) == "" {
 		h.logger.Warn(ctx, "missing signature header")
 		http.Error(w, "missing signature header", http.StatusBadRequest)
 		return
@@ -292,12 +349,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Verify signature.
-	if err := verifySignatureWithPublicKey(
+	// 4. Verify signature against the trusted keys.
+	if err := h.verifier.Verify(
 		body,
-		sigHeader,
 		tsHeader,
-		h.publicKey,
+		sigsHeader,
+		sigHeader,
 	); err != nil {
 		h.logger.Warn(ctx, "signature verification failed", log.Err(err))
 		http.Error(w, "unauthorized", http.StatusUnauthorized)

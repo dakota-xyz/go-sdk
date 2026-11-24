@@ -35,6 +35,38 @@ func ExampleVerifySignature() {
 	fmt.Println("signature valid")
 }
 
+func ExampleNewVerifier() {
+	// Trust every Dakota public key listed for your environment, for example
+	// DAKOTA_WEBHOOK_PUBLIC_KEYS="<current key>,<new key>" during a rotation.
+	current, currentPriv, _ := ed25519.GenerateKey(nil)
+	next, _, _ := ed25519.GenerateKey(nil)
+	v, err := webhook.NewVerifier(
+		hex.EncodeToString(current) + "," + hex.EncodeToString(next),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// A delivery as Dakota sends it.
+	body := []byte(`{"id":"evt_123","type":"customer.created","created":1705315500,"data":{"object":{"name":"Acme"}}}`)
+	timestamp := fmt.Sprintf("%d", time.Now().Unix())
+	header := http.Header{}
+	header.Set(webhook.TimestampHeader, timestamp)
+	header.Set(
+		webhook.SignaturesHeader,
+		webhook.KeyID(current)+":"+webhook.ComputeSignature(timestamp, body, currentPriv),
+	)
+
+	// Verify against the trusted keys, check the timestamp, and parse.
+	event, err := v.ConstructEvent(body, header)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Event: %s (trusted keys: %d)\n", event.ID, len(v.KeyIDs()))
+	// Output: Event: evt_123 (trusted keys: 2)
+}
+
 func ExampleConstructEvent() {
 	// Generate a test key pair for this example.
 	pub, priv, _ := ed25519.GenerateKey(nil)

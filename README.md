@@ -526,6 +526,7 @@ import (
     "context"
     "fmt"
     "net/http"
+    "os"
 
     "github.com/dakota-xyz/go-sdk/webhook"
     "github.com/dakota-xyz/go-sdk/webhook/idempotency"
@@ -534,7 +535,9 @@ import (
 
 func main() {
     handler, err := webhook.NewHandler(
-        webhook.WithPublicKey("your_webhook_public_key_hex"),
+        // Every Dakota public key you trust, comma-separated hex. A list keeps
+        // you verifying while Dakota rotates its signing key.
+        webhook.WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS")),
         webhook.WithIdempotencyStore(idempotency.NewMemoryStore()),
 
         // Handle specific event types
@@ -579,6 +582,39 @@ func main() {
     http.Handle("/webhooks/dakota", handler)
     http.ListenAndServe(":8080", nil)
 }
+```
+
+### Signing key rotation
+
+Dakota signs every webhook with Ed25519 and can rotate its signing key without
+downtime for receivers that trust a **list** of keys. Set
+`DAKOTA_WEBHOOK_PUBLIC_KEYS` to the keys from
+[Dakota Public Keys](https://docs.dakota.xyz/documentation/webhooks#dakota-public-keys)
+and pass it to `webhook.WithPublicKeys` (or `webhook.NewVerifier`):
+
+| Phase | What you do |
+|-------|-------------|
+| Normal | `DAKOTA_WEBHOOK_PUBLIC_KEYS=<current key>` |
+| Overlap | When Dakota publishes the new key, add it: `DAKOTA_WEBHOOK_PUBLIC_KEYS=<current key>,<new key>` |
+| Cutover | Nothing, if you already trust the new key |
+| Retire | Remove the old key as soon as Dakota retires it |
+
+The SDK verifies the `X-Dakota-Webhook-Signatures` header (one
+`<key id>:<base64 signature>` entry per Dakota signing key) and falls back to
+`X-Webhook-Signature` only when that header is missing or empty. Only trust
+keys listed on docs.dakota.xyz. `webhook.WithPublicKey` (one key) still works,
+but its key stops verifying at cutover.
+
+Outside an `http.Handler`, use a `Verifier`:
+
+```go
+v, err := webhook.NewVerifier(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS"))
+if err != nil {
+    log.Fatal(err)
+}
+log.Printf("trusting webhook keys %v", v.KeyIDs()) // key ids are safe to log
+
+event, err := v.ConstructEvent(body, r.Header) // verify, check timestamp, parse
 ```
 
 ## Pagination
