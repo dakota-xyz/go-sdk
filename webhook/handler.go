@@ -3,8 +3,10 @@ package webhook
 import (
 	"context"
 	"crypto/ed25519"
+	stderrors "errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"slices"
 	"strings"
@@ -292,6 +294,18 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 	return h, nil
 }
 
+// logReason is the "error" attribute for a rejected delivery: the SDK error's
+// code and message without its wrapped cause. Causes from strconv and
+// encoding/json quote parts of the request (a timestamp, a character or a
+// number from the body), and integrators may ship these logs to third parties.
+func logReason(err error) slog.Attr {
+	var sdkErr *errors.Error
+	if stderrors.As(err, &sdkErr) {
+		return log.String("error", string(sdkErr.Code)+": "+sdkErr.Message)
+	}
+	return log.String("error", "rejected")
+}
+
 // warnIgnoredPublicKey logs, once, that the WithPublicKey key is ignored
 // because WithPublicKeys gave keys, unless WithPublicKeys lists it too. It
 // names the key by its id at most, never its value.
@@ -402,14 +416,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sigsHeader,
 		sigHeader,
 	); err != nil {
-		h.logger.Warn(ctx, "signature verification failed", log.Err(err))
+		h.logger.Warn(ctx, "signature verification failed", logReason(err))
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// 5. Validate timestamp.
 	if err := ValidateTimestamp(tsHeader, h.tolerance); err != nil {
-		h.logger.Warn(ctx, "timestamp validation failed", log.Err(err))
+		h.logger.Warn(ctx, "timestamp validation failed", logReason(err))
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -417,7 +431,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 6. Parse event.
 	event, err := ParseEvent(body)
 	if err != nil {
-		h.logger.Warn(ctx, "event parse failed", log.Err(err))
+		h.logger.Warn(ctx, "event parse failed", logReason(err))
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}

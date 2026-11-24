@@ -36,6 +36,10 @@ before upgrading, or deliveries signed with it get 401.
   listener users see the warning above, and the handler's existing request
   warnings (rejected signatures, bad timestamps, callback errors) that were
   silent before. A `WithLogger` among `WithHandlerOptions` still wins.
+- A rejected delivery is logged with the reason only (error code and
+  message). The underlying JSON or timestamp parse error, which can quote a
+  character or number from the body or the timestamp header, is no longer
+  logged; the body and signature headers never were.
 
 ## [0.5.0] - 2026-11-24
 
