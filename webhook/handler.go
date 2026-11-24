@@ -3,6 +3,7 @@ package webhook
 import (
 	"context"
 	"crypto/ed25519"
+	"fmt"
 	"io"
 	"net/http"
 	"slices"
@@ -61,8 +62,14 @@ type handlerConfig struct {
 // verification. WithPublicKey or [WithPublicKeys] is required.
 //
 // To keep verifying while Dakota rotates its signing key, use
-// [WithPublicKeys] with every key you trust. Keys given to both options are
-// all trusted.
+// [WithPublicKeys] with every key you trust. WithPublicKey is ignored when
+// WithPublicKeys gives at least one key, so removing a retired key from
+// WithPublicKeys always stops trusting it; if that key is not also listed in
+// WithPublicKeys, [NewHandler] logs one warning naming its key id (never the
+// key) through the handler's logger ([WithLogger]; silent by default).
+// WithPublicKey is used only when WithPublicKeys is not given or is empty, for
+// example an unset environment variable. A malformed key fails [NewHandler]
+// only then; otherwise it is ignored with a warning that does not quote it.
 func WithPublicKey(hexKey string) HandlerOption {
 	return func(c *handlerConfig) {
 		c.publicKeyHex = hexKey
@@ -77,10 +84,12 @@ func WithPublicKey(hexKey string) HandlerOption {
 //	webhook.WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS"))
 //
 // During a key rotation, trust the current key and the new one; remove the
-// old key once Dakota retires it. [NewHandler] fails if a key is malformed,
-// or if neither WithPublicKeys nor [WithPublicKey] gives a key. An empty list
+// old key once Dakota retires it. When WithPublicKeys gives at least one key,
+// only its keys are trusted and [WithPublicKey] is ignored (with a warning if
+// it names another key). [NewHandler] fails if a WithPublicKeys key is
+// malformed, or if neither WithPublicKeys nor [WithPublicKey] gives a key. An empty list
 // alongside WithPublicKey is allowed, so a new variable can be added before it
-// is set.
+// is set; WithPublicKey's key is then trusted as before.
 func WithPublicKeys(hexKeys ...string) HandlerOption {
 	return func(c *handlerConfig) {
 		c.publicKeysHex = append(c.publicKeysHex, hexKeys...)
@@ -183,6 +192,8 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 		opt(cfg)
 	}
 
+	// Neither option given. (Both given but empty is caught below, with a
+	// message that points at the empty WithPublicKeys.)
 	if cfg.publicKeyHex == "" && !cfg.hasPublicKeys {
 		return nil, errors.New(
 			errors.CodeInvalidConfig,
@@ -211,34 +222,32 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 		cfg.logger = log.Nop()
 	}
 
-	// Parse and validate public keys eagerly.
+	// Parse and validate public keys eagerly. WithPublicKeys decides what is
+	// trusted whenever it gives a key; WithPublicKey is used only when it
+	// does not (it was not given, or is empty, such as an unset environment
+	// variable). Never trusting both means removing a retired key from
+	// WithPublicKeys always stops trusting it.
 	var keys []ed25519.PublicKey
-	if cfg.publicKeyHex != "" {
+	if cfg.hasPublicKeys {
+		listed, err := parsePublicKeyList(cfg.publicKeysHex...)
+		if err != nil {
+			return nil, err
+		}
+		keys = listed
+	}
+	// Warned about once the handler is built, so a config that fails below
+	// logs nothing about a handler that never exists.
+	ignoresPublicKey := false
+	switch {
+	case len(keys) > 0:
+		ignoresPublicKey = cfg.publicKeyHex != ""
+	case cfg.publicKeyHex != "":
 		pubKey, err := ParsePublicKey(cfg.publicKeyHex)
 		if err != nil {
 			return nil, err
 		}
-		keys = append(keys, pubKey)
-	}
-	if cfg.hasPublicKeys {
-		// An empty list (an unset environment variable) is allowed here as
-		// long as WithPublicKey gave a key; the check below requires one
-		// key overall.
-		more, err := parsePublicKeyList(cfg.publicKeysHex...)
-		if err != nil {
-			return nil, err
-		}
-		// parsePublicKeyList drops duplicates within the list; this also
-		// drops the WithPublicKey key if the list repeats it.
-		for _, key := range more {
-			if !slices.ContainsFunc(keys, func(k ed25519.PublicKey) bool {
-				return k.Equal(key)
-			}) {
-				keys = append(keys, key)
-			}
-		}
-	}
-	if len(keys) == 0 {
+		keys = []ed25519.PublicKey{pubKey}
+	default:
 		return nil, errors.New(
 			errors.CodeInvalidConfig,
 			"at least one webhook public key is required (WithPublicKeys was given none)",
@@ -276,7 +285,43 @@ func NewHandler(opts ...HandlerOption) (*Handler, error) {
 		h.mode = deliveryCallback
 	}
 
+	if ignoresPublicKey {
+		warnIgnoredPublicKey(cfg.logger, cfg.publicKeyHex, keys)
+	}
 	return h, nil
+}
+
+// warnIgnoredPublicKey logs, once, that the WithPublicKey key is ignored
+// because WithPublicKeys gave keys, unless WithPublicKeys lists it too. It
+// names the key by its id at most, never its value.
+func warnIgnoredPublicKey(
+	logger log.Logger,
+	publicKeyHex string,
+	listed []ed25519.PublicKey,
+) {
+	ctx := context.Background()
+	legacy, err := ParsePublicKey(publicKeyHex)
+	if err != nil {
+		// ParsePublicKey's error can quote part of the value; give our own.
+		logger.Warn(ctx, fmt.Sprintf(
+			"Dakota webhook handler: ignoring the WithPublicKey option "+
+				"(the WithPublicKey key is not 64 hex characters); "+
+				"verifying with the %d key(s) in WithPublicKeys",
+			len(listed),
+		))
+		return
+	}
+	if slices.ContainsFunc(listed, func(k ed25519.PublicKey) bool {
+		return k.Equal(legacy)
+	}) {
+		return
+	}
+	logger.Warn(ctx, fmt.Sprintf(
+		"Dakota webhook handler: ignoring the WithPublicKey option (key id %s) "+
+			"because WithPublicKeys is set; add that key to WithPublicKeys "+
+			"if you still need it",
+		KeyID(legacy),
+	))
 }
 
 // Events returns the event channel. Returns nil if the handler is not in

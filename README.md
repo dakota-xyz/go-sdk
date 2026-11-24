@@ -605,6 +605,15 @@ The SDK verifies the `X-Dakota-Webhook-Signatures` header (one
 keys listed on docs.dakota.xyz. `webhook.WithPublicKey` (one key) still works,
 but its key stops verifying at cutover.
 
+Once `WithPublicKeys` has at least one key, `WithPublicKey` is ignored, so
+removing a retired key from `DAKOTA_WEBHOOK_PUBLIC_KEYS` always stops trusting
+it, even if an old `WithPublicKey` setting still names it. The handler logs one
+warning naming that key's id (never the key) unless the list includes it too;
+it goes to the logger set with `webhook.WithLogger` (none by default).
+`WithPublicKey` applies only while the list is empty or not given, so you can
+add `WithPublicKeys(os.Getenv("DAKOTA_WEBHOOK_PUBLIC_KEYS"))` before the
+variable is set.
+
 Outside an `http.Handler`, use a `Verifier`:
 
 ```go
