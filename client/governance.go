@@ -52,6 +52,11 @@ var (
 	// ErrStaleSignerGroupVersion (409): the group changed since the
 	// signatures were made. Prepare again and re-sign.
 	ErrStaleSignerGroupVersion = &ProblemCodeError{Status: 409, Code: "stale_signer_group_version", Message: "the group changed since the signatures were made; prepare and sign again"}
+	// ErrStalePolicyVersion (409): a policy attach or detach carried the
+	// policy's version (WithPolicyVersion), and the policy changed after the
+	// signatures were made. Nothing changed. Read the policy again, check its
+	// rules, and sign again under a new idempotency key.
+	ErrStalePolicyVersion = &ProblemCodeError{Status: 409, Code: "stale_policy_version", Message: "the policy changed since the signatures were made; read it again and sign again"}
 	// ErrBelowThreshold (422): the removal would leave the group below a
 	// threshold it must keep (at least one member, its governance quorum, or
 	// a governed group's threshold).

@@ -515,6 +515,37 @@ resp, err := client.CheckResponse(c.Raw().CreateDestinationWithResponse(ctx, rec
 
 A runnable sandbox walk-through is in [`cmd/signer-group-governance`](cmd/signer-group-governance).
 
+### Attaching or detaching a policy at a known version
+
+A policy attach or detach can carry the policy's version, so the signatures approve the rules the signers saw. If the policy changes after they sign (a rule added, changed or removed, or its signer group or endorser scope changed), the platform refuses the request with `409 stale_policy_version` and nothing changes. Without the version, the attach or detach is signed and checked as before.
+
+```go
+policy, err := client.CheckResponse(c.Raw().GetPolicyWithResponse(ctx, policyID))
+version := policy.JSON200.Version // show the signers the rules at this version
+
+key := uuid.New()
+payload, err := client.AttachPolicyPayload(walletID, policyID, key.String(), client.WithPolicyVersion(version))
+sig, err := client.ES256IntentSigner(signer).SignIntent(ctx, payload)
+
+var body gen.EndorsedRequest
+err = body.Intent.FromAttachPolicyToWalletIntent(gen.AttachPolicyToWalletIntent{
+    Type:           gen.AttachPolicyToWalletIntentTypeAttachPolicyToWallet,
+    WalletId:       walletID,
+    PolicyId:       policyID,
+    IdempotencyKey: key.String(),
+    PolicyVersion:  &version, // exactly as signed
+})
+body.Signatures = []string{sig}
+_, err = client.CheckResponse(c.Raw().UpsertPolicyWalletRelationshipWithResponse(ctx, policyID, walletID,
+    &gen.UpsertPolicyWalletRelationshipParams{XIdempotencyKey: key}, body))
+if errors.Is(err, client.ErrStalePolicyVersion) {
+    // The policy changed after the signatures were made. Read it again, show
+    // the signers the new rules, and sign again under a new idempotency key.
+}
+```
+
+`DetachPolicyPayload` takes the same option, with `FromDetachPolicyFromWalletIntent` and `DeletePolicyWalletRelationshipWithResponse`. Send `PolicyVersion` exactly when you signed with `WithPolicyVersion`: the signed bytes must match the request.
+
 ## Handling Webhooks
 
 Dakota sends webhooks for all status changes. Set up a handler:

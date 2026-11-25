@@ -181,16 +181,64 @@ func AttachGroupPayload(walletID, groupID, idempotencyKey string) ([]byte, error
 	})
 }
 
-// AttachPolicyPayload is the canonical bytes a recognized wallet signer endorses
-// to attach a policy to a wallet — JCS JSON of
-// {type:"attach_policy_to_wallet", wallet_id, policy_id, idempotency_key}.
-func AttachPolicyPayload(walletID, policyID, idempotencyKey string) ([]byte, error) {
-	return canonicalJSON(map[string]any{
-		"type":            "attach_policy_to_wallet",
+// PolicyPayloadOption adds an optional field to AttachPolicyPayload or
+// DetachPolicyPayload.
+type PolicyPayloadOption func(*policyPayloadOptions)
+
+type policyPayloadOptions struct {
+	policyVersion *int32
+}
+
+// WithPolicyVersion binds the policy's version into a signed policy attach or
+// detach. Read it from the policy first (GET /policies/{policy_id}, field
+// "version") and show the signers the rules at that version. The version is
+// part of the signed bytes, so send the same value as the intent's
+// policy_version.
+//
+// If the policy changes after the signatures are made (a rule added, changed
+// or removed, or its signer group or endorser scope changed), the request is
+// refused with 409 stale_policy_version (ErrStalePolicyVersion) and nothing
+// changes: read the policy again, and sign again under a new idempotency key.
+// Without this option the payload is the one signed before policy versions
+// existed, and the attach or detach does not check the version.
+//
+// Versions start at 1; a version below 1 makes the payload helper return an
+// error.
+func WithPolicyVersion(version int32) PolicyPayloadOption {
+	return func(o *policyPayloadOptions) { o.policyVersion = &version }
+}
+
+// policyPayload builds the attach/detach canonical bytes. policy_version is
+// added only when an option sets it, which matches the policy engine's
+// reconstruction: an intent without it signs exactly the bytes it always has.
+func policyPayload(intentType, walletID, policyID, idempotencyKey string, opts []PolicyPayloadOption) ([]byte, error) {
+	var o policyPayloadOptions
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&o)
+		}
+	}
+	m := map[string]any{
+		"type":            intentType,
 		"wallet_id":       walletID,
 		"policy_id":       policyID,
 		"idempotency_key": idempotencyKey,
-	})
+	}
+	if o.policyVersion != nil {
+		if *o.policyVersion < 1 {
+			return nil, fmt.Errorf("policy version must be 1 or greater, got %d", *o.policyVersion)
+		}
+		m["policy_version"] = *o.policyVersion
+	}
+	return canonicalJSON(m)
+}
+
+// AttachPolicyPayload is the canonical bytes a recognized wallet signer endorses
+// to attach a policy to a wallet — JCS JSON of
+// {type:"attach_policy_to_wallet", wallet_id, policy_id, idempotency_key}, plus
+// policy_version when WithPolicyVersion is given.
+func AttachPolicyPayload(walletID, policyID, idempotencyKey string, opts ...PolicyPayloadOption) ([]byte, error) {
+	return policyPayload("attach_policy_to_wallet", walletID, policyID, idempotencyKey, opts)
 }
 
 // The remaining endorsed-intent payloads complete the wallet/policy mutation
@@ -214,14 +262,10 @@ func DetachGroupPayload(walletID, groupID, idempotencyKey string) ([]byte, error
 
 // DetachPolicyPayload is the canonical bytes a recognized wallet signer endorses
 // to remove a policy from a wallet — the inverse of AttachPolicyPayload.
-// JCS JSON of {type:"detach_policy_from_wallet", wallet_id, policy_id, idempotency_key}.
-func DetachPolicyPayload(walletID, policyID, idempotencyKey string) ([]byte, error) {
-	return canonicalJSON(map[string]any{
-		"type":            "detach_policy_from_wallet",
-		"wallet_id":       walletID,
-		"policy_id":       policyID,
-		"idempotency_key": idempotencyKey,
-	})
+// JCS JSON of {type:"detach_policy_from_wallet", wallet_id, policy_id, idempotency_key},
+// plus policy_version when WithPolicyVersion is given.
+func DetachPolicyPayload(walletID, policyID, idempotencyKey string, opts ...PolicyPayloadOption) ([]byte, error) {
+	return policyPayload("detach_policy_from_wallet", walletID, policyID, idempotencyKey, opts)
 }
 
 // DeletePolicyPayload is the canonical bytes a member of the policy's governing

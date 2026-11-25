@@ -186,6 +186,7 @@ Groups with governance settings (and every group of a client with governance enf
 - `DeletePolicyRuleWithResponse(ctx, policyID, params, request)`
 - `UpsertPolicyWalletRelationshipWithResponse(ctx, policyID, params, request)`
 - `DeletePolicyWalletRelationshipWithResponse(ctx, policyID, params, request)`
+- Signed attach/detach payloads: `client.AttachPolicyPayload(walletID, policyID, key, client.WithPolicyVersion(v))` / `client.DetachPolicyPayload(...)`. `WithPolicyVersion` is optional; when used, read `v` from `GetPolicyWithResponse` (`JSON200.Version`) and send the same value as the intent's `PolicyVersion`. A stale version is `errors.Is(err, client.ErrStalePolicyVersion)` (409 `stale_policy_version`): read the policy again and re-sign under a new key
 
 ### Applications (KYB/KYC)
 - `ListApplicationsWithResponse(ctx, params)`
