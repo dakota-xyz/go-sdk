@@ -532,21 +532,29 @@ if err != nil {
     return err
 }
 sig, err := client.ES256IntentSigner(signer).SignIntent(ctx, payload)
+if err != nil {
+    return err
+}
 
 var body gen.EndorsedRequest
-err = body.Intent.FromAttachPolicyToWalletIntent(gen.AttachPolicyToWalletIntent{
+if err := body.Intent.FromAttachPolicyToWalletIntent(gen.AttachPolicyToWalletIntent{
     Type:           gen.AttachPolicyToWalletIntentTypeAttachPolicyToWallet,
     WalletId:       walletID,
     PolicyId:       policyID,
     IdempotencyKey: key.String(),
     PolicyVersion:  &version, // exactly as signed
-})
+}); err != nil {
+    return err
+}
 body.Signatures = []string{sig}
 _, err = client.CheckResponse(c.Raw().UpsertPolicyWalletRelationshipWithResponse(ctx, policyID, walletID,
     &gen.UpsertPolicyWalletRelationshipParams{XIdempotencyKey: key}, body))
 if errors.Is(err, client.ErrStalePolicyVersion) {
     // The policy changed after the signatures were made. Read it again, show
     // the signers the new rules, and sign again under a new idempotency key.
+}
+if err != nil {
+    return err
 }
 ```
 

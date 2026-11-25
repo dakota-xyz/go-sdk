@@ -7,8 +7,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
+	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
@@ -28,13 +30,20 @@ func TestPolicyAttachDetach_PolicyVersionOnTheWire(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	var got []map[string]any
+	// The handler runs on the server's goroutine: it records what it saw
+	// under a lock and answers, and the test goroutine asserts afterwards.
+	var (
+		mu  sync.Mutex
+		got []map[string]any
+	)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		var body map[string]any
-		require.NoError(t, json.Unmarshal(raw, &body))
+		_ = json.Unmarshal(raw, &body) // a bad body fails the assertions below
+		mu.Lock()
 		got = append(got, body)
-		intent := body["intent"].(map[string]any)
+		mu.Unlock()
+		intent, _ := body["intent"].(map[string]any)
 		if _, ok := intent["policy_version"]; ok {
 			w.Header().Set("Content-Type", "application/problem+json")
 			w.WriteHeader(http.StatusConflict)
@@ -73,9 +82,59 @@ func TestPolicyAttachDetach_PolicyVersionOnTheWire(t *testing.T) {
 		&gen.DeletePolicyWalletRelationshipParams{XIdempotencyKey: params.XIdempotencyKey}, detach))
 	require.NoError(t, err)
 
+	mu.Lock()
+	defer mu.Unlock()
 	require.Len(t, got, 2)
-	require.Equal(t, float64(3), got[0]["intent"].(map[string]any)["policy_version"])
-	require.NotContains(t, got[1]["intent"].(map[string]any), "policy_version", "an intent without a version must not send the key")
+	attachSent, ok := got[0]["intent"].(map[string]any)
+	require.True(t, ok, "attach body has no intent object: %v", got[0])
+	detachSent, ok := got[1]["intent"].(map[string]any)
+	require.True(t, ok, "detach body has no intent object: %v", got[1])
+	require.Equal(t, float64(3), attachSent["policy_version"])
+	require.NotContains(t, detachSent, "policy_version", "an intent without a version must not send the key")
+}
+
+// TestPolicyIntents_SentIntentMatchesSignedPayload: the caller gives the
+// version twice, once to WithPolicyVersion (the signed bytes) and once as the
+// generated intent's PolicyVersion (what is sent). The platform verifies the
+// signature over the intent it receives, so the canonical form of the sent
+// intent must be exactly the bytes the payload helper produced. This pins it
+// for both intents, with and without a version, so a change to either side
+// (the helper or the generated struct) fails here instead of at the platform.
+func TestPolicyIntents_SentIntentMatchesSignedPayload(t *testing.T) {
+	t.Parallel()
+	version := int32(5)
+	for _, tc := range []struct {
+		name    string
+		payload func() ([]byte, error)
+		intent  any
+	}{
+		{"attach with version",
+			func() ([]byte, error) {
+				return AttachPolicyPayload("wal-1", "pol-1", "key-1", WithPolicyVersion(version))
+			},
+			gen.AttachPolicyToWalletIntent{Type: gen.AttachPolicyToWalletIntentTypeAttachPolicyToWallet, WalletId: "wal-1", PolicyId: "pol-1", IdempotencyKey: "key-1", PolicyVersion: &version}},
+		{"attach without version",
+			func() ([]byte, error) { return AttachPolicyPayload("wal-1", "pol-1", "key-1") },
+			gen.AttachPolicyToWalletIntent{Type: gen.AttachPolicyToWalletIntentTypeAttachPolicyToWallet, WalletId: "wal-1", PolicyId: "pol-1", IdempotencyKey: "key-1"}},
+		{"detach with version",
+			func() ([]byte, error) {
+				return DetachPolicyPayload("wal-1", "pol-1", "key-1", WithPolicyVersion(version))
+			},
+			gen.DetachPolicyFromWalletIntent{Type: gen.DetachPolicyFromWalletIntentTypeDetachPolicyFromWallet, WalletId: "wal-1", PolicyId: "pol-1", IdempotencyKey: "key-1", PolicyVersion: &version}},
+		{"detach without version",
+			func() ([]byte, error) { return DetachPolicyPayload("wal-1", "pol-1", "key-1") },
+			gen.DetachPolicyFromWalletIntent{Type: gen.DetachPolicyFromWalletIntentTypeDetachPolicyFromWallet, WalletId: "wal-1", PolicyId: "pol-1", IdempotencyKey: "key-1"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			signed, err := tc.payload()
+			require.NoError(t, err)
+			sent, err := json.Marshal(tc.intent)
+			require.NoError(t, err)
+			sentCanonical, err := jsoncanonicalizer.Transform(sent)
+			require.NoError(t, err)
+			require.Equal(t, string(signed), string(sentCanonical))
+		})
+	}
 }
 
 func TestErrStalePolicyVersionMatching(t *testing.T) {
