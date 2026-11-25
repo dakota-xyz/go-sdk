@@ -2921,8 +2921,11 @@ type AttachPolicyToWalletIntent struct {
 	IdempotencyKey string `json:"idempotency_key"`
 
 	// PolicyId The policy id to be attached to the wallet
-	PolicyId string                         `json:"policy_id"`
-	Type     AttachPolicyToWalletIntentType `json:"type"`
+	PolicyId string `json:"policy_id"`
+
+	// PolicyVersion Optional. The policy's current `version` (read it with `GET /policies/{policy_id}`). When sent it is part of the signed intent, and the request is refused with `409 stale_policy_version` unless it is still the policy's version, so the signatures approve the rules the signers saw. The version rises with every rule change, and when the policy's endorser scope, signer group or client changes. When omitted, the intent is signed and checked as before.
+	PolicyVersion *int32                         `json:"policy_version,omitempty"`
+	Type          AttachPolicyToWalletIntentType `json:"type"`
 
 	// WalletId Unique identifier for the wallet
 	WalletId string `json:"wallet_id"`
@@ -4534,8 +4537,11 @@ type DetachPolicyFromWalletIntent struct {
 	IdempotencyKey string `json:"idempotency_key"`
 
 	// PolicyId The policy id to be detached from the wallet
-	PolicyId string                           `json:"policy_id"`
-	Type     DetachPolicyFromWalletIntentType `json:"type"`
+	PolicyId string `json:"policy_id"`
+
+	// PolicyVersion Optional. The policy's current `version` (read it with `GET /policies/{policy_id}`). When sent it is part of the signed intent, and the request is refused with `409 stale_policy_version` unless it is still the policy's version, so the signatures approve the rules the signers saw. The version rises with every rule change, and when the policy's endorser scope, signer group or client changes. When omitted, the intent is signed and checked as before.
+	PolicyVersion *int32                           `json:"policy_version,omitempty"`
+	Type          DetachPolicyFromWalletIntentType `json:"type"`
 
 	// WalletId Unique identifier for the wallet
 	WalletId string `json:"wallet_id"`

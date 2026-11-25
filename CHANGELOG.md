@@ -4,6 +4,30 @@ All notable changes to the Dakota Go SDK are documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-25
+
+### Added — sign a policy attach or detach at the policy's version (ENG-6773)
+
+The platform (v0.3.181) accepts an optional, signed `policy_version` on a
+policy attach (`PUT /policies/{policy_id}/wallets/{wallet_id}`) or detach
+(`DELETE` on the same path). If the policy changed after the signatures were
+made, the request is refused with `409 stale_policy_version` and nothing
+changes, so a policy's rules cannot be loosened between the signers' approval
+and the request landing.
+
+- `AttachPolicyPayload` and `DetachPolicyPayload` take an optional
+  `WithPolicyVersion(version)`. With it, `policy_version` joins the signed
+  bytes, exactly as the policy engine verifies them. Without it, the bytes are
+  the same as before. A version below 1 returns an error.
+- `gen.AttachPolicyToWalletIntent` and `gen.DetachPolicyFromWalletIntent` have
+  `PolicyVersion *int32` (`policy_version`, omitted when nil). Send the value
+  you signed.
+- `ErrStalePolicyVersion` matches the 409 with `errors.Is`.
+
+Both helpers gained a variadic parameter. Calls compile unchanged; code that
+stores either helper in a variable typed `func(string, string, string)
+([]byte, error)` needs the new signature.
+
 ## [0.5.1] - 2026-11-24
 
 ### Changed — `WithPublicKeys` replaces `WithPublicKey` instead of adding to it (ENG-6720)
